@@ -15,21 +15,6 @@ const roleLabelMap: Record<Member["role"], string> = {
   external: "Externe",
 };
 
-const statusVariantMap: Record<
-  Member["status"],
-  "primary" | "success" | "default"
-> = {
-  family: "primary",
-  friends: "success",
-  other: "default",
-};
-
-const statusLabelMap: Record<Member["status"], string> = {
-  family: "Famille",
-  friends: "Amis",
-  other: "Autre",
-};
-
 // ------------------------------------------------------------
 // Props
 // ------------------------------------------------------------
@@ -37,10 +22,10 @@ const statusLabelMap: Record<Member["status"], string> = {
 interface MemberCardProps {
   member: Member;
   ownerName?: string; // nom du propriétaire parent si sub_member / external
+  canEdit?: boolean;
+  canDelete?: boolean;
   onEdit: (member: Member) => void;
   onDelete: (member: Member) => void;
-  onAuthorize?: (member: Member) => void;
-  canAuthorize?: boolean;
 }
 
 // ------------------------------------------------------------
@@ -50,10 +35,10 @@ interface MemberCardProps {
 export const MemberCard = ({
   member,
   ownerName,
+  canEdit = true,
+  canDelete = true,
   onEdit,
   onDelete,
-  onAuthorize,
-  canAuthorize = false,
 }: MemberCardProps) => {
   return (
     <Card hover className="flex flex-col gap-3">
@@ -80,34 +65,37 @@ export const MemberCard = ({
           </div>
         </div>
         <div className="flex gap-1 shrink-0">
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label="Modifier"
-            onClick={() => onEdit(member)}
-          >
-            <Pencil size={14} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label="Supprimer"
-            onClick={() => onDelete(member)}
-          >
-            <Trash2 size={14} className="text-red-500" />
-          </Button>
+          {onEdit && canEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Modifier"
+              onClick={() => onEdit(member)}
+            >
+              <Pencil size={14} />
+            </Button>
+          )}
+          {onDelete && canDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Supprimer"
+              onClick={() => onDelete(member)}
+            >
+              <Trash2 size={14} className="text-red-500" />
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Badges */}
       <div className="flex flex-wrap gap-1.5">
         <Badge variant={member.isAllowed ? "success" : "warning"}>
-          {member.isAllowed ? "Accès autorisé" : "En attente"}
+          {member.isAllowed ? "Accès autorisé" : "Accès non autorisé"}
         </Badge>
         <Badge variant="default">{roleLabelMap[member.role]}</Badge>
-        <Badge variant={statusVariantMap[member.status]}>
-          {statusLabelMap[member.status]}
-        </Badge>
+
+        {member.isEditor && <Badge variant="primary">Éditeur</Badge>}
       </div>
 
       {/* Info */}
@@ -131,27 +119,6 @@ export const MemberCard = ({
           </p>
         )}
       </div>
-
-      {onAuthorize && (
-        <div className="pt-2 border-t border-gray-100">
-          <Button
-            variant={member.isAllowed ? "secondary" : "primary"}
-            size="sm"
-            className="w-full"
-            onClick={() => onAuthorize(member)}
-            disabled={!member.isAllowed && !canAuthorize}
-            title={
-              member.isAllowed
-                ? "Retirer l'accès à cet utilisateur"
-                : canAuthorize
-                  ? "Autoriser cet utilisateur"
-                  : "Complétez prénom, nom et libellé avant autorisation"
-            }
-          >
-            {member.isAllowed ? "Retirer l'accès" : "Autoriser"}
-          </Button>
-        </div>
-      )}
     </Card>
   );
 };

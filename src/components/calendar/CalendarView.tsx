@@ -65,7 +65,7 @@ const formatDayLabel = (date: Date): string =>
 interface CalendarViewProps {
   rentals: Rental[];
   members: Member[];
-  onRentalClick: (rental: Rental) => void;
+  onRentalClick?: (rental: Rental) => void;
   onCreateClick?: () => void;
   onDayClick?: (date: Date) => void;
 }

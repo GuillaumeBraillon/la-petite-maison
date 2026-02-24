@@ -40,6 +40,8 @@ interface RentalCardProps {
   rental: Rental;
   owner?: Member;
   subMember?: Member;
+  canEdit?: boolean;
+  canDelete?: boolean;
   onClick?: (rental: Rental) => void;
   onEdit?: (rental: Rental) => void;
   onDelete?: (rental: Rental) => void;
@@ -53,6 +55,8 @@ export const RentalCard = ({
   rental,
   owner,
   subMember,
+  canEdit = true,
+  canDelete = true,
   onClick,
   onEdit,
   onDelete,
@@ -66,7 +70,14 @@ export const RentalCard = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          {owner?.avatarUrl ? (
+          {subMember?.avatarUrl ? (
+            <img
+              src={subMember.avatarUrl}
+              alt={`${subMember.firstName} ${subMember.lastName}`}
+              className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0"
+              referrerPolicy="no-referrer"
+            />
+          ) : owner?.avatarUrl ? (
             <img
               src={owner.avatarUrl}
               alt={`${owner.firstName} ${owner.lastName}`}
@@ -80,11 +91,15 @@ export const RentalCard = ({
           )}
           <div className="min-w-0">
             <p className="font-semibold text-gray-900 text-sm truncate">
-              {owner ? `${owner.firstName} ${owner.lastName}` : "—"}
+              {subMember
+                ? subMember.label
+                : owner
+                  ? `${owner.firstName} ${owner.lastName}`
+                  : "—"}
             </p>
-            {subMember && (
+            {subMember && owner && (
               <p className="text-xs text-gray-500 truncate">
-                {subMember.label}
+                {owner.firstName} {owner.lastName}
               </p>
             )}
           </div>
@@ -118,7 +133,7 @@ export const RentalCard = ({
       {/* Actions */}
       {(onEdit ?? onDelete) && (
         <div className="flex justify-end gap-1 pt-1 border-t border-gray-100">
-          {onEdit && (
+          {onEdit && canEdit && (
             <Button
               variant="ghost"
               size="sm"
@@ -131,7 +146,7 @@ export const RentalCard = ({
               <Pencil size={13} />
             </Button>
           )}
-          {onDelete && (
+          {onDelete && canDelete && (
             <Button
               variant="ghost"
               size="sm"

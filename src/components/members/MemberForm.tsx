@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import type { Member, MemberRole, MemberStatus } from "../../types";
+import type { Member, MemberRole } from "../../types";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Button } from "../ui/Button";
@@ -14,7 +14,9 @@ type MemberFormValues = Omit<Member, "id" | "createdAt" | "updatedAt">;
 interface MemberFormProps {
   initialValues?: Partial<MemberFormValues>;
   members?: Member[]; // pour la liste des owners (sub_member / external)
+  canEdit?: boolean;
   onSubmit: (values: MemberFormValues) => Promise<void>;
+  onAuthorize?: (email: string, values: MemberFormValues) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
 }
@@ -29,7 +31,7 @@ const defaultValues: MemberFormValues = {
   firstName: "",
   lastName: "",
   role: "owner",
-  status: "family",
+  isEditor: false,
   email: "",
   address: "",
   ownerId: undefined,
@@ -42,7 +44,9 @@ const defaultValues: MemberFormValues = {
 export const MemberForm = ({
   initialValues,
   members = [],
+  canEdit = true,
   onSubmit,
+  onAuthorize,
   onCancel,
   submitLabel = "Enregistrer",
 }: MemberFormProps) => {
@@ -51,6 +55,7 @@ export const MemberForm = ({
     ...initialValues,
   });
   const [loading, setLoading] = useState(false);
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
   const [errors, setErrors] = useState<
     Partial<Record<keyof MemberFormValues, string>>
   >({});
@@ -68,7 +73,6 @@ export const MemberForm = ({
     if (!values.firstName.trim()) next.firstName = "Le prénom est requis.";
     if (!values.lastName.trim()) next.lastName = "Le nom est requis.";
     if (!values.label.trim()) next.label = "Le libellé est requis.";
-    if (!values.email.trim()) next.email = "L'email est requis.";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -78,16 +82,29 @@ export const MemberForm = ({
     if (!validate()) return;
     setLoading(true);
     try {
-      await onSubmit(values);
+      // Si le rôle n'est pas "owner", forcer isEditor à false
+      const submitValues = { ...values };
+      if (submitValues.role !== "owner") {
+        submitValues.isEditor = false;
+      }
+      await onSubmit(submitValues);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleAuthorize = async () => {
+    if (!onAuthorize || !values.email) return;
+    setIsAuthorizing(true);
+    try {
+      await onAuthorize(values.email, values);
+    } finally {
+      setIsAuthorizing(false);
+    }
+  };
+
   const needsOwner = values.role === "sub_member" || values.role === "external";
-  const ownerCandidates = members.filter(
-    (m) => m.role === "owner" || m.role === "admin",
-  );
+  const ownerCandidates = members.filter((m) => m.role === "owner");
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -97,6 +114,7 @@ export const MemberForm = ({
         value={values.label}
         onChange={(e) => set("label", e.target.value)}
         error={errors.label}
+        disabled={!canEdit}
         required
       />
 
@@ -106,6 +124,7 @@ export const MemberForm = ({
           value={values.firstName}
           onChange={(e) => set("firstName", e.target.value)}
           error={errors.firstName}
+          disabled={!canEdit}
           required
         />
         <Input
@@ -113,6 +132,7 @@ export const MemberForm = ({
           value={values.lastName}
           onChange={(e) => set("lastName", e.target.value)}
           error={errors.lastName}
+          disabled={!canEdit}
           required
         />
       </div>
@@ -123,7 +143,8 @@ export const MemberForm = ({
         value={values.email}
         onChange={(e) => set("email", e.target.value)}
         error={errors.email}
-        required
+        disabled={!canEdit}
+        placeholder="Optionnel"
       />
 
       <Input
@@ -131,6 +152,7 @@ export const MemberForm = ({
         placeholder="Optionnel"
         value={values.address ?? ""}
         onChange={(e) => set("address", e.target.value || undefined)}
+        disabled={!canEdit}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -138,23 +160,13 @@ export const MemberForm = ({
           label="Rôle"
           value={values.role}
           onChange={(e) => set("role", e.target.value as MemberRole)}
+          disabled={!canEdit}
           required
         >
           <option value="admin">Admin</option>
           <option value="owner">Propriétaire</option>
           <option value="sub_member">Sous-membre</option>
           <option value="external">Externe</option>
-        </Select>
-
-        <Select
-          label="Statut"
-          value={values.status}
-          onChange={(e) => set("status", e.target.value as MemberStatus)}
-          required
-        >
-          <option value="family">Famille</option>
-          <option value="friends">Amis</option>
-          <option value="other">Autre</option>
         </Select>
       </div>
 
@@ -164,6 +176,7 @@ export const MemberForm = ({
           value={values.ownerId ?? ""}
           onChange={(e) => set("ownerId", e.target.value || undefined)}
           placeholder="Sélectionner un propriétaire"
+          disabled={!canEdit}
         >
           {ownerCandidates.map((m) => (
             <option key={m.id} value={m.id}>
@@ -173,19 +186,55 @@ export const MemberForm = ({
         </Select>
       )}
 
+      {values.role === "owner" && (
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={values.isEditor}
+              onChange={(e) => set("isEditor", e.target.checked)}
+              className="w-4 h-4 cursor-pointer"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              Peut éditer les locations et les membres
+            </span>
+          </label>
+          <p className="text-xs text-gray-500 mt-1 ml-7">
+            Si décoché : accès en lecture seule
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-2">
         <Button
           type="button"
           variant="secondary"
           onClick={onCancel}
-          disabled={loading}
+          disabled={loading || isAuthorizing}
           className="w-full sm:w-auto"
         >
           Annuler
         </Button>
-        <Button type="submit" loading={loading} className="w-full sm:w-auto">
+        <Button
+          type="submit"
+          loading={loading}
+          disabled={isAuthorizing}
+          className="w-full sm:w-auto"
+        >
           {submitLabel}
         </Button>
+        {!values.isAllowed && onAuthorize && (
+          <Button
+            type="button"
+            variant="secondary"
+            loading={isAuthorizing}
+            disabled={loading || !values.email}
+            onClick={handleAuthorize}
+            className="w-full sm:w-auto bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+          >
+            ✓ Autoriser
+          </Button>
+        )}
       </div>
     </form>
   );

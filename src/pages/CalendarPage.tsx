@@ -5,6 +5,8 @@ import { RentalForm } from "../components/rentals/RentalForm";
 import { Modal } from "../components/ui/Modal";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
+import { getPermissions } from "../services/permissions";
+import { createMember } from "../services/apiCrud";
 
 // ------------------------------------------------------------
 // Props
@@ -13,6 +15,7 @@ import { useRentalModals } from "../hooks/useRentalModals";
 interface CalendarPageProps {
   rentals: Rental[];
   members: Member[];
+  currentMember?: Member;
   onRefresh: () => Promise<void>;
 }
 
@@ -23,8 +26,10 @@ interface CalendarPageProps {
 export const CalendarPage = ({
   rentals,
   members,
+  currentMember,
   onRefresh,
 }: CalendarPageProps) => {
+  const permissions = getPermissions(currentMember ?? null);
   const {
     formOpen,
     detailOpen,
@@ -44,7 +49,32 @@ export const CalendarPage = ({
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
 
+  const handleCreateSubMember = async (data: {
+    firstName: string;
+    lastName: string;
+    label: string;
+    role: "sub_member" | "external";
+    ownerId?: string;
+  }) => {
+    const newMember = await createMember({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      label: data.label,
+      role: data.role,
+      email: undefined,
+      address: undefined,
+      ownerId: data.ownerId,
+      isAllowed: false,
+      isEditor: false,
+    });
+    await onRefresh();
+    return newMember;
+  };
+
   const handleDayClick = (date: Date) => {
+    // Vérifier les permissions avant de créer
+    if (!permissions.createLocations) return;
+
     // Début : le jour cliqué à midi
     const start = new Date(date);
     start.setHours(12, 0, 0, 0);
@@ -75,33 +105,37 @@ export const CalendarPage = ({
       <CalendarView
         rentals={rentals}
         members={members}
-        onRentalClick={openDetail}
-        onCreateClick={() => openCreate()}
-        onDayClick={handleDayClick}
+        onRentalClick={permissions.viewCalendarDetails ? openDetail : undefined}
+        onCreateClick={
+          permissions.createLocations ? () => openCreate() : undefined
+        }
+        onDayClick={permissions.createLocations ? handleDayClick : undefined}
       />
 
       {/* Détail */}
-      <Modal
-        isOpen={detailOpen && selected !== null}
-        onClose={closeDetail}
-        title="Détail de la location"
-        size="lg"
-      >
-        {selected && (
-          <RentalDetail
-            rental={selected}
-            owner={memberIndex.get(selected.ownerId)}
-            subMember={
-              selected.subMemberId
-                ? memberIndex.get(selected.subMemberId)
-                : undefined
-            }
-            onEdit={openEdit}
-            onDelete={handleDelete}
-            onStatusChange={handleStatusChange}
-          />
-        )}
-      </Modal>
+      {permissions.viewCalendarDetails && (
+        <Modal
+          isOpen={detailOpen && selected !== null}
+          onClose={closeDetail}
+          title="Détail de la location"
+          size="lg"
+        >
+          {selected && (
+            <RentalDetail
+              rental={selected}
+              owner={memberIndex.get(selected.ownerId)}
+              subMember={
+                selected.subMemberId
+                  ? memberIndex.get(selected.subMemberId)
+                  : undefined
+              }
+              onEdit={openEdit}
+              onDelete={handleDelete}
+              onStatusChange={handleStatusChange}
+            />
+          )}
+        </Modal>
+      )}
 
       {/* Formulaire création/modification */}
       <Modal
@@ -115,6 +149,7 @@ export const CalendarPage = ({
           members={members}
           onSubmit={handleSubmit}
           onCancel={closeForm}
+          onCreateSubMember={handleCreateSubMember}
           submitLabel={editing?.id ? "Enregistrer" : "Créer"}
         />
       </Modal>

@@ -40,8 +40,8 @@ create table public.members (
   first_name text not null default '',
   last_name text not null default '',
   role text not null default 'external' check (role in ('admin', 'owner', 'sub_member', 'external')),
-  status text not null default 'other' check (status in ('family', 'friends', 'other')),
-  email text not null,
+  is_editor boolean not null default false,
+  email text,
   avatar_url text,
   address text,
   owner_id uuid references public.members(id) on delete set null,
@@ -59,10 +59,9 @@ create table public.members (
 
 create index members_last_name_idx on public.members(last_name);
 create index members_role_idx on public.members(role);
-create index members_status_idx on public.members(status);
 create index members_owner_id_idx on public.members(owner_id);
 create index members_is_allowed_idx on public.members(is_allowed);
-create unique index members_email_unique_idx on public.members(lower(email));
+create unique index members_email_unique_idx on public.members(lower(email)) where email is not null;
 
 create trigger trg_members_set_updated_at
 before update on public.members
@@ -82,8 +81,7 @@ create table public.rentals (
   price numeric(10,2) not null default 0 check (price >= 0),
   status text not null default 'pending' check (status in ('pending', 'confirmed', 'rejected', 'completed')),
   notes text,
-  electricity_start numeric,
-  electricity_end numeric,
+  electricity_cost numeric,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint rentals_date_order_chk check (end_date > start_date)

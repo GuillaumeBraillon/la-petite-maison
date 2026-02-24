@@ -8,9 +8,10 @@ import { MemberCard } from "./MemberCard";
 
 interface MemberListProps {
   members: Member[];
+  canEdit?: boolean;
+  canDelete?: boolean;
   onEdit: (member: Member) => void;
   onDelete: (member: Member) => void;
-  onAuthorize?: (member: Member) => void;
 }
 
 // ------------------------------------------------------------
@@ -37,9 +38,10 @@ const EmptyState = () => (
 
 export const MemberList = ({
   members,
+  canEdit = true,
+  canDelete = true,
   onEdit,
   onDelete,
-  onAuthorize,
 }: MemberListProps) => {
   if (members.length === 0) return <EmptyState />;
 
@@ -48,23 +50,24 @@ export const MemberList = ({
     members.map((m) => [m.id, `${m.firstName} ${m.lastName}`]),
   );
 
+  // Tri par libellé
+  const sortedMembers = [...members].sort((a, b) =>
+    a.label.localeCompare(b.label),
+  );
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {members.map((member) => (
+      {sortedMembers.map((member) => (
         <MemberCard
           key={member.id}
           member={member}
           ownerName={
             member.ownerId ? ownerIndex.get(member.ownerId) : undefined
           }
+          canEdit={canEdit}
+          canDelete={canDelete}
           onEdit={onEdit}
           onDelete={onDelete}
-          onAuthorize={onAuthorize}
-          canAuthorize={
-            member.label.trim().length > 0 &&
-            member.firstName.trim().length > 0 &&
-            member.lastName.trim().length > 0
-          }
         />
       ))}
     </div>

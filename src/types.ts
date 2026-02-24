@@ -3,7 +3,6 @@
 // ============================================================
 
 export type MemberRole = "admin" | "owner" | "sub_member" | "external";
-export type MemberStatus = "family" | "friends" | "other";
 export type RentalStatus = "pending" | "confirmed" | "rejected" | "completed";
 
 // ------------------------------------------------------------
@@ -19,14 +18,16 @@ export interface Member {
   firstName: string;
   lastName: string;
   role: MemberRole;
-  status: MemberStatus;
-  email: string;
+  /** Email — optionnel */
+  email?: string;
   /** Avatar profil (Google) — optionnel */
   avatarUrl?: string;
   /** Adresse postale — optionnelle */
   address?: string;
   /** Lien vers le propriétaire parent (pour sub_member / external) */
   ownerId?: string;
+  /** Pour role="owner" : true = peut éditer locations&membres, false = lecture seule */
+  isEditor: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -52,8 +53,8 @@ export interface Rental {
   status: RentalStatus;
   /** Commentaires post-location */
   notes?: string;
-  electricityStart?: number;
-  electricityEnd?: number;
+  /** Coût électricité (€) */
+  electricityCost?: number;
   createdAt: string;
   updatedAt: string;
 }

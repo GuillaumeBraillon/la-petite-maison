@@ -7,7 +7,7 @@ import type { Rental, Member } from "../../types";
 interface RentalBadgeProps {
   rental: Rental;
   owner?: Member;
-  onClick: (rental: Rental) => void;
+  onClick?: (rental: Rental) => void;
 }
 
 // ------------------------------------------------------------
@@ -30,8 +30,8 @@ export const RentalBadge = ({ rental, owner, onClick }: RentalBadgeProps) => {
 
   return (
     <button
-      onClick={() => onClick(rental)}
-      title={`${label} — ${rental.price.toFixed(2)} €`}
+      onClick={() => onClick?.(rental)}
+      title={label}
       className={[
         "w-full text-left text-xs px-1.5 py-0.5 rounded border",
         "flex items-center gap-1",

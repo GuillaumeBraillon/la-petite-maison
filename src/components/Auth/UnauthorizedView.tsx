@@ -21,9 +21,10 @@ export const UnauthorizedView = ({
           <div className="bg-red-100 text-red-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <ShieldX size={40} />
           </div>
-          <CardTitle className="text-2xl">Accès refusé</CardTitle>
+          <CardTitle className="text-2xl">Email validé ✓</CardTitle>
           <p className="text-sm text-gray-600 mt-2 px-4">
-            Ce compte n’est pas autorisé à accéder à cette application.
+            Votre adresse email a été confirmée. Un administrateur doit
+            maintenant autoriser votre accès à l&apos;application.
           </p>
         </CardHeader>
 
@@ -38,8 +39,9 @@ export const UnauthorizedView = ({
               <Mail size={16} />
             </div>
             <p className="text-sm text-yellow-900 leading-relaxed">
-              Contactez un administrateur pour demander l’accès à votre adresse
-              email.
+              En attente d&apos;autorisation. Un administrateur doit valider
+              votre accès. Veuillez réessayer dans quelques instants ou
+              contactez l&apos;administrateur.
             </p>
           </div>
 

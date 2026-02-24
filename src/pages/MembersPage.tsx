@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import type { Member } from "../types";
+import { getPermissions } from "../services/permissions";
 import { MemberList } from "../components/members/MemberList";
 import { MemberForm } from "../components/members/MemberForm";
 import { Modal } from "../components/ui/Modal";
@@ -9,12 +10,13 @@ import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useError } from "../contexts/ErrorContext";
 import { createMember, updateMember, deleteMember } from "../services/apiCrud";
 
-// ------------------------------------------------------------
+// ----------------------------------------------- -------
 // Props
-// ------------------------------------------------------------
+// ---------- ------------------------------------------------
 
 interface MembersPageProps {
   members: Member[];
+  currentMember?: Member;
   onRefresh: () => Promise<void>;
 }
 
@@ -22,10 +24,15 @@ interface MembersPageProps {
 // Page
 // ------------------------------------------------------------
 
-export const MembersPage = ({ members, onRefresh }: MembersPageProps) => {
+export const MembersPage = ({
+  members,
+  currentMember,
+  onRefresh,
+}: MembersPageProps) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const { error, setError, clearError } = useError();
+  const permissions = getPermissions(currentMember ?? null);
 
   const openCreate = () => {
     setEditing(null);
@@ -76,30 +83,14 @@ export const MembersPage = ({ members, onRefresh }: MembersPageProps) => {
     }
   };
 
-  const handleAuthorize = async (m: Member) => {
-    if (m.isAllowed) {
-      const confirmed = window.confirm(
-        `Retirer l'accès de ${m.firstName} ${m.lastName} ?`,
-      );
-      if (!confirmed) return;
-
-      try {
-        await updateMember(m.id, { isAllowed: false });
-        await onRefresh();
-      } catch (err) {
-        setError({
-          message:
-            err instanceof Error ? err.message : "Une erreur est survenue.",
-          context: "Retrait d'accès utilisateur",
-        });
-      }
-      return;
-    }
-
+  const handleAuthorizeFromForm = async (
+    email: string,
+    values: Omit<Member, "id" | "createdAt" | "updatedAt">,
+  ) => {
     const isProfileComplete =
-      m.label.trim().length > 0 &&
-      m.firstName.trim().length > 0 &&
-      m.lastName.trim().length > 0;
+      values.label.trim().length > 0 &&
+      values.firstName.trim().length > 0 &&
+      values.lastName.trim().length > 0;
 
     if (!isProfileComplete) {
       setError({
@@ -110,8 +101,21 @@ export const MembersPage = ({ members, onRefresh }: MembersPageProps) => {
     }
 
     try {
+      // Chercher si le membre existe déjà en DB
+      let m = members.find((member) => member.email === email);
+
+      if (!m) {
+        // Créer le nouveau membre d'abord
+        m = await createMember(values);
+      } else {
+        // Ou le modifier s'il existe
+        m = await updateMember(m.id, values);
+      }
+
+      // Puis l'autoriser
       await updateMember(m.id, { isAllowed: true });
       await onRefresh();
+      closeModal();
     } catch (err) {
       setError({
         message:
@@ -131,18 +135,21 @@ export const MembersPage = ({ members, onRefresh }: MembersPageProps) => {
             {members.length} membre{members.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button onClick={openCreate} className="w-full sm:w-auto">
-          <UserPlus size={16} /> Ajouter
-        </Button>
+        {permissions.createMembers && (
+          <Button onClick={openCreate} className="w-full sm:w-auto">
+            <UserPlus size={16} /> Ajouter
+          </Button>
+        )}
       </div>
 
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
 
       <MemberList
         members={members}
+        canEdit={permissions.editMembers}
+        canDelete={permissions.deleteMembers}
         onEdit={openEdit}
         onDelete={handleDelete}
-        onAuthorize={handleAuthorize}
       />
 
       <Modal
@@ -154,6 +161,7 @@ export const MembersPage = ({ members, onRefresh }: MembersPageProps) => {
           initialValues={editing ?? undefined}
           members={members}
           onSubmit={handleSubmit}
+          onAuthorize={handleAuthorizeFromForm}
           onCancel={closeModal}
           submitLabel={editing ? "Enregistrer" : "Créer"}
         />

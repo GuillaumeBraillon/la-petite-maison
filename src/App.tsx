@@ -22,6 +22,7 @@ import { CalendarPage } from "./pages/CalendarPage";
 import { usePWAInstall } from "./hooks/usePWAInstall";
 import { useAuthorization } from "./hooks/useAuthorization";
 import { LoginView } from "./components/Auth/LoginView";
+import { ResetPasswordView } from "./components/Auth/ResetPasswordView";
 import { UnauthorizedView } from "./components/Auth/UnauthorizedView";
 
 // ------------------------------------------------------------
@@ -38,6 +39,7 @@ interface NavItem {
   id: View;
   label: string;
   icon: React.ReactNode;
+  requiredRoles?: Member["role"][];
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -45,10 +47,21 @@ const NAV_ITEMS: NavItem[] = [
     id: "dashboard",
     label: "Tableau de bord",
     icon: <LayoutDashboard size={18} />,
+    requiredRoles: ["admin", "owner"],
   },
   { id: "calendar", label: "Calendrier", icon: <CalendarDays size={18} /> },
-  { id: "rentals", label: "Locations", icon: <List size={18} /> },
-  { id: "members", label: "Membres", icon: <Users size={18} /> },
+  {
+    id: "rentals",
+    label: "Locations",
+    icon: <List size={18} />,
+    requiredRoles: ["admin", "owner"],
+  },
+  {
+    id: "members",
+    label: "Membres",
+    icon: <Users size={18} />,
+    requiredRoles: ["admin", "owner"],
+  },
 ];
 
 // ------------------------------------------------------------
@@ -56,21 +69,98 @@ const NAV_ITEMS: NavItem[] = [
 // ------------------------------------------------------------
 
 const LoginScreen = ({ error }: { error?: string | null }) => {
-  const [loading, setLoading] = useState(false);
-  const { setError } = useError();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [signUpLoading, setSignUpLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginInfo, setLoginInfo] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setLoading(true);
+  const handleGoogleLogin = async () => {
+    setLoginInfo(null);
+    setLoginError(null);
+    setGoogleLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
     });
     if (error) {
-      setError({ message: error.message, context: "Connexion Google" });
-      setLoading(false);
+      setLoginError(error.message);
     }
+    setGoogleLoading(false);
   };
 
-  return <LoginView onLogin={handleLogin} loading={loading} error={error} />;
+  const handleEmailLogin = async (email: string, password: string) => {
+    setLoginInfo(null);
+    setLoginError(null);
+    setEmailLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      setLoginError(error.message);
+    }
+    setEmailLoading(false);
+  };
+
+  const handleSignUp = async (email: string, password: string) => {
+    setLoginInfo(null);
+    setLoginError(null);
+    if (!email || !password) {
+      setLoginError("Email et mot de passe requis.");
+      return;
+    }
+    setSignUpLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    if (error) {
+      setLoginError(error.message);
+    } else {
+      setLoginInfo(
+        "Compte cree. Verifie ton email pour confirmer l'inscription.",
+      );
+    }
+    setSignUpLoading(false);
+  };
+
+  const handleResetPassword = async (email: string) => {
+    setLoginInfo(null);
+    setLoginError(null);
+    if (!email) {
+      setLoginError("Email requis pour la reinitialisation.");
+      return;
+    }
+    setResetLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) {
+      setLoginError(error.message);
+    } else {
+      setLoginInfo("Email de reinitialisation envoye.");
+    }
+    setResetLoading(false);
+  };
+
+  return (
+    <LoginView
+      onLoginGoogle={handleGoogleLogin}
+      onLoginEmail={handleEmailLogin}
+      onSignUp={handleSignUp}
+      onResetPassword={handleResetPassword}
+      loadingGoogle={googleLoading}
+      loadingEmail={emailLoading}
+      loadingSignUp={signUpLoading}
+      loadingReset={resetLoading}
+      error={loginError ?? error}
+      info={loginInfo}
+    />
+  );
 };
 
 // ------------------------------------------------------------
@@ -88,14 +178,47 @@ const AppShell = ({ session }: AppShellProps) => {
   const [loading, setLoading] = useState(true);
   const { error, clearError, setError } = useError();
   const { isInstallable, install } = usePWAInstall();
-  const userName =
-    session.user.user_metadata?.full_name ??
-    session.user.user_metadata?.name ??
-    "Utilisateur";
   const userAvatar =
     session.user.user_metadata?.avatar_url ??
     session.user.user_metadata?.picture ??
     null;
+
+  // Récupérer le nom depuis session OU depuis la DB
+  const defaultUserName =
+    session.user.user_metadata?.full_name ??
+    session.user.user_metadata?.name ??
+    "Utilisateur";
+  const currentMember = members.find((m) => m.email === session.user.email);
+  const userName = currentMember
+    ? `${currentMember.firstName} ${currentMember.lastName}`
+    : defaultUserName;
+
+  // Helper pour filtrer les items de nav basés sur le rôle
+  const getAvailableNavItems = (): NavItem[] => {
+    if (!currentMember) return NAV_ITEMS.filter((item) => !item.requiredRoles);
+    return NAV_ITEMS.filter(
+      (item) =>
+        !item.requiredRoles || item.requiredRoles.includes(currentMember.role),
+    );
+  };
+
+  // Vérifier si la vue actuelle est accessible
+  const isViewAccessible = useCallback(
+    (viewId: View): boolean => {
+      const navItem = NAV_ITEMS.find((item) => item.id === viewId);
+      if (!navItem || !navItem.requiredRoles) return true;
+      if (!currentMember) return false;
+      return navItem.requiredRoles.includes(currentMember.role);
+    },
+    [currentMember],
+  );
+
+  // Rediriger vers Calendar si la vue n'est pas accessible
+  useEffect(() => {
+    if (currentMember && !isViewAccessible(view)) {
+      setView("calendar");
+    }
+  }, [isViewAccessible, view, currentMember]);
 
   const refresh = useCallback(async () => {
     try {
@@ -140,7 +263,7 @@ const AppShell = ({ session }: AppShellProps) => {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
+          {getAvailableNavItems().map((item) => (
             <button
               key={item.id}
               onClick={() => setView(item.id)}
@@ -244,6 +367,7 @@ const AppShell = ({ session }: AppShellProps) => {
                 <DashboardPage
                   rentals={rentals}
                   members={members}
+                  currentMember={currentMember ?? undefined}
                   onRefresh={refresh}
                 />
               )}
@@ -251,6 +375,7 @@ const AppShell = ({ session }: AppShellProps) => {
                 <RentalsPage
                   rentals={rentals}
                   members={members}
+                  currentMember={currentMember ?? undefined}
                   onRefresh={refresh}
                 />
               )}
@@ -258,11 +383,16 @@ const AppShell = ({ session }: AppShellProps) => {
                 <CalendarPage
                   rentals={rentals}
                   members={members}
+                  currentMember={currentMember ?? undefined}
                   onRefresh={refresh}
                 />
               )}
               {view === "members" && (
-                <MembersPage members={members} onRefresh={refresh} />
+                <MembersPage
+                  members={members}
+                  currentMember={currentMember ?? undefined}
+                  onRefresh={refresh}
+                />
               )}
             </>
           )}
@@ -272,7 +402,7 @@ const AppShell = ({ session }: AppShellProps) => {
       {/* Mobile nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 px-2 py-2">
         <div className="flex items-center justify-around">
-          {NAV_ITEMS.map((item) => (
+          {getAvailableNavItems().map((item) => (
             <button
               key={item.id}
               onClick={() => setView(item.id)}
@@ -301,6 +431,10 @@ const AppShell = ({ session }: AppShellProps) => {
 const AppRoot = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetSuccess, setResetSuccess] = useState<string | null>(null);
   const { setError } = useError();
   const {
     isAuthorized,
@@ -314,8 +448,14 @@ const AppRoot = () => {
       setAuthLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
+      if (event === "PASSWORD_RECOVERY") {
+        setRecoveryMode(true);
+      }
+      if (event === "SIGNED_OUT") {
+        setRecoveryMode(false);
+      }
     });
 
     return () => listener.subscription.unsubscribe();
@@ -344,6 +484,29 @@ const AppRoot = () => {
 
   if (!session) {
     return <LoginScreen error={authorizationError} />;
+  }
+
+  if (recoveryMode) {
+    return (
+      <ResetPasswordView
+        onSubmit={async (password) => {
+          setResetError(null);
+          setResetSuccess(null);
+          setResetLoading(true);
+          const { error } = await supabase.auth.updateUser({ password });
+          if (error) {
+            setResetError(error.message);
+          } else {
+            setResetSuccess("Mot de passe mis a jour.");
+          }
+          setResetLoading(false);
+        }}
+        onContinue={() => setRecoveryMode(false)}
+        loading={resetLoading}
+        error={resetError}
+        success={resetSuccess}
+      />
+    );
   }
 
   if (authorizationLoading || isAuthorized === null) {

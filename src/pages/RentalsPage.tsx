@@ -1,5 +1,7 @@
 import { PlusCircle } from "lucide-react";
 import type { Rental, Member } from "../types";
+import { getPermissions } from "../services/permissions";
+import { createMember } from "../services/apiCrud";
 import { RentalList } from "../components/rentals/RentalList";
 import { RentalDetail } from "../components/rentals/RentalDetail";
 import { RentalForm } from "../components/rentals/RentalForm";
@@ -15,6 +17,7 @@ import { useRentalModals } from "../hooks/useRentalModals";
 interface RentalsPageProps {
   rentals: Rental[];
   members: Member[];
+  currentMember?: Member;
   onRefresh: () => Promise<void>;
 }
 
@@ -25,6 +28,7 @@ interface RentalsPageProps {
 export const RentalsPage = ({
   rentals,
   members,
+  currentMember,
   onRefresh,
 }: RentalsPageProps) => {
   const {
@@ -45,6 +49,29 @@ export const RentalsPage = ({
   } = useRentalModals(onRefresh);
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
+  const permissions = getPermissions(currentMember ?? null);
+
+  const handleCreateSubMember = async (data: {
+    firstName: string;
+    lastName: string;
+    label: string;
+    role: "sub_member" | "external";
+    ownerId?: string;
+  }) => {
+    const newMember = await createMember({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      label: data.label,
+      role: data.role,
+      email: undefined,
+      address: undefined,
+      ownerId: data.ownerId,
+      isAllowed: false,
+      isEditor: false,
+    });
+    await onRefresh();
+    return newMember;
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -56,9 +83,11 @@ export const RentalsPage = ({
             {rentals.length} location{rentals.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button onClick={() => openCreate()} className="w-full sm:w-auto">
-          <PlusCircle size={16} /> Nouvelle location
-        </Button>
+        {permissions.createLocations && (
+          <Button onClick={() => openCreate()} className="w-full sm:w-auto">
+            <PlusCircle size={16} /> Nouvelle location
+          </Button>
+        )}
       </div>
 
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
@@ -66,6 +95,8 @@ export const RentalsPage = ({
       <RentalList
         rentals={rentals}
         members={members}
+        canEdit={permissions.editLocations}
+        canDelete={permissions.deleteLocations}
         onClick={openDetail}
         onEdit={openEdit}
         onDelete={handleDelete}
@@ -83,6 +114,7 @@ export const RentalsPage = ({
           members={members}
           onSubmit={handleSubmit}
           onCancel={closeForm}
+          onCreateSubMember={handleCreateSubMember}
           submitLabel={editing?.id ? "Enregistrer" : "Créer"}
         />
       </Modal>

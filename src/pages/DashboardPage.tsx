@@ -5,6 +5,7 @@ import { RentalForm } from "../components/rentals/RentalForm";
 import { Modal } from "../components/ui/Modal";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
+import { getPermissions } from "../services/permissions";
 
 // ------------------------------------------------------------
 // Props
@@ -13,6 +14,7 @@ import { useRentalModals } from "../hooks/useRentalModals";
 interface DashboardPageProps {
   rentals: Rental[];
   members: Member[];
+  currentMember?: Member;
   onRefresh: () => Promise<void>;
 }
 
@@ -23,8 +25,11 @@ interface DashboardPageProps {
 export const DashboardPage = ({
   rentals,
   members,
+  currentMember,
   onRefresh,
 }: DashboardPageProps) => {
+  // Permissions calculées pour usage futur (conditionnalité des stats affichées)
+  void getPermissions(currentMember ?? null);
   const {
     formOpen,
     detailOpen,

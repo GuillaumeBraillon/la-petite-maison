@@ -11,11 +11,11 @@ export interface DbMember {
   first_name: string;
   last_name: string;
   role: string;
-  status: string;
-  email: string;
+  email: string | null;
   avatar_url: string | null;
   address: string | null;
   owner_id: string | null;
+  is_editor: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -30,8 +30,7 @@ export interface DbRental {
   price: number;
   status: string;
   notes: string | null;
-  electricity_start: number | null;
-  electricity_end: number | null;
+  electricity_cost: number | null;
   created_at: string;
   updated_at: string;
 }

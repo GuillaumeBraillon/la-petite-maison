@@ -9,6 +9,8 @@ import { RentalCard } from "./RentalCard";
 interface RentalListProps {
   rentals: Rental[];
   members: Member[];
+  canEdit?: boolean;
+  canDelete?: boolean;
   onClick?: (rental: Rental) => void;
   onEdit?: (rental: Rental) => void;
   onDelete?: (rental: Rental) => void;
@@ -39,6 +41,8 @@ const EmptyState = () => (
 export const RentalList = ({
   rentals,
   members,
+  canEdit = true,
+  canDelete = true,
   onClick,
   onEdit,
   onDelete,
@@ -57,6 +61,8 @@ export const RentalList = ({
           subMember={
             rental.subMemberId ? memberIndex.get(rental.subMemberId) : undefined
           }
+          canEdit={canEdit}
+          canDelete={canDelete}
           onClick={onClick}
           onEdit={onEdit}
           onDelete={onDelete}

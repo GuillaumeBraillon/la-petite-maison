@@ -1,4 +1,4 @@
-import { CalendarDays, Euro, Home, Clock } from "lucide-react";
+import { CalendarDays, Euro, Home, Clock, Zap } from "lucide-react";
 import type { Rental, Member } from "../../types";
 import { KpiCard } from "./KpiCard";
 
@@ -48,9 +48,15 @@ const computeStats = (rentals: Rental[]) => {
 
   const occupancy = Math.min(100, Math.round((occupiedDays / 365) * 100));
 
+  const totalElectricityCost = thisYear.reduce(
+    (sum, r) => sum + (r.electricityCost ?? 0),
+    0,
+  );
+
   return {
     totalRentals: thisYear.length,
     totalRevenue,
+    totalElectricityCost,
     pending,
     nextLabel,
     occupancy,
@@ -77,7 +83,7 @@ export const DashboardStats = ({
   const stats = computeStats(rentals);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <KpiCard
         label="Locations (année)"
         value={stats.totalRentals}
@@ -87,6 +93,11 @@ export const DashboardStats = ({
         label="Revenus (année)"
         value={`${stats.totalRevenue.toFixed(0)} €`}
         icon={<Euro size={18} />}
+      />
+      <KpiCard
+        label="Coût électrique (année)"
+        value={`${stats.totalElectricityCost.toFixed(2)} €`}
+        icon={<Zap size={18} />}
       />
       <KpiCard
         label="Taux d'occupation"

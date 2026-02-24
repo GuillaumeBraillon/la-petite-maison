@@ -74,10 +74,6 @@ export const RentalDetail = ({
   onStatusChange,
 }: RentalDetailProps) => {
   const [updating, setUpdating] = useState(false);
-  const electricityUsage =
-    rental.electricityStart !== undefined && rental.electricityEnd !== undefined
-      ? (rental.electricityEnd - rental.electricityStart).toFixed(1)
-      : null;
 
   const handleStatusChange = async (newStatus: RentalStatus) => {
     setUpdating(true);
@@ -169,33 +165,17 @@ export const RentalDetail = ({
       </Card>
 
       {/* Post-location */}
-      {(rental.electricityStart !== undefined ||
-        rental.electricityEnd !== undefined ||
-        rental.notes) && (
+      {(rental.electricityCost !== undefined || rental.notes) && (
         <Card padding="md" className="flex flex-col gap-4">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             Infos post-location
           </p>
 
-          {rental.electricityStart !== undefined && (
+          {rental.electricityCost !== undefined && (
             <DetailRow
               icon={<Zap size={16} />}
-              label="Relevé élec. début (kWh)"
-              value={String(rental.electricityStart)}
-            />
-          )}
-          {rental.electricityEnd !== undefined && (
-            <DetailRow
-              icon={<Zap size={16} />}
-              label="Relevé élec. fin (kWh)"
-              value={String(rental.electricityEnd)}
-            />
-          )}
-          {electricityUsage !== null && (
-            <DetailRow
-              icon={<Zap size={16} />}
-              label="Consommation"
-              value={`${electricityUsage} kWh`}
+              label="Coût électrique"
+              value={`${rental.electricityCost.toFixed(2)} €`}
             />
           )}
           {rental.notes && (

@@ -7,6 +7,63 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.2.3] - 2026-02-24
+
+### Ajouté
+
+- **Authentification**
+  - Connexion via Google OAuth et email/mot de passe
+  - Vue d'inscription (`SignUpView`) et réinitialisation de mot de passe (`ResetPasswordView`)
+  - Gestion du flow `PASSWORD_RECOVERY` dans `App.tsx` avec redirection vers la vue de récupération
+
+- **Autorisation & Rôles**
+  - Service `permissions.ts` avec matrice de droits à 11 flags selon le rôle
+  - Hook `usePermissions` pour accès aux permissions dans les composants
+  - Navigation et actions conditionnées au rôle de `currentMember`
+  - `currentMember` transmis aux pages `RentalsPage`, `CalendarPage`, `DashboardPage`
+
+- **Membres — flag `isEditor`**
+  - Champ `isEditor: boolean` (non optionnel, `false` par défaut) sur les owners
+  - Badge "Éditeur" dans `MemberCard` si `isEditor = true`
+  - Case à cocher "Éditeur" dans `MemberForm`, visible uniquement pour `role = owner`
+  - Reset automatique de `isEditor` à `false` si le rôle passe de `owner` à autre chose (formulaire + mapper)
+
+- **Création inline de sous-membre depuis `RentalForm`**
+  - Nouveau composant `Combobox.tsx` : champ recherche avec filtre + option "Créer «…»"
+  - Mini-formulaire inline : prénom, nom, libellé, rôle (`external` / `sub_member`)
+  - Rôle sélectionnable directement à la création (défaut : `external`)
+  - Handlers `handleCreateSubMember` dans `RentalsPage` et `CalendarPage`
+
+### Modifié
+
+- **Membres**
+  - `MemberStatus` (`family` / `friends` / `other`) entièrement supprimé (type, DB, mapper, formulaire, carte)
+  - Email rendu optionnel dans `MemberForm` et dans la DB (`NOT NULL` levé)
+  - Liste triée alphabétiquement par libellé dans `MemberList`
+  - Bouton "Autoriser" retiré de `MemberCard` (accessible uniquement via la modal d'édition)
+  - Préférence du sous-membre pour l'affichage de l'avatar dans les cartes de location
+
+- **Locations**
+  - Section post-location (notes + coût électrique) conditionnelle : visible uniquement si `statut = Terminé`
+  - Option "— Aucun —" dans le select sous-membre pour permettre la désélection
+  - Handlers de clic optionnels dans les composants calendrier et location
+
+- **DB / Services**
+  - Colonne `electricity_start` / `electricity_end` remplacée par `electricity_cost numeric` dans `rentals`
+  - Colonne `status` supprimée de `members`
+  - Colonne `is_editor boolean not null default false` ajoutée à `members`
+  - Email nullable avec index unique partiel (`WHERE email IS NOT NULL`)
+  - `mapMemberToDb` : utilise `'email' in member` pour envoyer `null` explicitement vs omettre le champ
+  - `schema.sql` mis à jour pour refléter l'état courant ; fichiers de migration ad hoc supprimés
+
+### Corrigé
+
+- Erreur 409 lors de la création inline d'un sous-membre : `email: ""` provoquait un conflit sur la contrainte `UNIQUE(email)` → remplacé par `email: undefined` → `NULL` en DB
+- Erreur 400 sur l'INSERT membre : champ `email` absent du payload quand `undefined` → le mapper envoie désormais `null` explicitement
+- `isEditor` non réinitialisé lors d'un changement de rôle via le formulaire ou le mapper → reset garanti à `false` si `role !== "owner"`
+
+---
+
 ## [0.2.2] - 2026-02-24
 
 ### Ajouté

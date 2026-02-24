@@ -3,13 +3,7 @@
 // C'est LE SEUL endroit autorisé pour ces conversions.
 // ============================================================
 
-import type {
-  Member,
-  Rental,
-  MemberRole,
-  MemberStatus,
-  RentalStatus,
-} from "../types";
+import type { Member, Rental, MemberRole, RentalStatus } from "../types";
 import type { DbMember, DbRental } from "./dbTypes";
 
 // ------------------------------------------------------------
@@ -23,31 +17,44 @@ export const mapMemberFromDb = (db: DbMember): Member => ({
   firstName: db.first_name,
   lastName: db.last_name,
   role: db.role as MemberRole,
-  status: db.status as MemberStatus,
-  email: db.email,
+  email: db.email ?? undefined,
   avatarUrl: db.avatar_url ?? undefined,
   address: db.address ?? undefined,
   ownerId: db.owner_id ?? undefined,
+  isEditor: db.is_editor ?? false,
   createdAt: db.created_at,
   updatedAt: db.updated_at,
 });
 
 export const mapMemberToDb = (
   member: Partial<Omit<Member, "id" | "createdAt" | "updatedAt">>,
-): Partial<Omit<DbMember, "id" | "created_at" | "updated_at">> => ({
-  ...(member.isAllowed !== undefined && { is_allowed: member.isAllowed }),
-  ...(member.label !== undefined && { label: member.label }),
-  ...(member.firstName !== undefined && { first_name: member.firstName }),
-  ...(member.lastName !== undefined && { last_name: member.lastName }),
-  ...(member.role !== undefined && { role: member.role }),
-  ...(member.status !== undefined && { status: member.status }),
-  ...(member.email !== undefined && { email: member.email }),
-  ...(member.avatarUrl !== undefined && {
-    avatar_url: member.avatarUrl ?? null,
-  }),
-  ...(member.address !== undefined && { address: member.address ?? null }),
-  ...(member.ownerId !== undefined && { owner_id: member.ownerId ?? null }),
-});
+): Partial<Omit<DbMember, "id" | "created_at" | "updated_at">> => {
+  const mapped: Partial<Omit<DbMember, "id" | "created_at" | "updated_at">> = {
+    ...(member.isAllowed !== undefined && { is_allowed: member.isAllowed }),
+    ...(member.label !== undefined && { label: member.label }),
+    ...(member.firstName !== undefined && { first_name: member.firstName }),
+    ...(member.lastName !== undefined && { last_name: member.lastName }),
+    ...(member.role !== undefined && { role: member.role }),
+    // 'email' in member distingue "champ absent d'un update partiel" (pas inclus)
+    // de "champ undefined dans un create" → on envoie null pour insérer NULL en DB
+    ...("email" in member && { email: member.email ?? null }),
+    ...(member.avatarUrl !== undefined && {
+      avatar_url: member.avatarUrl ?? null,
+    }),
+    ...(member.address !== undefined && { address: member.address ?? null }),
+    ...("ownerId" in member && { owner_id: member.ownerId ?? null }),
+  };
+
+  // isEditor n'existe que pour role = "owner"
+  // Si le rôle est fourni et n'est pas "owner", forcer is_editor à false en DB
+  if (member.role !== undefined && member.role !== "owner") {
+    mapped.is_editor = false;
+  } else if (member.isEditor !== undefined) {
+    mapped.is_editor = member.isEditor;
+  }
+
+  return mapped;
+};
 
 // ------------------------------------------------------------
 // Rental mappers
@@ -63,8 +70,7 @@ export const mapRentalFromDb = (db: DbRental): Rental => ({
   price: db.price,
   status: db.status as RentalStatus,
   notes: db.notes ?? undefined,
-  electricityStart: db.electricity_start ?? undefined,
-  electricityEnd: db.electricity_end ?? undefined,
+  electricityCost: db.electricity_cost ?? undefined,
   createdAt: db.created_at,
   updatedAt: db.updated_at,
 });
@@ -82,10 +88,7 @@ export const mapRentalToDb = (
   ...(rental.price !== undefined && { price: rental.price }),
   ...(rental.status !== undefined && { status: rental.status }),
   ...(rental.notes !== undefined && { notes: rental.notes ?? null }),
-  ...(rental.electricityStart !== undefined && {
-    electricity_start: rental.electricityStart ?? null,
-  }),
-  ...(rental.electricityEnd !== undefined && {
-    electricity_end: rental.electricityEnd ?? null,
+  ...(rental.electricityCost !== undefined && {
+    electricity_cost: rental.electricityCost ?? null,
   }),
 });

@@ -11,7 +11,7 @@ interface CalendarCellProps {
   members: Member[];
   isToday: boolean;
   isCurrentMonth: boolean;
-  onRentalClick: (rental: Rental) => void;
+  onRentalClick?: (rental: Rental) => void;
   onDayClick?: (date: Date) => void;
 }
 
@@ -66,14 +66,19 @@ export const CalendarCell = ({
         className="flex flex-col gap-0.5"
         onClick={(e) => e.stopPropagation()}
       >
-        {rentals.map((rental) => (
-          <RentalBadge
-            key={rental.id}
-            rental={rental}
-            owner={memberIndex.get(rental.ownerId)}
-            onClick={onRentalClick}
-          />
-        ))}
+        {rentals.map((rental) => {
+          const displayMember = rental.subMemberId
+            ? memberIndex.get(rental.subMemberId)
+            : memberIndex.get(rental.ownerId);
+          return (
+            <RentalBadge
+              key={rental.id}
+              rental={rental}
+              owner={displayMember}
+              onClick={onRentalClick}
+            />
+          );
+        })}
       </div>
     </div>
   );
