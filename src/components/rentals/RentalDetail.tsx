@@ -159,25 +159,28 @@ export const RentalDetail = ({
         />
         <DetailRow
           icon={<Euro size={16} />}
-          label="Prix"
+          label="Tarif location (€)"
           value={`${rental.price.toFixed(2)} €`}
         />
       </Card>
 
       {/* Post-location */}
-      {(rental.electricityCost !== undefined || rental.notes) && (
+      {((rental.status === "completed" &&
+        rental.electricityCost !== undefined) ||
+        rental.notes) && (
         <Card padding="md" className="flex flex-col gap-4">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             Infos post-location
           </p>
 
-          {rental.electricityCost !== undefined && (
-            <DetailRow
-              icon={<Zap size={16} />}
-              label="Coût électrique"
-              value={`${rental.electricityCost.toFixed(2)} €`}
-            />
-          )}
+          {rental.status === "completed" &&
+            rental.electricityCost !== undefined && (
+              <DetailRow
+                icon={<Zap size={16} />}
+                label="Coût électrique"
+                value={`${rental.electricityCost.toFixed(2)} €`}
+              />
+            )}
           {rental.notes && (
             <DetailRow
               icon={<FileText size={16} />}

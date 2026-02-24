@@ -375,7 +375,7 @@ export const RentalForm = ({
         </div>
       )}
 
-      {/* Invités & Prix */}
+      {/* Invités & Tarif */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
           label="Nombre de personnes"
@@ -388,7 +388,7 @@ export const RentalForm = ({
           required
         />
         <Input
-          label="Prix (€)"
+          label="Tarif location (€)"
           type="number"
           min={0}
           step={0.01}

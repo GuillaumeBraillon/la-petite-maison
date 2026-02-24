@@ -414,7 +414,7 @@ const {
 - Sélection du sous-membre (autocomplete)
 - Création rapide de membre inline
 - Nombre de personnes
-- Prix libre
+- Tarif libre
 - Infos post-location : commentaires, relevé électrique (début / fin)
 
 ### 📊 Dashboard

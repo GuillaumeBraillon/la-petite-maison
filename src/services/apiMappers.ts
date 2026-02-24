@@ -88,7 +88,7 @@ export const mapRentalToDb = (
   ...(rental.price !== undefined && { price: rental.price }),
   ...(rental.status !== undefined && { status: rental.status }),
   ...(rental.notes !== undefined && { notes: rental.notes ?? null }),
-  ...(rental.electricityCost !== undefined && {
+  ...("electricityCost" in rental && {
     electricity_cost: rental.electricityCost ?? null,
   }),
 });

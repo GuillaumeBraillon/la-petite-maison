@@ -156,7 +156,7 @@ src/
 ### 📋 Gestion des locations
 
 - Sélection du propriétaire et sous-membre (autocomplete)
-- Nombre de personnes et prix libre
+- Nombre de personnes et Tarif libre
 - Statut modifiable : `pending`, `confirmed`, `rejected`, `completed`
 - Notes et relevés électriques (début/fin)
 - Calcul automatique de la consommation

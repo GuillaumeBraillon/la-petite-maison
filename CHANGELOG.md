@@ -7,6 +7,67 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.2.4] — 2026-02-25
+
+### Added
+
+- Inline création de sous-membre depuis le formulaire de location (mini-form / Combobox).
+- Nouveau composant UI: `src/components/ui/Combobox.tsx`.
+- KPI tableau de bord: coût électrique et cartes par propriétaire triées.
+
+### Changed
+
+- `Prix (€)` renommé en **Tarif location (€)** dans le formulaire et affichages.
+- Affichage du `Coût électrique` sur les cartes de location; n'est affiché que si le statut est `Terminé` (`completed`).
+- Types & DB mapping:
+  - `email` rendu optionnel côté app (TypeScript) et nullable côté DB.
+  - Ajout de `isEditor` (booléen non-optionnel) et suppression du champ `status` des membres.
+  - Conversion du suivi électrique vers `electricityCost` (numeric).
+- `apiMappers.ts` mis à jour pour envoyer explicitement `null` quand un champ est intentionnellement vidé (ex: `email`, `ownerId`, `sub_member_id`, `electricityCost`).
+
+### Fixed
+
+- Résolution du conflit 409 lors de la création de membre (éviter `email: ""` en envoyant `undefined` / `null`).
+- Correction des erreurs 400 liées à l'omission/présence de clés — mappers ajustés pour envoyer `null` explicite quand nécessaire.
+- Corrections de lint / hooks (ex: `App.tsx`, `UnauthorizedView.tsx`).
+
+### Removed
+
+- Suppression de migrations ad-hoc et fichiers de migration obsolètes.
+- Suppression de `members.status` (champ DB) et du type `MemberStatus` côté app.
+
+### Database / Schema
+
+- Fichier mis à jour: `supabase/schema.sql`
+  - `members.email` → `NULL` autorisé, index unique partiel `WHERE email IS NOT NULL`.
+  - Ajout de `members.is_editor boolean NOT NULL DEFAULT false`.
+  - Suppression de `members.status`.
+  - Remplacement de `rentals.electricity_start` / `electricity_end` par `rentals.electricity_cost numeric`.
+
+### Key files touched
+
+- `src/components/rentals/RentalForm.tsx`
+- `src/components/rentals/RentalCard.tsx`
+- `src/components/rentals/RentalDetail.tsx` (consistency changes pending)
+- `src/components/ui/Combobox.tsx`
+- `src/components/members/MemberForm.tsx`
+- `src/components/members/MemberCard.tsx`
+- `src/components/members/MemberList.tsx`
+- `src/services/apiMappers.ts`
+- `src/services/apiCrud.ts`
+- `src/services/dbTypes.ts`
+- `src/types.ts`
+- `src/components/dashboard/DashboardStats.tsx`
+- `src/App.tsx`
+- `supabase/schema.sql`
+
+---
+
+Notes:
+
+- Les mappers garantissent désormais l'envoi explicite de `null` pour les champs vidés afin d'éviter les erreurs PostgREST.
+- Certains endroits (export CSV, `RentalDetail.tsx`) peuvent nécessiter l'harmonisation des libellés; me dire si vous voulez que j'applique ces changements aussi.
+
 ## [0.2.3] - 2026-02-24
 
 ### Ajouté

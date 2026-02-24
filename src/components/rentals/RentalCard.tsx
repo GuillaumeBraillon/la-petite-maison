@@ -1,4 +1,12 @@
-import { CalendarDays, Users, Euro, Pencil, Trash2, User } from "lucide-react";
+import {
+  CalendarDays,
+  Users,
+  Euro,
+  Pencil,
+  Trash2,
+  User,
+  Zap,
+} from "lucide-react";
 import type { Rental, Member } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
@@ -126,8 +134,19 @@ export const RentalCard = ({
           <Users size={13} /> {rental.guestCount} pers.
         </span>
         <span className="flex items-center gap-1">
-          <Euro size={13} /> {rental.price.toFixed(2)} €
+          <Euro size={13} />{" "}
+          <span className="font-medium">Tarif location:</span>&nbsp;
+          {rental.price.toFixed(2)} €
         </span>
+        {rental.status === "completed" && (
+          <span className="flex items-center gap-1">
+            <Zap size={13} />{" "}
+            <span className="font-medium">Coût électrique:</span>&nbsp;
+            {rental.electricityCost != null
+              ? `${rental.electricityCost.toFixed(2)} €`
+              : "—"}
+          </span>
+        )}
       </div>
 
       {/* Actions */}
