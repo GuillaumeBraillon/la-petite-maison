@@ -9,16 +9,16 @@ WebApp responsive (desktop) et installable sur mobile (PWA).
 
 ## Stack technique
 
-| Couche | Technologie |
-|---|---|
-| Frontend | React 18 + TypeScript (strict) |
-| Styling | Tailwind CSS |
-| Icônes | lucide-react |
-| Backend | Supabase (PostgreSQL + Auth + Storage) |
-| Auth | Google OAuth via Supabase |
-| Hébergement | Vercel |
-| CI/CD | GitHub Actions |
-| Linter | ESLint |
+| Couche      | Technologie                            |
+| ----------- | -------------------------------------- |
+| Frontend    | React 18 + TypeScript (strict)         |
+| Styling     | Tailwind CSS                           |
+| Icônes      | lucide-react                           |
+| Backend     | Supabase (PostgreSQL + Auth + Storage) |
+| Auth        | Google OAuth via Supabase              |
+| Hébergement | Vercel                                 |
+| CI/CD       | GitHub Actions                         |
+| Linter      | ESLint                                 |
 
 ---
 
@@ -167,40 +167,40 @@ const ParentComponent = () => <SubComponent />;
 ```typescript
 // types.ts — source de vérité unique
 
-export type MemberRole = 'admin' | 'owner' | 'sub_member' | 'external';
-export type MemberStatus = 'family' | 'friends' | 'other';
+export type MemberRole = "admin" | "owner" | "sub_member" | "external";
+export type MemberStatus = "family" | "friends" | "other";
 
 export interface Member {
   id: string;
-  label: string;           // ex: "Copine de Nicole" — éditable
+  label: string; // ex: "Copine de Nicole" — éditable
   firstName: string;
   lastName: string;
   role: MemberRole;
   status: MemberStatus;
   email: string;
-  address?: string;        // optionnel
-  ownerId?: string;        // lien vers le propriétaire parent (pour sub_member / external)
+  address?: string; // optionnel
+  ownerId?: string; // lien vers le propriétaire parent (pour sub_member / external)
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Rental {
   id: string;
-  startDate: string;       // ISO date — par défaut dimanche midi
-  endDate: string;         // ISO date — par défaut dimanche midi suivant
-  ownerId: string;         // propriétaire principal
-  subMemberId?: string;    // enfant / sous-membre / locataire
-  guestCount: number;      // nombre de personnes
-  price: number;           // tarif libre
+  startDate: string; // ISO date — par défaut dimanche midi
+  endDate: string; // ISO date — par défaut dimanche midi suivant
+  ownerId: string; // propriétaire principal
+  subMemberId?: string; // enfant / sous-membre / locataire
+  guestCount: number; // nombre de personnes
+  price: number; // tarif libre
   status: RentalStatus;
-  notes?: string;          // commentaires post-location
+  notes?: string; // commentaires post-location
   electricityStart?: number;
   electricityEnd?: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export type RentalStatus = 'pending' | 'confirmed' | 'rejected' | 'completed';
+export type RentalStatus = "pending" | "confirmed" | "rejected" | "completed";
 
 export interface AppError {
   message: string;
@@ -256,18 +256,18 @@ export interface DbRental {
 ```typescript
 // api.ts — chargement initial, utilise toujours les mappers
 
-import { supabase } from './supabaseClient';
-import { mapMemberFromDb, mapRentalFromDb } from './apiMappers';
-import type { Member, Rental } from '../types';
+import { supabase } from "./supabaseClient";
+import { mapMemberFromDb, mapRentalFromDb } from "./apiMappers";
+import type { Member, Rental } from "../types";
 
 export const fetchMembers = async (): Promise<Member[]> => {
-  const { data, error } = await supabase.from('members').select('*');
+  const { data, error } = await supabase.from("members").select("*");
   if (error) throw error;
   return (data ?? []).map(mapMemberFromDb);
 };
 
 export const fetchRentals = async (): Promise<Rental[]> => {
-  const { data, error } = await supabase.from('rentals').select('*');
+  const { data, error } = await supabase.from("rentals").select("*");
   if (error) throw error;
   return (data ?? []).map(mapRentalFromDb);
 };
@@ -278,26 +278,45 @@ export const fetchRentals = async (): Promise<Rental[]> => {
 ```typescript
 // apiCrud.ts — utilise toujours les mappers avant/après appels Supabase
 
-import { supabase } from './supabaseClient';
-import { mapMemberFromDb, mapMemberToDb, mapRentalFromDb, mapRentalToDb } from './apiMappers';
-import type { Member, Rental } from '../types';
+import { supabase } from "./supabaseClient";
+import {
+  mapMemberFromDb,
+  mapMemberToDb,
+  mapRentalFromDb,
+  mapRentalToDb,
+} from "./apiMappers";
+import type { Member, Rental } from "../types";
 
-export const createMember = async (member: Omit<Member, 'id' | 'createdAt' | 'updatedAt'>): Promise<Member> => {
+export const createMember = async (
+  member: Omit<Member, "id" | "createdAt" | "updatedAt">,
+): Promise<Member> => {
   const dbPayload = mapMemberToDb(member);
-  const { data, error } = await supabase.from('members').insert(dbPayload).select().single();
+  const { data, error } = await supabase
+    .from("members")
+    .insert(dbPayload)
+    .select()
+    .single();
   if (error) throw error;
   return mapMemberFromDb(data);
 };
 
-export const updateMember = async (id: string, updates: Partial<Member>): Promise<Member> => {
+export const updateMember = async (
+  id: string,
+  updates: Partial<Member>,
+): Promise<Member> => {
   const dbPayload = mapMemberToDb(updates);
-  const { data, error } = await supabase.from('members').update(dbPayload).eq('id', id).select().single();
+  const { data, error } = await supabase
+    .from("members")
+    .update(dbPayload)
+    .eq("id", id)
+    .select()
+    .single();
   if (error) throw error;
   return mapMemberFromDb(data);
 };
 
 export const deleteMember = async (id: string): Promise<void> => {
-  const { error } = await supabase.from('members').delete().eq('id', id);
+  const { error } = await supabase.from("members").delete().eq("id", id);
   if (error) throw error;
 };
 
@@ -346,24 +365,26 @@ export const useError = (): ErrorContextValue => {
 
 ### Rôles
 
-| Rôle | Description | Permissions |
-|---|---|---|
-| `admin` | Administrateur | Tous les droits |
-| `owner` | Propriétaire de la maison | Voir locations, faire des demandes (validation admin requise) |
-| `sub_member` | Enfant/petit-enfant d'un owner | Voir dates + libellé + propriétaire uniquement |
-| `external` | Locataire externe lié à un owner | Voir dates + libellé + propriétaire uniquement |
+| Rôle         | Description                      | Permissions                                                   |
+| ------------ | -------------------------------- | ------------------------------------------------------------- |
+| `admin`      | Administrateur                   | Tous les droits                                               |
+| `owner`      | Propriétaire de la maison        | Voir locations, faire des demandes (validation admin requise) |
+| `sub_member` | Enfant/petit-enfant d'un owner   | Voir dates + libellé + propriétaire uniquement                |
+| `external`   | Locataire externe lié à un owner | Voir dates + libellé + propriétaire uniquement                |
 
 ### Auth Google OAuth
 
 ```typescript
 // Connexion via Google
-const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
 
 // Déconnexion
 await supabase.auth.signOut();
 
 // Session courante
-const { data: { session } } = await supabase.auth.getSession();
+const {
+  data: { session },
+} = await supabase.auth.getSession();
 ```
 
 ---
