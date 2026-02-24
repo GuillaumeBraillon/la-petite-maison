@@ -148,7 +148,7 @@ export const RentalForm = ({
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       {/* Dates */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
           label={startDateLabel}
           type="datetime-local"
@@ -207,7 +207,7 @@ export const RentalForm = ({
       )}
 
       {/* Invités & Prix */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
           label="Nombre de personnes"
           type="number"
@@ -273,7 +273,7 @@ export const RentalForm = ({
             (à remplir pendant/après la location)
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
             label="Début (kWh)"
             type="number"
@@ -301,16 +301,17 @@ export const RentalForm = ({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-2">
         <Button
           type="button"
           variant="secondary"
           onClick={onCancel}
           disabled={loading}
+          className="w-full sm:w-auto"
         >
           Annuler
         </Button>
-        <Button type="submit" loading={loading}>
+        <Button type="submit" loading={loading} className="w-full sm:w-auto">
           {submitLabel}
         </Button>
       </div>

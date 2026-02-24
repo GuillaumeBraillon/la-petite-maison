@@ -100,7 +100,7 @@ export const MemberForm = ({
         required
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
           label="Prénom"
           value={values.firstName}
@@ -133,7 +133,7 @@ export const MemberForm = ({
         onChange={(e) => set("address", e.target.value || undefined)}
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select
           label="Rôle"
           value={values.role}
@@ -173,16 +173,17 @@ export const MemberForm = ({
         </Select>
       )}
 
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-2">
         <Button
           type="button"
           variant="secondary"
           onClick={onCancel}
           disabled={loading}
+          className="w-full sm:w-auto"
         >
           Annuler
         </Button>
-        <Button type="submit" loading={loading}>
+        <Button type="submit" loading={loading} className="w-full sm:w-auto">
           {submitLabel}
         </Button>
       </div>

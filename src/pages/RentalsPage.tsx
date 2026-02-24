@@ -49,14 +49,14 @@ export const RentalsPage = ({
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Locations</h1>
           <p className="text-sm text-gray-500 mt-1">
             {rentals.length} location{rentals.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button onClick={() => openCreate()}>
+        <Button onClick={() => openCreate()} className="w-full sm:w-auto">
           <PlusCircle size={16} /> Nouvelle location
         </Button>
       </div>

@@ -64,7 +64,7 @@ export const RentalCard = ({
       className="flex flex-col gap-3"
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           {owner?.avatarUrl ? (
             <img
@@ -89,13 +89,16 @@ export const RentalCard = ({
             )}
           </div>
         </div>
-        <Badge variant={statusVariantMap[rental.status]}>
+        <Badge
+          variant={statusVariantMap[rental.status]}
+          className="self-start sm:self-auto"
+        >
           {statusLabelMap[rental.status]}
         </Badge>
       </div>
 
       {/* Dates */}
-      <div className="flex items-center gap-2 text-xs text-gray-500">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
         <CalendarDays size={13} className="shrink-0" />
         <span>
           {formatDate(rental.startDate)} → {formatDate(rental.endDate)}
@@ -103,7 +106,7 @@ export const RentalCard = ({
       </div>
 
       {/* Infos */}
-      <div className="flex items-center gap-4 text-xs text-gray-500">
+      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
         <span className="flex items-center gap-1">
           <Users size={13} /> {rental.guestCount} pers.
         </span>

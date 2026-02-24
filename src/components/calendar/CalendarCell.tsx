@@ -40,7 +40,7 @@ export const CalendarCell = ({
     <div
       onClick={handleCellClick}
       className={[
-        "min-h-[90px] p-1.5 border-b border-r border-gray-100 flex flex-col gap-1",
+        "min-h-[72px] sm:min-h-[90px] p-1 sm:p-1.5 border-b border-r border-gray-100 flex flex-col gap-1",
         isCurrentMonth ? "bg-white" : "bg-gray-50",
         onDayClick && isCurrentMonth
           ? "cursor-pointer hover:bg-primary-50 transition-colors"
@@ -50,7 +50,7 @@ export const CalendarCell = ({
       {/* Numéro du jour */}
       <span
         className={[
-          "text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full self-end",
+          "text-[10px] sm:text-xs font-medium w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full self-end",
           isToday
             ? "bg-primary-600 text-white"
             : isCurrentMonth

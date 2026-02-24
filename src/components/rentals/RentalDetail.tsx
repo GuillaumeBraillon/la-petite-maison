@@ -91,7 +91,7 @@ export const RentalDetail = ({
   return (
     <div className="flex flex-col gap-4">
       {/* Status */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs font-medium text-gray-500 shrink-0">
             Statut :
@@ -100,7 +100,7 @@ export const RentalDetail = ({
             value={rental.status}
             onChange={(e) => handleStatusChange(e.target.value as RentalStatus)}
             disabled={updating}
-            className="text-sm"
+            className="text-sm w-full sm:w-auto"
           >
             <option value="pending">En attente</option>
             <option value="confirmed">Confirmé</option>
@@ -207,11 +207,21 @@ export const RentalDetail = ({
           )}
         </Card>
       )}
-      <div className="flex gap-2 justify-end">
-        <Button variant="danger" size="sm" onClick={() => onDelete(rental)}>
+      <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={() => onDelete(rental)}
+          className="w-full sm:w-auto"
+        >
           <Trash2 size={14} /> Supprimer
         </Button>
-        <Button variant="secondary" size="sm" onClick={() => onEdit(rental)}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => onEdit(rental)}
+          className="w-full sm:w-auto"
+        >
           <Pencil size={14} /> Modifier
         </Button>
       </div>

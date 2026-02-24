@@ -46,8 +46,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "Tableau de bord",
     icon: <LayoutDashboard size={18} />,
   },
-  { id: "rentals", label: "Locations", icon: <List size={18} /> },
   { id: "calendar", label: "Calendrier", icon: <CalendarDays size={18} /> },
+  { id: "rentals", label: "Locations", icon: <List size={18} /> },
   { id: "members", label: "Membres", icon: <Users size={18} /> },
 ];
 
@@ -123,9 +123,9 @@ const AppShell = ({ session }: AppShellProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Sidebar */}
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
+      <aside className="hidden md:flex md:w-56 bg-white border-r border-gray-200 flex-col shrink-0">
         {/* Logo */}
         <div className="flex items-center gap-2 px-5 py-5 border-b border-gray-100">
           <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
@@ -204,7 +204,36 @@ const AppShell = ({ session }: AppShellProps) => {
 
       {/* Main */}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 pb-24 md:pb-8">
+          {/* Mobile header */}
+          <div className="md:hidden flex items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
+                <Home size={16} className="text-white" />
+              </div>
+              <span className="font-semibold text-gray-900 text-sm">
+                La Petite Maison
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {isInstallable && (
+                <button
+                  onClick={install}
+                  className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+                  aria-label="Installer l'app"
+                >
+                  <Download size={18} />
+                </button>
+              )}
+              <button
+                onClick={handleSignOut}
+                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+                aria-label="Déconnexion"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          </div>
           {loading ? (
             <div className="flex items-center justify-center py-32">
               <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
@@ -239,6 +268,25 @@ const AppShell = ({ session }: AppShellProps) => {
           )}
         </div>
       </main>
+
+      {/* Mobile nav */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 px-2 py-2">
+        <div className="flex items-center justify-around">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setView(item.id)}
+              className={[
+                "flex flex-col items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors",
+                view === item.id ? "text-primary-700" : "text-gray-600",
+              ].join(" ")}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
 
       {/* Error modal global */}
       {error && <ErrorModal error={error} onClose={clearError} />}

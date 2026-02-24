@@ -82,7 +82,7 @@ export const Modal = ({
         className={`relative bg-white rounded-2xl shadow-xl w-full ${sizeClasses[size]} flex flex-col max-h-[90vh]`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
           <h2
             id="modal-title"
             className="text-base font-semibold text-gray-900"
@@ -99,11 +99,13 @@ export const Modal = ({
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto px-6 py-4 flex-1">{children}</div>
+        <div className="overflow-y-auto px-4 sm:px-6 py-4 flex-1">
+          {children}
+        </div>
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+          <div className="px-4 sm:px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row sm:justify-end gap-2">
             {footer}
           </div>
         )}

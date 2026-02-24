@@ -124,14 +124,14 @@ export const MembersPage = ({ members, onRefresh }: MembersPageProps) => {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Membres</h1>
           <p className="text-sm text-gray-500 mt-1">
             {members.length} membre{members.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="w-full sm:w-auto">
           <UserPlus size={16} /> Ajouter
         </Button>
       </div>

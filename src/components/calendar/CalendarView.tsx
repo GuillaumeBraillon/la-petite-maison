@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import type { Rental, Member } from "../../types";
 import { CalendarCell } from "./CalendarCell";
+import { RentalBadge } from "./RentalBadge";
 import { Button } from "../ui/Button";
 
 // ------------------------------------------------------------
@@ -50,6 +51,13 @@ const getRentalsForDay = (day: Date, rentals: Rental[]): Rental[] =>
     return day >= start && day <= end;
   });
 
+const formatDayLabel = (date: Date): string =>
+  date.toLocaleDateString("fr-FR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  });
+
 // ------------------------------------------------------------
 // Props
 // ------------------------------------------------------------
@@ -78,6 +86,8 @@ export const CalendarView = ({
   const [month, setMonth] = useState(today.getMonth());
 
   const days = buildCalendarDays(year, month);
+  const monthDays = days.filter((day) => day.getMonth() === month);
+  const memberIndex = new Map(members.map((m) => [m.id, m]));
 
   const prevMonth = () => {
     if (month === 0) {
@@ -101,13 +111,13 @@ export const CalendarView = ({
   return (
     <div className="flex flex-col gap-4">
       {/* Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold text-gray-900 capitalize">
           {monthLabel}
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
           {onCreateClick && (
-            <Button onClick={onCreateClick}>
+            <Button onClick={onCreateClick} className="w-full sm:w-auto">
               <PlusCircle size={16} /> Nouvelle location
             </Button>
           )}
@@ -142,34 +152,91 @@ export const CalendarView = ({
         </div>
       </div>
 
-      {/* Grille */}
-      <div className="border border-gray-200 rounded-xl overflow-hidden">
-        {/* En-têtes jours */}
-        <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
-          {DAYS_OF_WEEK.map((d) => (
+      {/* Liste mobile */}
+      <div className="md:hidden flex flex-col gap-3">
+        {monthDays.map((day) => {
+          const dayRentals = getRentalsForDay(day, rentals);
+          return (
             <div
-              key={d}
-              className="py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide"
-            >
-              {d}
-            </div>
-          ))}
-        </div>
-
-        {/* Cellules */}
-        <div className="grid grid-cols-7">
-          {days.map((day) => (
-            <CalendarCell
               key={day.toISOString()}
-              date={day}
-              rentals={getRentalsForDay(day, rentals)}
-              members={members}
-              isToday={isSameDay(day, today)}
-              isCurrentMonth={day.getMonth() === month}
-              onRentalClick={onRentalClick}
-              onDayClick={onDayClick}
-            />
-          ))}
+              onClick={onDayClick ? () => onDayClick(day) : undefined}
+              onKeyDown={(event) => {
+                if (!onDayClick) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onDayClick(day);
+                }
+              }}
+              role={onDayClick ? "button" : undefined}
+              tabIndex={onDayClick ? 0 : -1}
+              className={[
+                "rounded-lg border border-gray-200 bg-white p-3 flex flex-col gap-2",
+                onDayClick
+                  ? "cursor-pointer hover:bg-primary-50 transition-colors"
+                  : "",
+              ].join(" ")}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-gray-900">
+                  {formatDayLabel(day)}
+                </p>
+                <span className="text-xs text-gray-500">
+                  {dayRentals.length} location
+                  {dayRentals.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              {dayRentals.length > 0 ? (
+                <div
+                  className="flex flex-col gap-1"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {dayRentals.map((rental) => (
+                    <RentalBadge
+                      key={rental.id}
+                      rental={rental}
+                      owner={memberIndex.get(rental.ownerId)}
+                      onClick={onRentalClick}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">Aucune location</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Grille desktop */}
+      <div className="hidden md:block border border-gray-200 rounded-xl overflow-x-auto overflow-y-hidden">
+        <div className="min-w-[720px]">
+          {/* En-têtes jours */}
+          <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+            {DAYS_OF_WEEK.map((d) => (
+              <div
+                key={d}
+                className="py-2 text-center text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide"
+              >
+                {d}
+              </div>
+            ))}
+          </div>
+
+          {/* Cellules */}
+          <div className="grid grid-cols-7">
+            {days.map((day) => (
+              <CalendarCell
+                key={day.toISOString()}
+                date={day}
+                rentals={getRentalsForDay(day, rentals)}
+                members={members}
+                isToday={isSameDay(day, today)}
+                isCurrentMonth={day.getMonth() === month}
+                onRentalClick={onRentalClick}
+                onDayClick={onDayClick}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -7,6 +7,25 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.2.2] - 2026-02-24
+
+### Ajouté
+
+- **Responsive**
+  - Navigation mobile avec header et barre d'onglets
+  - Vue calendrier mobile en liste (jours cliquables)
+
+### Modifie
+
+- **Responsive**
+  - KPI cards empilees sur mobile
+  - En-tetes + boutons adaptes (full-width) sur mobile
+  - Cartes locations et details adaptes aux petits ecrans
+  - Formulaires membres/locations en grille 1 colonne sur mobile
+  - Modals avec padding et actions adaptes aux petits ecrans
+
+---
+
 ## [0.2.1] - 2026-02-24
 
 ### Ajouté
