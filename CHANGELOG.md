@@ -7,6 +7,24 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.2.1] - 2026-02-24
+
+### Ajouté
+
+- **PWA**
+  - Bouton d'installation conditionnel via `usePWAInstall` dans la sidebar
+  - Captures d'ecran `wide` et mobile dans le manifest pour l'install UI enrichie
+  - Ajout du champ `id` dans le manifest pour stabiliser l'identite de l'app
+
+### Modifie
+
+- **PWA**
+  - Icônes PNG generees depuis `maison-de-plage.png` (192x192, 512x512)
+  - Manifest aligne sur les assets PNG et screenshots
+  - Favicon et apple-touch-icon mis a jour vers les PNG
+
+---
+
 ## [0.2.0] - 2026-02-24
 
 ### Ajouté

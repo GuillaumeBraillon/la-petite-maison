@@ -7,6 +7,7 @@ import {
   List,
   LogOut,
   Home,
+  Download,
 } from "lucide-react";
 import type { Member, Rental } from "./types";
 import { supabase } from "./services/supabaseClient";
@@ -18,6 +19,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { MembersPage } from "./pages/MembersPage";
 import { RentalsPage } from "./pages/RentalsPage";
 import { CalendarPage } from "./pages/CalendarPage";
+import { usePWAInstall } from "./hooks/usePWAInstall";
 import { useAuthorization } from "./hooks/useAuthorization";
 import { LoginView } from "./components/Auth/LoginView";
 import { UnauthorizedView } from "./components/Auth/UnauthorizedView";
@@ -85,6 +87,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(true);
   const { error, clearError, setError } = useError();
+  const { isInstallable, install } = usePWAInstall();
   const userName =
     session.user.user_metadata?.full_name ??
     session.user.user_metadata?.name ??
@@ -178,6 +181,16 @@ const AppShell = ({ session }: AppShellProps) => {
               </p>
             </div>
           </div>
+
+          {isInstallable && (
+            <button
+              onClick={install}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 w-full transition-colors"
+            >
+              <Download size={16} />
+              Installer l&apos;app
+            </button>
+          )}
 
           <button
             onClick={handleSignOut}
