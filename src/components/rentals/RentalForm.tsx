@@ -66,6 +66,16 @@ const formatDateLabel = (iso: string): string => {
   }
 };
 
+const getRentalDurationDays = (startIso?: string, endIso?: string): number => {
+  if (!startIso || !endIso) return 0;
+  const start = new Date(startIso).getTime();
+  const end = new Date(endIso).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return 0;
+  const diffInMs = end - start;
+  const dayInMs = 1000 * 60 * 60 * 24;
+  return Math.max(1, Math.round(diffInMs / dayInMs));
+};
+
 const buildDefaultValues = (): RentalFormValues => {
   const now = new Date();
   const start = nextSunday(now);
@@ -229,6 +239,7 @@ export const RentalForm = ({
     ? formatDateLabel(values.startDate)
     : "Début";
   const endDateLabel = values.endDate ? formatDateLabel(values.endDate) : "Fin";
+  const durationDays = getRentalDurationDays(values.startDate, values.endDate);
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -257,6 +268,14 @@ export const RentalForm = ({
           required
         />
       </div>
+      {durationDays > 0 && (
+        <p className="text-xs text-gray-500 -mt-2">
+          Durée :{" "}
+          <span className="font-medium text-gray-700">
+            {durationDays} jour{durationDays > 1 ? "s" : ""}
+          </span>
+        </p>
+      )}
 
       {/* Propriétaire */}
       <Select

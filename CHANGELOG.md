@@ -7,6 +7,21 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.2.9] — 2026-02-25
+
+### Changed
+
+- Affichage de la durée des séjours (`X jour(s)`) sur les vues locations : `RentalCard`, `RentalDetail` et `RentalForm`.
+- Badge calendrier (`RentalBadge`) : durée visible directement sur le badge (en plus du tooltip détaillé au survol).
+
+### Key files touched
+
+- `src/components/rentals/RentalCard.tsx`
+- `src/components/rentals/RentalDetail.tsx`
+- `src/components/rentals/RentalForm.tsx`
+- `src/components/calendar/RentalBadge.tsx`
+- `CHANGELOG.md`
+
 ## [0.2.8] — 2026-02-25
 
 ### Added

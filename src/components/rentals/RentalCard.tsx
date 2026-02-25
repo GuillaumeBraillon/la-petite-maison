@@ -40,6 +40,14 @@ const formatDate = (iso: string): string =>
     year: "numeric",
   });
 
+const getRentalDurationDays = (startIso: string, endIso: string): number => {
+  const start = new Date(startIso).getTime();
+  const end = new Date(endIso).getTime();
+  const diffInMs = end - start;
+  const dayInMs = 1000 * 60 * 60 * 24;
+  return Math.max(1, Math.round(diffInMs / dayInMs));
+};
+
 // ------------------------------------------------------------
 // Props
 // ------------------------------------------------------------
@@ -69,6 +77,8 @@ export const RentalCard = ({
   onEdit,
   onDelete,
 }: RentalCardProps) => {
+  const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
+
   return (
     <Card
       hover={!!onClick}
@@ -130,6 +140,10 @@ export const RentalCard = ({
 
       {/* Infos */}
       <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+        <span className="flex items-center gap-1">
+          <CalendarDays size={13} /> {durationDays} jour
+          {durationDays > 1 ? "s" : ""}
+        </span>
         <span className="flex items-center gap-1">
           <Users size={13} /> {rental.guestCount} pers.
         </span>

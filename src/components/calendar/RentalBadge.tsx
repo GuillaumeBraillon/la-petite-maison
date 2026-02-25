@@ -21,17 +21,34 @@ const statusColorMap: Record<Rental["status"], string> = {
   completed: "bg-gray-100 text-gray-700 border-gray-200",
 };
 
+const getRentalDurationDays = (startIso: string, endIso: string): number => {
+  const start = new Date(startIso).getTime();
+  const end = new Date(endIso).getTime();
+  const diffInMs = end - start;
+  const dayInMs = 1000 * 60 * 60 * 24;
+  return Math.max(1, Math.round(diffInMs / dayInMs));
+};
+
+const formatDate = (iso: string): string =>
+  new Date(iso).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
 // ------------------------------------------------------------
 // Component
 // ------------------------------------------------------------
 
 export const RentalBadge = ({ rental, owner, onClick }: RentalBadgeProps) => {
   const label = owner ? `${owner.firstName} ${owner.lastName}` : "Location";
+  const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
+  const title = `${label} — ${formatDate(rental.startDate)} → ${formatDate(rental.endDate)} (${durationDays} jour${durationDays > 1 ? "s" : ""})`;
 
   return (
     <button
       onClick={() => onClick?.(rental)}
-      title={label}
+      title={title}
       className={[
         "w-full text-left text-xs px-1.5 py-0.5 rounded border",
         "flex items-center gap-1",
@@ -48,6 +65,9 @@ export const RentalBadge = ({ rental, owner, onClick }: RentalBadgeProps) => {
         />
       ) : null}
       <span className="truncate">{label}</span>
+      <span className="shrink-0 text-[10px] font-semibold">
+        {durationDays}j
+      </span>
     </button>
   );
 };

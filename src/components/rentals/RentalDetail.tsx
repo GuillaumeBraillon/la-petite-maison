@@ -28,6 +28,14 @@ const formatDate = (iso: string): string =>
     minute: "2-digit",
   });
 
+const getRentalDurationDays = (startIso: string, endIso: string): number => {
+  const start = new Date(startIso).getTime();
+  const end = new Date(endIso).getTime();
+  const diffInMs = end - start;
+  const dayInMs = 1000 * 60 * 60 * 24;
+  return Math.max(1, Math.round(diffInMs / dayInMs));
+};
+
 // ------------------------------------------------------------
 // Sub-components (définis hors du composant parent — règle Atomic Design)
 // ------------------------------------------------------------
@@ -74,6 +82,7 @@ export const RentalDetail = ({
   onStatusChange,
 }: RentalDetailProps) => {
   const [updating, setUpdating] = useState(false);
+  const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
 
   const handleStatusChange = async (newStatus: RentalStatus) => {
     setUpdating(true);
@@ -151,6 +160,11 @@ export const RentalDetail = ({
           icon={<CalendarDays size={16} />}
           label="Départ"
           value={formatDate(rental.endDate)}
+        />
+        <DetailRow
+          icon={<CalendarDays size={16} />}
+          label="Durée"
+          value={`${durationDays} jour${durationDays > 1 ? "s" : ""}`}
         />
         <DetailRow
           icon={<Users size={16} />}
