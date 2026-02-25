@@ -58,6 +58,7 @@ interface RentalCardProps {
   subMember?: Member;
   canEdit?: boolean;
   canDelete?: boolean;
+  canViewPrice?: boolean;
   onClick?: (rental: Rental) => void;
   onEdit?: (rental: Rental) => void;
   onDelete?: (rental: Rental) => void;
@@ -73,6 +74,7 @@ export const RentalCard = ({
   subMember,
   canEdit = true,
   canDelete = true,
+  canViewPrice = false,
   onClick,
   onEdit,
   onDelete,
@@ -180,12 +182,14 @@ export const RentalCard = ({
         <span className="flex items-center gap-1">
           <Users size={13} /> {rental.guestCount} pers.
         </span>
-        <span className="flex items-center gap-1">
-          <Euro size={13} />{" "}
-          <span className="font-medium">Tarif location:</span>&nbsp;
-          {rental.price.toFixed(2)} €
-        </span>
-        {rental.status === "completed" && (
+        {(canViewPrice || canEdit) && (
+          <span className="flex items-center gap-1">
+            <Euro size={13} />{" "}
+            <span className="font-medium">Tarif location:</span>&nbsp;
+            {rental.price.toFixed(2)} €
+          </span>
+        )}
+        {(canViewPrice || canEdit) && rental.status === "completed" && (
           <span className="flex items-center gap-1">
             <Zap size={13} />{" "}
             <span className="font-medium">Coût électrique:</span>&nbsp;
@@ -206,12 +210,15 @@ export const RentalCard = ({
             )}
           </span>
         )}
-        {rental.status === "completed" && rental.totalPrice != null && (
-          <span className="flex items-center gap-1 font-semibold text-gray-700">
-            <Euro size={13} /> <span className="font-medium">Total:</span>&nbsp;
-            {rental.totalPrice.toFixed(2)} €
-          </span>
-        )}
+        {(canViewPrice || canEdit) &&
+          rental.status === "completed" &&
+          rental.totalPrice != null && (
+            <span className="flex items-center gap-1 font-semibold text-gray-700">
+              <Euro size={13} /> <span className="font-medium">Total:</span>
+              &nbsp;
+              {rental.totalPrice.toFixed(2)} €
+            </span>
+          )}
       </div>
 
       {/* Actions */}

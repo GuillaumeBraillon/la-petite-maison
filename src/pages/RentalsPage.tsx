@@ -95,6 +95,7 @@ export const RentalsPage = ({
       <RentalList
         rentals={rentals}
         members={members}
+        currentMember={currentMember}
         canEdit={permissions.editLocations}
         canDelete={permissions.deleteLocations}
         onClick={openDetail}

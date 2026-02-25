@@ -1,5 +1,6 @@
 import { CalendarX } from "lucide-react";
 import type { Rental, Member } from "../../types";
+import { isMemberRental } from "../../services/permissions";
 import { RentalCard } from "./RentalCard";
 
 // ------------------------------------------------------------
@@ -9,6 +10,7 @@ import { RentalCard } from "./RentalCard";
 interface RentalListProps {
   rentals: Rental[];
   members: Member[];
+  currentMember?: Member | null;
   canEdit?: boolean;
   canDelete?: boolean;
   onClick?: (rental: Rental) => void;
@@ -41,6 +43,7 @@ const EmptyState = () => (
 export const RentalList = ({
   rentals,
   members,
+  currentMember,
   canEdit = true,
   canDelete = true,
   onClick,
@@ -63,6 +66,7 @@ export const RentalList = ({
           }
           canEdit={canEdit}
           canDelete={canDelete}
+          canViewPrice={isMemberRental(currentMember ?? null, rental)}
           onClick={onClick}
           onEdit={onEdit}
           onDelete={onDelete}
