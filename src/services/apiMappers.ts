@@ -19,6 +19,7 @@ export const mapMemberFromDb = (db: DbMember): Member => ({
   role: db.role as MemberRole,
   email: db.email ?? undefined,
   avatarUrl: db.avatar_url ?? undefined,
+  lastLogin: db.last_login ?? undefined,
   address: db.address ?? undefined,
   ownerId: db.owner_id ?? undefined,
   isEditor: db.is_editor ?? false,
@@ -40,6 +41,9 @@ export const mapMemberToDb = (
     ...("email" in member && { email: member.email ?? null }),
     ...(member.avatarUrl !== undefined && {
       avatar_url: member.avatarUrl ?? null,
+    }),
+    ...(member.lastLogin !== undefined && {
+      last_login: member.lastLogin ?? null,
     }),
     ...(member.address !== undefined && { address: member.address ?? null }),
     ...("ownerId" in member && { owner_id: member.ownerId ?? null }),

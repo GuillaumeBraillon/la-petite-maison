@@ -7,6 +7,29 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.2.8] — 2026-02-25
+
+### Added
+
+- Colonne `members.last_login` (timestamptz) et migration associée (`supabase/migrations/20260225_add_last_login.sql`).
+- Affichage de la "Dernière connexion" dans `MemberCard` et formatage local de la date.
+
+### Changed
+
+- Ajout de `Member.lastLogin`/`DbMember.last_login` dans les mappers (`mapMemberFromDb` / `mapMemberToDb`) pour propager la donnée.
+- `AppRoot` écrit maintenant `members.last_login` après récupération de session et à chaque événement `SIGNED_IN`.
+- Mise à jour `supabase/schema.sql` et `dbTypes.ts` pour exposer la colonne et documenter la migration.
+
+### Key files touched
+
+- `supabase/migrations/20260225_add_last_login.sql`
+- `supabase/schema.sql`
+- `src/types.ts`
+- `src/services/dbTypes.ts`
+- `src/services/apiMappers.ts`
+- `src/components/members/MemberCard.tsx`
+- `src/App.tsx`
+
 ## [0.2.7] — 2026-02-25
 
 ### Added

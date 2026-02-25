@@ -44,6 +44,7 @@ create table public.members (
   email text,
   avatar_url text,
   address text,
+  last_login timestamptz,
   owner_id uuid references public.members(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -151,3 +152,7 @@ for delete
 using (auth.role() = 'authenticated');
 
 commit;
+
+-- Migration disponible: supabase/migrations/20260225_add_last_login.sql
+-- SQL utile pour une base existante:
+-- ALTER TABLE public.members ADD COLUMN IF NOT EXISTS last_login timestamptz;

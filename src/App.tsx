@@ -468,13 +468,38 @@ const AppRoot = () => {
       window.history.replaceState(null, "", window.location.pathname);
     }
 
+    const updateLastLogin = async (sess: Session | null) => {
+      try {
+        if (!sess?.user?.email) return;
+        const { error } = await supabase
+          .from("members")
+          .update({ last_login: new Date().toISOString() })
+          .eq("email", sess.user.email);
+        if (error) {
+          setError({
+            message: error.message,
+            context: "Mise a jour last_login",
+          });
+        }
+      } catch (err) {
+        setError({
+          message: err instanceof Error ? err.message : String(err),
+          context: "Mise a jour last_login",
+        });
+      }
+    };
+
     void supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setAuthLoading(false);
+      void updateLastLogin(data.session);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
+      if (event === "SIGNED_IN") {
+        void updateLastLogin(s);
+      }
       if (event === "PASSWORD_RECOVERY") {
         setRecoveryMode(true);
       }

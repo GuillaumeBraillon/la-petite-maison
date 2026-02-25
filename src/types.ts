@@ -22,6 +22,8 @@ export interface Member {
   email?: string;
   /** Avatar profil (Google) — optionnel */
   avatarUrl?: string;
+  /** Date ISO de la dernière connexion — optionnel */
+  lastLogin?: string;
   /** Adresse postale — optionnelle */
   address?: string;
   /** Lien vers le propriétaire parent (pour sub_member / external) */

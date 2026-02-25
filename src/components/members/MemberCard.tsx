@@ -118,6 +118,14 @@ export const MemberCard = ({
             <span className="font-medium text-gray-600">{ownerName}</span>
           </p>
         )}
+        {member.lastLogin && (
+          <p className="text-xs text-gray-400 mt-0.5">
+            Dernière connexion :{" "}
+            <span className="font-medium text-gray-600">
+              {new Date(member.lastLogin).toLocaleString()}
+            </span>
+          </p>
+        )}
       </div>
     </Card>
   );

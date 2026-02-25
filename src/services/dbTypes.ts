@@ -14,6 +14,7 @@ export interface DbMember {
   email: string | null;
   avatar_url: string | null;
   address: string | null;
+  last_login: string | null;
   owner_id: string | null;
   is_editor: boolean;
   created_at: string;
