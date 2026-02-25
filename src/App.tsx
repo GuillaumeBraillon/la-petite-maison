@@ -509,7 +509,7 @@ const AppRoot = () => {
     });
 
     return () => listener.subscription.unsubscribe();
-  }, []);
+  }, [setError]);
 
   useEffect(() => {
     if (authorizationError) {

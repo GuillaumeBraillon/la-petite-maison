@@ -7,6 +7,22 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.0] — 2026-02-25
+
+### Added
+
+- **Redirection conditionnelle vers site sécurisé** : Si l'application est hébergée sur un domaine gratuit (`.free.fr`), le bouton Google redirige vers le site Vercel sécurisé avec badge "Site securise →".
+
+### Changed
+
+- Correction de la dépendance ESLint dans `AppRoot` useEffect : ajout de `setError` dans le tableau de dépendances.
+
+### Fixed
+
+### Removed
+
+---
+
 ## [0.2.9] — 2026-02-25
 
 ### Changed
