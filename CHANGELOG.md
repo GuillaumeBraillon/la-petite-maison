@@ -7,6 +7,34 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.4] — 2026-02-25
+
+### Added
+
+- **Métriques de locations enrichies et agrégations par statut** :
+  - Nouveau helper `getDaysForRental(rental)` pour calculer le nombre de jours réels en utilisant `actualStartDate`/`actualEndDate` si présents, sinon les dates prévues.
+  - Calcul des statistiques **par statut de location** : nombre de locations, jours totaux, coût électrique total, moyennes par nuit et par location.
+  - Dashboard affiche maintenant **cartes détaillées par statut** avec labels clairs et chiffres comparables.
+
+- **Statistiques propriétaires enrichies** :
+  - Chaque propriétaire affiche : nom, nombre de jours accumulés, coût électrique total.
+  - **Sous-cartes par statut** pour chaque propriétaire : répartition des locations par statut (`pending`, `confirmed`, `rejected`, `completed`).
+  - Statistiques d'électricité **par nuit** et **par location** pour chaque propriétaire.
+  - Moyenne électrique précise basée sur les jours réels.
+
+- **KPI Cards — refonte visuelle** :
+  - Helper/hook pour ajuster le padding, les gaps et les tailles d'icônes pour une meilleure densité.
+  - Typographie affinée : labels `text-[10px] uppercase`, valeurs `text-xl font-semibold`, trends `text-[10px]`.
+  - Icône KPI agrandie légèrement (`w-8 h-8`) avec meilleur contraste.
+
+### Changed
+
+- `DashboardStats.tsx` : restructuration complète pour exposer les agrégations par statut et par propriétaire via des réductions/calculs sophistiqués.
+- `KpiCard.tsx` : padding restauré à `sm`, gap vertical à `2`, typographie et icône ajustées pour clarité et hiérarchie.
+- `services/` : ajout du helper `getDaysForRental` pour une source unique de vérité sur le calcul des jours réels.
+
+---
+
 ## [0.3.3] — 2026-02-25
 
 ### Added

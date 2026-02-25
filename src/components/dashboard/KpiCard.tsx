@@ -27,17 +27,21 @@ export const KpiCard = ({
   className = "",
 }: KpiCardProps) => {
   return (
-    <Card padding="md" className={`flex flex-col gap-3 ${className}`}>
+    <Card padding="sm" className={`flex flex-col gap-2 ${className}`}>
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-500">{label}</p>
-        <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500">
+          {label}
+        </p>
+        <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600 text-[10px]">
           {icon}
         </div>
       </div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
+      <p className="text-xl font-semibold text-gray-900 leading-tight">
+        {value}
+      </p>
       {trend && (
         <p
-          className={`text-xs font-medium ${trendUp ? "text-green-600" : "text-red-500"}`}
+          className={`text-[10px] font-medium ${trendUp ? "text-green-600" : "text-red-500"}`}
         >
           {trend}
         </p>
