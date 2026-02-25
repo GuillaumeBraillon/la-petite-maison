@@ -5,9 +5,6 @@ import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
 
-const VERCEL_URL = "https://la-petite-maison-seven.vercel.app";
-const isOnFree = window.location.hostname.includes("free.fr");
-
 interface LoginViewProps {
   onLoginGoogle: () => void;
   onLoginEmail: (email: string, password: string) => void;
@@ -225,26 +222,14 @@ export const LoginView = ({
             <div className="h-px flex-1 bg-gray-200" />
           </div>
 
-          {!isOnFree ? (
-            <a
-              href={VERCEL_URL}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-            >
-              Se connecter avec Google
-              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">
-                Site securise →
-              </span>
-            </a>
-          ) : (
-            <Button
-              onClick={onLoginGoogle}
-              loading={loadingGoogle}
-              size="lg"
-              className="w-full"
-            >
-              Se connecter avec Google
-            </Button>
-          )}
+          <Button
+            onClick={onLoginGoogle}
+            loading={loadingGoogle}
+            size="lg"
+            className="w-full"
+          >
+            Se connecter avec Google
+          </Button>
         </CardContent>
       </Card>
     </div>
