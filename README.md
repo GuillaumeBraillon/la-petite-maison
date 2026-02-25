@@ -148,10 +148,10 @@ src/
 
 - Libellé personnalisable (ex: "Copine de Nicole")
 - Prénom, nom, email, adresse (optionnelle)
-- Rôles : `admin`, `owner`, `sub_member`, `external`
+- Rôles : `admin`, `owner`, `sub_member`
 - Statut : `family`, `friends`, `other`
 - Avatars depuis Google OAuth
-- Lien vers un propriétaire parent (pour sub_member/external)
+- Lien vers un propriétaire parent (pour sub_member)
 
 ### 📋 Gestion des locations
 
@@ -186,12 +186,11 @@ L'application utilise un système d'autorisation en deux étapes :
 
 ### Rôles et permissions
 
-| Rôle         | Description                      | Permissions                                           |
-| ------------ | -------------------------------- | ----------------------------------------------------- |
-| `admin`      | Administrateur                   | Tous les droits + gestion des autorisations           |
-| `owner`      | Propriétaire de la maison        | Voir locations, faire des demandes (validation admin) |
-| `sub_member` | Enfant/petit-enfant d'un owner   | Voir dates + libellé + propriétaire uniquement        |
-| `external`   | Locataire externe lié à un owner | Voir dates + libellé + propriétaire uniquement        |
+| Rôle         | Description                    | Permissions                                           |
+| ------------ | ------------------------------ | ----------------------------------------------------- |
+| `admin`      | Administrateur                 | Tous les droits + gestion des autorisations           |
+| `owner`      | Propriétaire de la maison      | Voir locations, faire des demandes (validation admin) |
+| `sub_member` | Enfant/petit-enfant d'un owner | Voir dates + libellé + propriétaire uniquement        |
 
 ## 🚀 Déploiement
 

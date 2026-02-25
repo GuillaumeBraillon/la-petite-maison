@@ -23,7 +23,7 @@ interface RentalFormProps {
     firstName: string;
     lastName: string;
     label: string;
-    role: "sub_member" | "external";
+    role: "sub_member";
     ownerId?: string;
   }) => Promise<Member>;
 }
@@ -121,7 +121,7 @@ export const RentalForm = ({
     label: string;
     firstName: string;
     lastName: string;
-    role: "sub_member" | "external";
+    role: "sub_member";
     loading: boolean;
     error: string;
   }>({
@@ -129,7 +129,7 @@ export const RentalForm = ({
     label: "",
     firstName: "",
     lastName: "",
-    role: "external",
+    role: "sub_member",
     loading: false,
     error: "",
   });
@@ -173,7 +173,7 @@ export const RentalForm = ({
   const owners = members.filter((m) => m.role === "owner");
   const subMembers = members.filter(
     (m) =>
-      (m.role === "sub_member" || m.role === "external") &&
+      m.role === "sub_member" &&
       (!values.ownerId || !m.ownerId || m.ownerId === values.ownerId),
   );
   const subMemberOptions = subMembers.map((m) => ({
@@ -188,7 +188,7 @@ export const RentalForm = ({
       label: searchText,
       firstName: "",
       lastName: "",
-      role: "external",
+      role: "sub_member",
       loading: false,
       error: "",
     });
@@ -222,7 +222,7 @@ export const RentalForm = ({
         label: "",
         firstName: "",
         lastName: "",
-        role: "external",
+        role: "sub_member",
         loading: false,
         error: "",
       });
@@ -351,11 +351,10 @@ export const RentalForm = ({
               onChange={(e) =>
                 setNewMember((prev) => ({
                   ...prev,
-                  role: e.target.value as "sub_member" | "external",
+                  role: e.target.value as "sub_member",
                 }))
               }
             >
-              <option value="external">Externe</option>
               <option value="sub_member">Sous-membre</option>
             </Select>
           </div>
@@ -373,7 +372,7 @@ export const RentalForm = ({
                   label: "",
                   firstName: "",
                   lastName: "",
-                  role: "external",
+                  role: "sub_member",
                   loading: false,
                   error: "",
                 })

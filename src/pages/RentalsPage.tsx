@@ -55,7 +55,7 @@ export const RentalsPage = ({
     firstName: string;
     lastName: string;
     label: string;
-    role: "sub_member" | "external";
+    role: "sub_member";
     ownerId?: string;
   }) => {
     const newMember = await createMember({

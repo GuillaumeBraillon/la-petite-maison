@@ -167,7 +167,7 @@ const ParentComponent = () => <SubComponent />;
 ```typescript
 // types.ts — source de vérité unique
 
-export type MemberRole = "admin" | "owner" | "sub_member" | "external";
+export type MemberRole = "admin" | "owner" | "sub_member";
 export type MemberStatus = "family" | "friends" | "other";
 
 export interface Member {
@@ -179,7 +179,7 @@ export interface Member {
   status: MemberStatus;
   email: string;
   address?: string; // optionnel
-  ownerId?: string; // lien vers le propriétaire parent (pour sub_member / external)
+  ownerId?: string; // lien vers le propriétaire parent (pour sub_member)
   createdAt: string;
   updatedAt: string;
 }
@@ -365,12 +365,11 @@ export const useError = (): ErrorContextValue => {
 
 ### Rôles
 
-| Rôle         | Description                      | Permissions                                                   |
-| ------------ | -------------------------------- | ------------------------------------------------------------- |
-| `admin`      | Administrateur                   | Tous les droits                                               |
-| `owner`      | Propriétaire de la maison        | Voir locations, faire des demandes (validation admin requise) |
-| `sub_member` | Enfant/petit-enfant d'un owner   | Voir dates + libellé + propriétaire uniquement                |
-| `external`   | Locataire externe lié à un owner | Voir dates + libellé + propriétaire uniquement                |
+| Rôle         | Description                    | Permissions                                                   |
+| ------------ | ------------------------------ | ------------------------------------------------------------- |
+| `admin`      | Administrateur                 | Tous les droits                                               |
+| `owner`      | Propriétaire de la maison      | Voir locations, faire des demandes (validation admin requise) |
+| `sub_member` | Enfant/petit-enfant d'un owner | Voir dates + libellé + propriétaire uniquement                |
 
 ### Auth Google OAuth
 
@@ -405,8 +404,8 @@ const {
 - Libellé éditable (ex: "Copine de Nicole")
 - Prénom, nom, statut (famille / amis / autre — éditable)
 - Email, adresse postale (optionnelle)
-- Rôle (admin / owner / sub_member / external)
-- Lien optionnel vers un owner parent (pour sub_member et external)
+- Rôle (admin / owner / sub_member)
+- Lien optionnel vers un owner parent (pour sub_member)
 
 ### 📋 Location
 
@@ -434,7 +433,7 @@ create table members (
   label text not null,
   first_name text not null,
   last_name text not null,
-  role text not null check (role in ('admin', 'owner', 'sub_member', 'external')),
+  role text not null check (role in ('admin', 'owner', 'sub_member')),
   status text not null default 'family' check (status in ('family', 'friends', 'other')),
   email text,
   address text,

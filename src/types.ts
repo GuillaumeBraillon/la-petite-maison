@@ -2,7 +2,7 @@
 // types.ts — Source de vérité unique pour toutes les interfaces
 // ============================================================
 
-export type MemberRole = "admin" | "owner" | "sub_member" | "external";
+export type MemberRole = "admin" | "owner" | "sub_member";
 export type RentalStatus = "pending" | "confirmed" | "rejected" | "completed";
 
 // ------------------------------------------------------------
@@ -26,7 +26,7 @@ export interface Member {
   lastLogin?: string;
   /** Adresse postale — optionnelle */
   address?: string;
-  /** Lien vers le propriétaire parent (pour sub_member / external) */
+  /** Lien vers le propriétaire parent (pour sub_member) */
   ownerId?: string;
   /** Pour role="owner" : true = peut éditer locations&membres, false = lecture seule */
   isEditor: boolean;

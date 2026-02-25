@@ -7,6 +7,26 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.1] — 2026-02-25
+
+### Breaking Changes
+
+- **Suppression complète du rôle `external`** : Le type de compte "Externe" n'existe plus dans l'application.
+  - Migration automatique : tous les comptes `external` existants sont convertis en `sub_member`.
+  - Fichier de migration : `supabase/migrations/20260225_remove_external_role.sql`
+
+### Changed
+
+- `MemberRole` ne contient plus que 3 valeurs : `"admin"`, `"owner"`, `"sub_member"`.
+- Schema SQL : contrainte CHECK mise à jour pour retirer `external`.
+- Tous les formulaires et composants mis à jour pour retirer les options "Externe".
+
+### Removed
+
+- Type de rôle `external` supprimé de tous les fichiers TypeScript et composants UI.
+
+---
+
 ## [0.3.0] — 2026-02-25
 
 ### Added

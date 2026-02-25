@@ -39,7 +39,7 @@ create table public.members (
   label text not null default '',
   first_name text not null default '',
   last_name text not null default '',
-  role text not null default 'external' check (role in ('admin', 'owner', 'sub_member', 'external')),
+  role text not null default 'sub_member' check (role in ('admin', 'owner', 'sub_member')),
   is_editor boolean not null default false,
   email text,
   avatar_url text,

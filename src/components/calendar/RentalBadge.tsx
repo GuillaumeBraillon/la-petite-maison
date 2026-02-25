@@ -16,9 +16,9 @@ interface RentalBadgeProps {
 
 const statusColorMap: Record<Rental["status"], string> = {
   pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  confirmed: "bg-green-100 text-green-800 border-green-200",
-  rejected: "bg-red-100 text-red-800 border-red-200",
-  completed: "bg-gray-100 text-gray-700 border-gray-200",
+  confirmed: "bg-red-100 text-red-800 border-red-200",
+  rejected: "bg-gray-100 text-gray-700 border-gray-200",
+  completed: "bg-green-100 text-green-800 border-green-200",
 };
 
 const getRentalDurationDays = (startIso: string, endIso: string): number => {

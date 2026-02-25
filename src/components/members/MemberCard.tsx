@@ -12,7 +12,6 @@ const roleLabelMap: Record<Member["role"], string> = {
   admin: "Admin",
   owner: "Propriétaire",
   sub_member: "Sous-membre",
-  external: "Externe",
 };
 
 // ------------------------------------------------------------
@@ -21,7 +20,7 @@ const roleLabelMap: Record<Member["role"], string> = {
 
 interface MemberCardProps {
   member: Member;
-  ownerName?: string; // nom du propriétaire parent si sub_member / external
+  ownerName?: string; // nom du propriétaire parent si sub_member
   canEdit?: boolean;
   canDelete?: boolean;
   onEdit: (member: Member) => void;

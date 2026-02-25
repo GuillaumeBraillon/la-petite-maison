@@ -13,7 +13,7 @@ type MemberFormValues = Omit<Member, "id" | "createdAt" | "updatedAt">;
 
 interface MemberFormProps {
   initialValues?: Partial<MemberFormValues>;
-  members?: Member[]; // pour la liste des owners (sub_member / external)
+  members?: Member[]; // pour la liste des owners (sub_member)
   canEdit?: boolean;
   canToggleAuth?: boolean;
   onSubmit: (values: MemberFormValues) => Promise<void>;
@@ -119,7 +119,7 @@ export const MemberForm = ({
     }
   };
 
-  const needsOwner = values.role === "sub_member" || values.role === "external";
+  const needsOwner = values.role === "sub_member";
   const ownerCandidates = members.filter((m) => m.role === "owner");
 
   return (
@@ -182,7 +182,6 @@ export const MemberForm = ({
           <option value="admin">Admin</option>
           <option value="owner">Propriétaire</option>
           <option value="sub_member">Sous-membre</option>
-          <option value="external">Externe</option>
         </Select>
       </div>
 

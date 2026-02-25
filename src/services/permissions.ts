@@ -23,7 +23,7 @@ export interface Permissions {
  * Admin : tous les droits
  * Owner + isEditor=true : tous les droits sur locations & members
  * Owner + isEditor=false : lecture seule sur tout
- * Sub_member / external : calendrier seul, pas les détails
+ * Sub_member : calendrier seul, pas les détails
  */
 export const getPermissions = (member: Member | null): Permissions => {
   // Pas de membre = pas de droits
@@ -78,7 +78,7 @@ export const getPermissions = (member: Member | null): Permissions => {
     };
   }
 
-  // Sub_member / external : calendrier seul
+  // Sub_member : calendrier seul
   return {
     viewLocations: false,
     createLocations: false,
