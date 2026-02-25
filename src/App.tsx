@@ -10,6 +10,7 @@ import {
   Download,
 } from "lucide-react";
 import type { Member, Rental } from "./types";
+import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
 import { fetchMembers, fetchRentals } from "./services/api";
 import { ErrorProvider, useError } from "./contexts/ErrorContext";
@@ -246,9 +247,9 @@ const AppShell = ({ session }: AppShellProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+    <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
       {/* Sidebar */}
-      <aside className="hidden md:flex md:w-56 bg-white border-r border-gray-200 flex-col shrink-0">
+      <aside className="hidden md:flex md:w-56 bg-white border-r border-gray-200 flex-col shrink-0 overflow-y-auto">
         {/* Logo */}
         <div className="flex items-center gap-2 px-5 py-5 border-b border-gray-100">
           <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
@@ -322,6 +323,10 @@ const AppShell = ({ session }: AppShellProps) => {
             <LogOut size={16} />
             Déconnexion
           </button>
+
+          <div className="px-3 py-2 text-center">
+            <p className="text-[10px] text-gray-400">v{packageJson.version}</p>
+          </div>
         </div>
       </aside>
 

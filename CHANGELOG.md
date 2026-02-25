@@ -7,25 +7,45 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.2.7] — 2026-02-25
+
+### Added
+
+- **Numéro de version dynamique** affiché dans la Sidebar (bas de page), importé depuis `package.json` via `packageJson.version`.
+
+### Changed
+
+- **Layout Sidebar fixe** : le conteneur principal utilise `h-screen` avec `overflow-hidden`, la Sidebar utilise `overflow-y-auto` pour éviter qu'elle ne bouge lorsque le contenu principal (`main`) est long.
+- Nettoyage JSX et formatage mineur dans `App.tsx` (rendu conditionnel compact, chaînes sur une seule ligne).
+
+### Fixed
+
+- Apostrophe échappée dans `MemberForm.tsx` pour respecter la règle ESLint `react/no-unescaped-entities` (`l'application` → `l&apos;application`).
+
+### Key files touched
+
+- `src/App.tsx`
+- `package.json`
+- `CHANGELOG.md`
+
 ## [0.2.6] — 2026-02-25
 
 ### Added
 
-- Permet d'effacer le champ "Nombre de personnes" dans le formulaire de location (`RentalForm`) afin de saisir librement (comportement identique au champ `Tarif location (€)`).
+- **Gestion de l'autorisation des membres** : checkbox toggle pour activer/désactiver l'accès d'un membre à l'application directement depuis le formulaire d'édition.
+- Visibilité conditionnelle du bouton "Créer et autoriser" (uniquement en mode création).
 
 ### Changed
 
-- Le bouton "✓ Créer et autoriser" dans `MemberForm` n'est visible qu'en mode création (lorsque `initialValues?.isAllowed === undefined`).
-
-### Fixed
-
-- Comportement des champs numériques aligné entre `RentalForm` et le champ `price` (possibilité de vider la saisie pour réécrire sans conserver un 0 par défaut).
+- **UX autorisation** : transformation du bouton d'autorisation en checkbox toggle avec styling conditionnel (vert si autorisé, orange si non autorisé).
+- Fonctionnalité d'autorisation déplacée de `MemberCard` vers `MemberForm` pour une meilleure cohérence UX.
 
 ### Key files touched
 
-- `src/components/rentals/RentalForm.tsx`
 - `src/components/members/MemberForm.tsx`
-- `CHANGELOG.md`
+- `src/components/members/MemberCard.tsx`
+- `src/components/members/MemberList.tsx`
+- `src/pages/MembersPage.tsx`
 
 ## [0.2.5] — 2026-02-25
 
