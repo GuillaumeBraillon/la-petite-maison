@@ -381,8 +381,15 @@ export const RentalForm = ({
           label="Nombre de personnes"
           type="number"
           min={1}
-          value={values.guestCount}
-          onChange={(e) => set("guestCount", Number(e.target.value))}
+          value={values.guestCount === 0 ? "" : values.guestCount}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "") {
+              set("guestCount", 0);
+            } else {
+              set("guestCount", Number(val));
+            }
+          }}
           error={errors.guestCount}
           disabled={!canEdit}
           required

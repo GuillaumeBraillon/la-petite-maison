@@ -168,8 +168,29 @@ export const MembersPage = ({
         <MemberForm
           initialValues={editing ?? undefined}
           members={members}
+          canEdit={permissions.editMembers}
+          canToggleAuth={permissions.authorizeUsers}
           onSubmit={handleSubmit}
           onAuthorize={handleAuthorizeFromForm}
+          onToggleAuthorization={
+            editing
+              ? async (isAllowed: boolean) => {
+                  try {
+                    await updateMember(editing.id, { isAllowed });
+                    await onRefresh();
+                    closeModal();
+                  } catch (err) {
+                    setError({
+                      message:
+                        err instanceof Error
+                          ? err.message
+                          : "Une erreur est survenue.",
+                      context: "Modification de l'autorisation",
+                    });
+                  }
+                }
+              : undefined
+          }
           onCancel={closeModal}
           submitLabel={editing ? "Enregistrer" : "Créer"}
         />

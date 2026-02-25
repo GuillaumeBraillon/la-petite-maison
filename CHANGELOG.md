@@ -7,6 +7,26 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.2.6] — 2026-02-25
+
+### Added
+
+- Permet d'effacer le champ "Nombre de personnes" dans le formulaire de location (`RentalForm`) afin de saisir librement (comportement identique au champ `Tarif location (€)`).
+
+### Changed
+
+- Le bouton "✓ Créer et autoriser" dans `MemberForm` n'est visible qu'en mode création (lorsque `initialValues?.isAllowed === undefined`).
+
+### Fixed
+
+- Comportement des champs numériques aligné entre `RentalForm` et le champ `price` (possibilité de vider la saisie pour réécrire sans conserver un 0 par défaut).
+
+### Key files touched
+
+- `src/components/rentals/RentalForm.tsx`
+- `src/components/members/MemberForm.tsx`
+- `CHANGELOG.md`
+
 ## [0.2.5] — 2026-02-25
 
 ### Added

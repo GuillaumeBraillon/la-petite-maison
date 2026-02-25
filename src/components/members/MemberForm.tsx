@@ -15,8 +15,10 @@ interface MemberFormProps {
   initialValues?: Partial<MemberFormValues>;
   members?: Member[]; // pour la liste des owners (sub_member / external)
   canEdit?: boolean;
+  canToggleAuth?: boolean;
   onSubmit: (values: MemberFormValues) => Promise<void>;
   onAuthorize?: (email: string, values: MemberFormValues) => Promise<void>;
+  onToggleAuthorization?: (isAllowed: boolean) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
 }
@@ -45,8 +47,10 @@ export const MemberForm = ({
   initialValues,
   members = [],
   canEdit = true,
+  canToggleAuth = false,
   onSubmit,
   onAuthorize,
+  onToggleAuthorization,
   onCancel,
   submitLabel = "Enregistrer",
 }: MemberFormProps) => {
@@ -66,6 +70,18 @@ export const MemberForm = ({
   ) => {
     setValues((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const handleToggleAllowed = async (checked: boolean) => {
+    set("isAllowed", checked);
+    if (onToggleAuthorization && initialValues?.isAllowed !== undefined) {
+      setIsAuthorizing(true);
+      try {
+        await onToggleAuthorization(checked);
+      } finally {
+        setIsAuthorizing(false);
+      }
+    }
   };
 
   const validate = (): boolean => {
@@ -205,6 +221,30 @@ export const MemberForm = ({
         </div>
       )}
 
+      {canToggleAuth && initialValues?.isAllowed !== undefined && (
+        <div
+          className={`p-3 border rounded-lg ${values.isAllowed ? "bg-green-50 border-green-200" : "bg-orange-50 border-orange-200"}`}
+        >
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={values.isAllowed}
+              onChange={(e) => handleToggleAllowed(e.target.checked)}
+              className="w-4 h-4 cursor-pointer"
+              disabled={!canToggleAuth || isAuthorizing || loading}
+            />
+            <span className="text-sm font-medium text-gray-700">
+              Accès autorisé à l&apos;application
+            </span>
+          </label>
+          <p className="text-xs text-gray-500 mt-1 ml-7">
+            {values.isAllowed
+              ? "Ce membre peut se connecter et utiliser l&apos;application"
+              : "Ce membre ne peut pas se connecter"}
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-2">
         <Button
           type="button"
@@ -223,18 +263,20 @@ export const MemberForm = ({
         >
           {submitLabel}
         </Button>
-        {!values.isAllowed && onAuthorize && (
-          <Button
-            type="button"
-            variant="secondary"
-            loading={isAuthorizing}
-            disabled={loading || !values.email}
-            onClick={handleAuthorize}
-            className="w-full sm:w-auto bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-          >
-            ✓ Autoriser
-          </Button>
-        )}
+        {!values.isAllowed &&
+          onAuthorize &&
+          initialValues?.isAllowed === undefined && (
+            <Button
+              type="button"
+              variant="primary"
+              loading={isAuthorizing}
+              disabled={loading || !values.email}
+              onClick={handleAuthorize}
+              className="w-full sm:w-auto"
+            >
+              ✓ Créer et autoriser
+            </Button>
+          )}
       </div>
     </form>
   );
