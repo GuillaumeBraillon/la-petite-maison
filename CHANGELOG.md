@@ -7,25 +7,49 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
-## [0.2.6] — 2026-02-25
+## [0.2.7] — 2026-02-25
 
 ### Added
 
+- **Numéro de version dynamique** affiché dans la Sidebar, importé depuis `package.json`.
 - Permet d'effacer le champ "Nombre de personnes" dans le formulaire de location (`RentalForm`) afin de saisir librement (comportement identique au champ `Tarif location (€)`).
 
 ### Changed
 
 - Le bouton "✓ Créer et autoriser" dans `MemberForm` n'est visible qu'en mode création (lorsque `initialValues?.isAllowed === undefined`).
+- **Sidebar fixe en hauteur** : utilise `h-screen` avec `overflow-hidden` sur le conteneur parent pour éviter que la Sidebar ne bouge lorsque le contenu principal est long.
 
 ### Fixed
 
 - Comportement des champs numériques aligné entre `RentalForm` et le champ `price` (possibilité de vider la saisie pour réécrire sans conserver un 0 par défaut).
+- Apostrophe échappée dans `MemberForm` pour respecter la règle ESLint `react/no-unescaped-entities` (`l'application` → `l&apos;application`).
 
 ### Key files touched
 
 - `src/components/rentals/RentalForm.tsx`
 - `src/components/members/MemberForm.tsx`
+- `src/App.tsx`
+- `package.json`
 - `CHANGELOG.md`
+
+## [0.2.6] — 2026-02-25
+
+### Added
+
+- **Gestion de l'autorisation des membres** : checkbox toggle pour activer/désactiver l'accès d'un membre à l'application directement depuis le formulaire d'édition.
+- Visibilité conditionnelle du bouton "Créer et autoriser" (uniquement en mode création).
+
+### Changed
+
+- **UX autorisation** : transformation du bouton d'autorisation en checkbox toggle avec styling conditionnel (vert si autorisé, orange si non autorisé).
+- Fonctionnalité d'autorisation déplacée de `MemberCard` vers `MemberForm` pour une meilleure cohérence UX.
+
+### Key files touched
+
+- `src/components/members/MemberForm.tsx`
+- `src/components/members/MemberCard.tsx`
+- `src/components/members/MemberList.tsx`
+- `src/pages/MembersPage.tsx`
 
 ## [0.2.5] — 2026-02-25
 
