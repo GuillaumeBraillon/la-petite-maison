@@ -435,6 +435,7 @@ const AppRoot = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState<string | null>(null);
+  const [hashError, setHashError] = useState<string | null>(null);
   const { setError } = useError();
   const {
     isAuthorized,
@@ -443,6 +444,25 @@ const AppRoot = () => {
   } = useAuthorization(session);
 
   useEffect(() => {
+    // Vérifier si le hash contient une erreur Supabase (ex: lien expiré)
+    const hash = window.location.hash;
+    if (hash.includes("error=")) {
+      const params = new URLSearchParams(hash.substring(1));
+      const errorCode = params.get("error_code");
+      const errorDesc = params.get("error_description");
+      if (errorCode === "otp_expired") {
+        setHashError(
+          "Le lien de réinitialisation a expiré. Demande un nouveau lien.",
+        );
+      } else if (errorDesc) {
+        setHashError(decodeURIComponent(errorDesc));
+      } else {
+        setHashError("Une erreur est survenue lors de l'authentification.");
+      }
+      // Nettoyer le hash pour éviter de le traiter à nouveau
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+
     void supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setAuthLoading(false);
@@ -483,7 +503,7 @@ const AppRoot = () => {
   }
 
   if (!session) {
-    return <LoginScreen error={authorizationError} />;
+    return <LoginScreen error={hashError ?? authorizationError} />;
   }
 
   if (recoveryMode) {

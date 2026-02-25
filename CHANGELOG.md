@@ -7,6 +7,37 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.2.5] — 2026-02-25
+
+### Added
+
+- **Toggle de visibilité des mots de passe** : icônes œil (`Eye` / `EyeOff`) dans `LoginView` et `ResetPasswordView` pour afficher/masquer les mots de passe saisis.
+
+### Changed
+
+- Affichage du `Coût électrique` sur les cartes de location (`RentalCard`) et vue détail (`RentalDetail`) : **n'est affiché que si le statut est `Terminé` (`completed`)**.
+- **Sécurité** : Les membres avec `role = "admin"` ne sont visibles que par d'autres administrateurs dans la liste des membres (`MembersPage`).
+
+### Fixed
+
+- **Lien de réinitialisation de mot de passe expiré** : `App.tsx` détecte maintenant les erreurs dans le hash URL (`#error=access_denied&error_code=otp_expired`) et affiche un message clair à l'utilisateur ("Le lien de réinitialisation a expiré. Demande un nouveau lien.").
+
+### Key files touched
+
+- `src/pages/MembersPage.tsx`
+- `src/components/Auth/LoginView.tsx`
+- `src/components/Auth/ResetPasswordView.tsx`
+- `src/components/rentals/RentalCard.tsx`
+- `src/components/rentals/RentalDetail.tsx`
+- `src/App.tsx`
+
+---
+
+Notes:
+
+- Toggle de visibilité des mots de passe améliore l'UX lors de la saisie.
+- Les liens de réinitialisation Supabase expirent par défaut après 1h (configurable côté Dashboard Supabase).
+
 ## [0.2.4] — 2026-02-25
 
 ### Added
@@ -18,7 +49,6 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 ### Changed
 
 - `Prix (€)` renommé en **Tarif location (€)** dans le formulaire et affichages.
-- Affichage du `Coût électrique` sur les cartes de location; n'est affiché que si le statut est `Terminé` (`completed`).
 - Types & DB mapping:
   - `email` rendu optionnel côté app (TypeScript) et nullable côté DB.
   - Ajout de `isEditor` (booléen non-optionnel) et suppression du champ `status` des membres.
@@ -48,7 +78,7 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 - `src/components/rentals/RentalForm.tsx`
 - `src/components/rentals/RentalCard.tsx`
-- `src/components/rentals/RentalDetail.tsx` (consistency changes pending)
+- `src/components/rentals/RentalDetail.tsx`
 - `src/components/ui/Combobox.tsx`
 - `src/components/members/MemberForm.tsx`
 - `src/components/members/MemberCard.tsx`
@@ -58,7 +88,6 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 - `src/services/dbTypes.ts`
 - `src/types.ts`
 - `src/components/dashboard/DashboardStats.tsx`
-- `src/App.tsx`
 - `supabase/schema.sql`
 
 ---
@@ -66,7 +95,6 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 Notes:
 
 - Les mappers garantissent désormais l'envoi explicite de `null` pour les champs vidés afin d'éviter les erreurs PostgREST.
-- Certains endroits (export CSV, `RentalDetail.tsx`) peuvent nécessiter l'harmonisation des libellés; me dire si vous voulez que j'applique ces changements aussi.
 
 ## [0.2.3] - 2026-02-24
 

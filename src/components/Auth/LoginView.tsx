@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Home } from "lucide-react";
+import { Home, Eye, EyeOff } from "lucide-react";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
@@ -36,6 +36,8 @@ export const LoginView = ({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [signupError, setSignupError] = useState("");
   const [signupCompleted, setSignupCompleted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -135,30 +137,62 @@ export const LoginView = ({
                 autoComplete="email"
                 required
               />
-              <Input
-                label="Mot de passe"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete={
-                  mode === "login" ? "current-password" : "new-password"
-                }
-                hint={
-                  mode === "signup"
-                    ? "8+ caractères, avec majuscule, minuscule, chiffre, symbole."
-                    : undefined
-                }
-                required
-              />
-              {mode === "signup" && (
+              <div className="relative">
                 <Input
-                  label="Confirmer le mot de passe"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  autoComplete="new-password"
+                  label="Mot de passe"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete={
+                    mode === "login" ? "current-password" : "new-password"
+                  }
+                  hint={
+                    mode === "signup"
+                      ? "8+ caractères, avec majuscule, minuscule, chiffre, symbole."
+                      : undefined
+                  }
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
+                  aria-label={
+                    showPassword
+                      ? "Masquer le mot de passe"
+                      : "Afficher le mot de passe"
+                  }
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {mode === "signup" && (
+                <div className="relative">
+                  <Input
+                    label="Confirmer le mot de passe"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
+                    aria-label={
+                      showConfirmPassword
+                        ? "Masquer le mot de passe"
+                        : "Afficher le mot de passe"
+                    }
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
+                  </button>
+                </div>
               )}
               <Button
                 type="submit"

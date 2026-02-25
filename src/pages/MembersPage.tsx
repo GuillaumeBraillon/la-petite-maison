@@ -34,6 +34,14 @@ export const MembersPage = ({
   const { error, setError, clearError } = useError();
   const permissions = getPermissions(currentMember ?? null);
 
+  // Les administrateurs ne doivent être visibles que par d'autres administrateurs
+  const visibleMembers = members.filter((m) => {
+    if (m.role === "admin") {
+      return currentMember?.role === "admin";
+    }
+    return true;
+  });
+
   const openCreate = () => {
     setEditing(null);
     clearError();
@@ -145,7 +153,7 @@ export const MembersPage = ({
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
 
       <MemberList
-        members={members}
+        members={visibleMembers}
         canEdit={permissions.editMembers}
         canDelete={permissions.deleteMembers}
         onEdit={openEdit}
