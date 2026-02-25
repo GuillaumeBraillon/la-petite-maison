@@ -5,7 +5,7 @@ import { RentalForm } from "../components/rentals/RentalForm";
 import { Modal } from "../components/ui/Modal";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
-import { getPermissions } from "../services/permissions";
+import { getPermissions, isMemberRental } from "../services/permissions";
 import { createMember } from "../services/apiCrud";
 
 // ------------------------------------------------------------
@@ -129,6 +129,10 @@ export const CalendarPage = ({
                   ? memberIndex.get(selected.subMemberId)
                   : undefined
               }
+              canEdit={
+                getPermissions(currentMember ?? null).createWithAnyStatus
+              }
+              canViewPrice={isMemberRental(currentMember ?? null, selected)}
               onEdit={openEdit}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
@@ -141,16 +145,28 @@ export const CalendarPage = ({
       <Modal
         isOpen={formOpen}
         onClose={closeForm}
-        title={editing?.id ? "Modifier la location" : "Nouvelle location"}
+        title={
+          editing?.id ? "Modifier la location" : "Nouvelle demande de location"
+        }
         size="lg"
       >
         <RentalForm
           initialValues={editing ?? undefined}
           members={members}
+          canEdit={
+            editing?.id
+              ? getPermissions(currentMember ?? null).editLocations
+              : true
+          }
+          currentMember={currentMember}
           onSubmit={handleSubmit}
           onCancel={closeForm}
-          onCreateSubMember={handleCreateSubMember}
-          submitLabel={editing?.id ? "Enregistrer" : "Créer"}
+          onCreateSubMember={
+            getPermissions(currentMember ?? null).createMembers
+              ? handleCreateSubMember
+              : undefined
+          }
+          submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
         />
       </Modal>
     </div>

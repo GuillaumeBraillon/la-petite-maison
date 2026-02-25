@@ -189,7 +189,7 @@ export interface Rental {
   startDate: string; // ISO date — par défaut dimanche midi
   endDate: string; // ISO date — par défaut dimanche midi suivant
   ownerId: string; // propriétaire principal
-  subMemberId?: string; // enfant / sous-membre / locataire
+  subMemberId?: string; // enfant / sous-membre
   guestCount: number; // nombre de personnes
   price: number; // tarif libre
   status: RentalStatus;

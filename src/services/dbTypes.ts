@@ -32,6 +32,9 @@ export interface DbRental {
   status: string;
   notes: string | null;
   electricity_cost: number | null;
+  total_price: number | null;
+  actual_start_date: string | null;
+  actual_end_date: string | null;
   created_at: string;
   updated_at: string;
 }

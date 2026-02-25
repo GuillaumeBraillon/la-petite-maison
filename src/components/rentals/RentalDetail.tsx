@@ -11,9 +11,9 @@ import {
 import { useState } from "react";
 import type { Rental, Member, RentalStatus } from "../../types";
 import { Button } from "../ui/Button";
+import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Select } from "../ui/Select";
-
 // ------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------
@@ -64,6 +64,10 @@ interface RentalDetailProps {
   rental: Rental;
   owner?: Member;
   subMember?: Member;
+  /** true = admin ou owner éditeur — accès complet (statut, infos post-location, boutons) */
+  canEdit?: boolean;
+  /** true = admin, owner éditeur, owner non éditeur et sous-membre — peut voir le tarif (lecture seule) */
+  canViewPrice?: boolean;
   onEdit: (rental: Rental) => void;
   onDelete: (rental: Rental) => void;
   onStatusChange: (rentalId: string, newStatus: RentalStatus) => Promise<void>;
@@ -77,12 +81,18 @@ export const RentalDetail = ({
   rental,
   owner,
   subMember,
+  canEdit = false,
+  canViewPrice = false,
   onEdit,
   onDelete,
   onStatusChange,
 }: RentalDetailProps) => {
   const [updating, setUpdating] = useState(false);
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
+  const actualDurationDays =
+    rental.actualStartDate && rental.actualEndDate
+      ? getRentalDurationDays(rental.actualStartDate, rental.actualEndDate)
+      : durationDays;
 
   const handleStatusChange = async (newStatus: RentalStatus) => {
     setUpdating(true);
@@ -101,17 +111,38 @@ export const RentalDetail = ({
           <span className="text-xs font-medium text-gray-500 shrink-0">
             Statut :
           </span>
-          <Select
-            value={rental.status}
-            onChange={(e) => handleStatusChange(e.target.value as RentalStatus)}
-            disabled={updating}
-            className="text-sm w-full sm:w-auto"
-          >
-            <option value="pending">En attente</option>
-            <option value="confirmed">Confirmé</option>
-            <option value="rejected">Refusé</option>
-            <option value="completed">Terminé</option>
-          </Select>
+          {canEdit ? (
+            <Select
+              value={rental.status}
+              onChange={(e) =>
+                handleStatusChange(e.target.value as RentalStatus)
+              }
+              disabled={updating}
+              className="text-sm w-full sm:w-auto"
+            >
+              <option value="pending">En attente</option>
+              <option value="confirmed">Confirmé</option>
+              <option value="rejected">Refusé</option>
+              <option value="completed">Terminé</option>
+            </Select>
+          ) : (
+            <Badge
+              variant={
+                rental.status === "confirmed"
+                  ? "success"
+                  : rental.status === "rejected"
+                    ? "danger"
+                    : rental.status === "completed"
+                      ? "default"
+                      : "warning"
+              }
+            >
+              {rental.status === "pending" && "En attente"}
+              {rental.status === "confirmed" && "Confirmé"}
+              {rental.status === "rejected" && "Refusé"}
+              {rental.status === "completed" && "Terminé"}
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -147,7 +178,7 @@ export const RentalDetail = ({
                 <User size={16} />
               )
             }
-            label="Sous-membre / locataire"
+            label="Sous-membre"
             value={`${subMember.firstName} ${subMember.lastName} — ${subMember.label}`}
           />
         )}
@@ -171,57 +202,96 @@ export const RentalDetail = ({
           label="Nombre de personnes"
           value={`${rental.guestCount} personne${rental.guestCount > 1 ? "s" : ""}`}
         />
-        <DetailRow
-          icon={<Euro size={16} />}
-          label="Tarif location (€)"
-          value={`${rental.price.toFixed(2)} €`}
-        />
+        {(canViewPrice || canEdit) && (
+          <DetailRow
+            icon={<Euro size={16} />}
+            label="Tarif location (€)"
+            value={`${rental.price.toFixed(2)} €`}
+          />
+        )}
       </Card>
 
       {/* Post-location */}
-      {((rental.status === "completed" &&
-        rental.electricityCost !== undefined) ||
-        rental.notes) && (
-        <Card padding="md" className="flex flex-col gap-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Infos post-location
-          </p>
+      {canEdit &&
+        ((rental.status === "completed" &&
+          (rental.electricityCost !== undefined ||
+            rental.totalPrice !== undefined ||
+            rental.actualStartDate ||
+            rental.actualEndDate)) ||
+          rental.notes) && (
+          <Card padding="md" className="flex flex-col gap-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Infos post-location
+            </p>
 
-          {rental.status === "completed" &&
-            rental.electricityCost !== undefined && (
+            {rental.status === "completed" && rental.actualStartDate && (
               <DetailRow
-                icon={<Zap size={16} />}
-                label="Coût électrique"
-                value={`${rental.electricityCost.toFixed(2)} €`}
+                icon={<CalendarDays size={16} />}
+                label="Début réel"
+                value={formatDate(rental.actualStartDate)}
               />
             )}
-          {rental.notes && (
-            <DetailRow
-              icon={<FileText size={16} />}
-              label="Notes"
-              value={rental.notes}
-            />
-          )}
-        </Card>
+            {rental.status === "completed" && rental.actualEndDate && (
+              <DetailRow
+                icon={<CalendarDays size={16} />}
+                label="Fin réelle"
+                value={formatDate(rental.actualEndDate)}
+              />
+            )}
+            {rental.status === "completed" &&
+              rental.actualStartDate &&
+              rental.actualEndDate &&
+              (rental.actualStartDate !== rental.startDate ||
+                rental.actualEndDate !== rental.endDate) && (
+                <p className="text-xs text-amber-600">
+                  ⚠️ Les dates réelles diffèrent des dates prévues.
+                </p>
+              )}
+            {rental.status === "completed" &&
+              rental.electricityCost !== undefined && (
+                <DetailRow
+                  icon={<Zap size={16} />}
+                  label="Coût électrique"
+                  value={`${rental.electricityCost.toFixed(2)} € (${(rental.electricityCost / actualDurationDays).toFixed(2)} €/j)`}
+                />
+              )}
+            {rental.status === "completed" &&
+              rental.totalPrice !== undefined && (
+                <DetailRow
+                  icon={<Euro size={16} />}
+                  label="Total final"
+                  value={`${rental.totalPrice.toFixed(2)} €`}
+                />
+              )}
+            {rental.notes && (
+              <DetailRow
+                icon={<FileText size={16} />}
+                label="Notes"
+                value={rental.notes}
+              />
+            )}
+          </Card>
+        )}
+      {canEdit && (
+        <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => onDelete(rental)}
+            className="w-full sm:w-auto"
+          >
+            <Trash2 size={14} /> Supprimer
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onEdit(rental)}
+            className="w-full sm:w-auto"
+          >
+            <Pencil size={14} /> Modifier
+          </Button>
+        </div>
       )}
-      <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
-        <Button
-          variant="danger"
-          size="sm"
-          onClick={() => onDelete(rental)}
-          className="w-full sm:w-auto"
-        >
-          <Trash2 size={14} /> Supprimer
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => onEdit(rental)}
-          className="w-full sm:w-auto"
-        >
-          <Pencil size={14} /> Modifier
-        </Button>
-      </div>
     </div>
   );
 };

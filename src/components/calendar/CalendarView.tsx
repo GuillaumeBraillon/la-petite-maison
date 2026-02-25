@@ -195,6 +195,7 @@ export const CalendarView = ({
                       key={rental.id}
                       rental={rental}
                       owner={memberIndex.get(rental.ownerId)}
+                      cellDate={day}
                       onClick={onRentalClick}
                     />
                   ))}

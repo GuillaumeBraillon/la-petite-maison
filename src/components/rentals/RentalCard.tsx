@@ -78,6 +78,19 @@ export const RentalCard = ({
   onDelete,
 }: RentalCardProps) => {
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
+  const hasActualDates =
+    rental.status === "completed" &&
+    (rental.actualStartDate || rental.actualEndDate);
+  const datesChanged =
+    hasActualDates &&
+    (rental.actualStartDate !== rental.startDate ||
+      rental.actualEndDate !== rental.endDate);
+  const actualDurationDays = hasActualDates
+    ? getRentalDurationDays(
+        rental.actualStartDate ?? rental.startDate,
+        rental.actualEndDate ?? rental.endDate,
+      )
+    : null;
 
   return (
     <Card
@@ -133,16 +146,36 @@ export const RentalCard = ({
       {/* Dates */}
       <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
         <CalendarDays size={13} className="shrink-0" />
-        <span>
+        <span className={datesChanged ? "line-through opacity-50" : ""}>
           {formatDate(rental.startDate)} → {formatDate(rental.endDate)}
         </span>
       </div>
+      {datesChanged && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-amber-600 -mt-2">
+          <CalendarDays size={13} className="shrink-0" />
+          <span>
+            {formatDate(rental.actualStartDate ?? rental.startDate)} →{" "}
+            {formatDate(rental.actualEndDate ?? rental.endDate)}
+          </span>
+          <span className="text-[10px] opacity-70">(réel)</span>
+        </div>
+      )}
 
       {/* Infos */}
       <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
         <span className="flex items-center gap-1">
-          <CalendarDays size={13} /> {durationDays} jour
-          {durationDays > 1 ? "s" : ""}
+          <CalendarDays size={13} />{" "}
+          {datesChanged ? (
+            <>
+              <span className="line-through opacity-50">{durationDays}j</span>
+              &nbsp;{actualDurationDays} jour
+              {actualDurationDays !== 1 ? "s" : ""}
+            </>
+          ) : (
+            <>
+              {durationDays} jour{durationDays > 1 ? "s" : ""}
+            </>
+          )}
         </span>
         <span className="flex items-center gap-1">
           <Users size={13} /> {rental.guestCount} pers.
@@ -156,9 +189,27 @@ export const RentalCard = ({
           <span className="flex items-center gap-1">
             <Zap size={13} />{" "}
             <span className="font-medium">Coût électrique:</span>&nbsp;
-            {rental.electricityCost != null
-              ? `${rental.electricityCost.toFixed(2)} €`
-              : "—"}
+            {rental.electricityCost != null ? (
+              <>
+                {rental.electricityCost.toFixed(2)} €
+                <span className="opacity-60">
+                  (
+                  {(
+                    rental.electricityCost /
+                    (actualDurationDays ?? durationDays)
+                  ).toFixed(2)}{" "}
+                  €/j)
+                </span>
+              </>
+            ) : (
+              "—"
+            )}
+          </span>
+        )}
+        {rental.status === "completed" && rental.totalPrice != null && (
+          <span className="flex items-center gap-1 font-semibold text-gray-700">
+            <Euro size={13} /> <span className="font-medium">Total:</span>&nbsp;
+            {rental.totalPrice.toFixed(2)} €
           </span>
         )}
       </div>

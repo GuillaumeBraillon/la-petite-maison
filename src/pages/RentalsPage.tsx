@@ -1,6 +1,6 @@
 import { PlusCircle } from "lucide-react";
 import type { Rental, Member } from "../types";
-import { getPermissions } from "../services/permissions";
+import { getPermissions, isMemberRental } from "../services/permissions";
 import { createMember } from "../services/apiCrud";
 import { RentalList } from "../components/rentals/RentalList";
 import { RentalDetail } from "../components/rentals/RentalDetail";
@@ -112,10 +112,14 @@ export const RentalsPage = ({
         <RentalForm
           initialValues={editing ?? undefined}
           members={members}
+          canEdit={editing?.id ? permissions.editLocations : true}
+          currentMember={currentMember}
           onSubmit={handleSubmit}
           onCancel={closeForm}
-          onCreateSubMember={handleCreateSubMember}
-          submitLabel={editing?.id ? "Enregistrer" : "Créer"}
+          onCreateSubMember={
+            permissions.createMembers ? handleCreateSubMember : undefined
+          }
+          submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
         />
       </Modal>
 
@@ -135,6 +139,8 @@ export const RentalsPage = ({
                 ? memberIndex.get(selected.subMemberId)
                 : undefined
             }
+            canEdit={permissions.createWithAnyStatus}
+            canViewPrice={isMemberRental(currentMember ?? null, selected)}
             onEdit={openEdit}
             onDelete={handleDelete}
             onStatusChange={handleStatusChange}

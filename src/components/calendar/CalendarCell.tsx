@@ -75,6 +75,7 @@ export const CalendarCell = ({
               key={rental.id}
               rental={rental}
               owner={displayMember}
+              cellDate={date}
               onClick={onRentalClick}
             />
           );

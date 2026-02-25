@@ -83,6 +83,9 @@ create table public.rentals (
   status text not null default 'pending' check (status in ('pending', 'confirmed', 'rejected', 'completed')),
   notes text,
   electricity_cost numeric,
+  total_price numeric(10,2),
+  actual_start_date timestamptz,
+  actual_end_date   timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint rentals_date_order_chk check (end_date > start_date)

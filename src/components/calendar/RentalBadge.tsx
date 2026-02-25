@@ -7,6 +7,8 @@ import type { Rental, Member } from "../../types";
 interface RentalBadgeProps {
   rental: Rental;
   owner?: Member;
+  /** Date de la cellule calendrier — permet de détecter arrivée tardive / départ anticipé */
+  cellDate?: Date;
   onClick?: (rental: Rental) => void;
 }
 
@@ -40,19 +42,49 @@ const formatDate = (iso: string): string =>
 // Component
 // ------------------------------------------------------------
 
-export const RentalBadge = ({ rental, owner, onClick }: RentalBadgeProps) => {
+export const RentalBadge = ({
+  rental,
+  owner,
+  cellDate,
+  onClick,
+}: RentalBadgeProps) => {
   const label = owner ? `${owner.firstName} ${owner.lastName}` : "Location";
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
   const title = `${label} — ${formatDate(rental.startDate)} → ${formatDate(rental.endDate)} (${durationDays} jour${durationDays > 1 ? "s" : ""})`;
 
+  // Détecter si le jour de la cellule est hors des dates réelles (location terminée avec dates réelles)
+  let outsideActualReason: "arrived-late" | "left-early" | null = null;
+  if (cellDate && rental.status === "completed") {
+    const cell = new Date(cellDate);
+    cell.setHours(0, 0, 0, 0);
+    if (rental.actualStartDate) {
+      const actualStart = new Date(rental.actualStartDate);
+      actualStart.setHours(0, 0, 0, 0);
+      if (cell < actualStart) outsideActualReason = "arrived-late";
+    }
+    if (outsideActualReason === null && rental.actualEndDate) {
+      const actualEnd = new Date(rental.actualEndDate);
+      actualEnd.setHours(0, 0, 0, 0);
+      if (cell > actualEnd) outsideActualReason = "left-early";
+    }
+  }
+
+  const outsideTitle =
+    outsideActualReason === "arrived-late"
+      ? " (↗️ Arrivée plus tardive)"
+      : outsideActualReason === "left-early"
+        ? " (↘️ Départ anticipé)"
+        : "";
+
   return (
     <button
       onClick={() => onClick?.(rental)}
-      title={title}
+      title={title + outsideTitle}
       className={[
         "w-full text-left text-xs px-1.5 py-0.5 rounded border",
         "flex items-center gap-1",
         "hover:opacity-80 transition-opacity",
+        outsideActualReason ? "opacity-40 border-dashed" : "",
         statusColorMap[rental.status],
       ].join(" ")}
     >
@@ -64,7 +96,13 @@ export const RentalBadge = ({ rental, owner, onClick }: RentalBadgeProps) => {
           referrerPolicy="no-referrer"
         />
       ) : null}
-      <span className="truncate">{label}</span>
+      <span
+        className={["truncate", outsideActualReason ? "line-through" : ""].join(
+          " ",
+        )}
+      >
+        {label}
+      </span>
       <span className="shrink-0 text-[10px] font-semibold">
         {durationDays}j
       </span>

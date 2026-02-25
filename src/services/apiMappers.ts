@@ -75,6 +75,9 @@ export const mapRentalFromDb = (db: DbRental): Rental => ({
   status: db.status as RentalStatus,
   notes: db.notes ?? undefined,
   electricityCost: db.electricity_cost ?? undefined,
+  totalPrice: db.total_price ?? undefined,
+  actualStartDate: db.actual_start_date ?? undefined,
+  actualEndDate: db.actual_end_date ?? undefined,
   createdAt: db.created_at,
   updatedAt: db.updated_at,
 });
@@ -94,5 +97,14 @@ export const mapRentalToDb = (
   ...(rental.notes !== undefined && { notes: rental.notes ?? null }),
   ...("electricityCost" in rental && {
     electricity_cost: rental.electricityCost ?? null,
+  }),
+  ...("totalPrice" in rental && {
+    total_price: rental.totalPrice ?? null,
+  }),
+  ...("actualStartDate" in rental && {
+    actual_start_date: rental.actualStartDate ?? null,
+  }),
+  ...("actualEndDate" in rental && {
+    actual_end_date: rental.actualEndDate ?? null,
   }),
 });

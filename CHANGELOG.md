@@ -7,6 +7,85 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.3] — 2026-02-25
+
+### Added
+
+- **Visibilité du tarif par location (`isMemberRental`)** :
+  - Le tarif d'une location est visible par un `sub_member` ou un `owner` non éditeur uniquement si la location le concerne directement (il est `ownerId` ou `subMemberId`, ou son propriétaire parent est `ownerId`).
+  - Nouvelle fonction exportée `isMemberRental(member, rental)` dans `permissions.ts`.
+  - Prop `canViewPrice` ajouté à `RentalDetail`, transmis depuis `RentalsPage`, `CalendarPage` et `DashboardPage`.
+
+- **Validation des dates réelles à la clôture** :
+  - Nouveaux champs `actualStartDate` et `actualEndDate` sur le type `Rental` (optionnels).
+  - Visible et éditable dans `RentalForm` lorsque le statut est `"completed"`.
+  - Valeurs par défaut : dates prévues (`startDate` / `endDate`).
+  - Affichage de la durée réelle calculée dans le formulaire.
+  - Avertissement ⚠️ si les dates réelles diffèrent des dates prévues.
+  - `RentalDetail` : affiche "Début réel" et "Fin réelle" avec alerte si différentes.
+  - `RentalCard` : dates prévues en barré + dates réelles en amber quand elles diffèrent.
+  - Colonnes `actual_start_date`, `actual_end_date` ajoutées dans `supabase/schema.sql`.
+
+- **Visuel calendrier — jours hors dates réelles** :
+  - `RentalBadge` : nouveau prop `cellDate` pour comparer la date de la cellule aux dates réelles.
+  - Pour les locations terminées, les cellules hors dates réelles affichent le badge en opacité 40 %, bordure pointillée et nom barré.
+  - Raison calculée : `"arrived-late"` (cellule avant `actualStartDate`) ou `"left-early"` (cellule après `actualEndDate`).
+  - `CalendarCell` et `CalendarView` (liste mobile) transmettent `cellDate` à `RentalBadge`.
+
+- **Calcul dynamique du tarif** :
+  - Constante `PRICE_PER_NIGHT_PER_PERSON = 5 €` dans `RentalForm`.
+  - À la création : tarif auto-calculé `nuits × personnes × 5 €`.
+  - Si les dates réelles diffèrent, le recalcul utilise `actualStartDate`/`actualEndDate`.
+  - Bloc "💶 Recalcul sur dates réelles" avec bouton **"Appliquer ce tarif"** (masqué si tarif déjà à jour).
+  - Hint sous le champ tarif : formule du calcul + bouton **"Réinitialiser"** pour déverrouiller l'auto-calcul.
+  - État `isPriceLocked` : la saisie manuelle verrouille le recalcul automatique.
+
+- **Champ `totalPrice` (total final)** :
+  - Nouveau champ `totalPrice` sur le type `Rental` (optionnel) : total final = tarif + coût électrique.
+  - Auto-calculé et modifiable dans le bloc "💰 Total final" en statut `"completed"`.
+  - État `isTotalLocked` : saisie manuelle verrouille l'auto-calcul ; bouton **"Réinitialiser"** pour revenir au calcul auto.
+  - `RentalDetail` : ligne "Total final" affichée dans le bloc post-location.
+  - Colonne `total_price numeric(10,2)` ajoutée dans `supabase/schema.sql`.
+
+### Changed
+
+- `types.ts` : ajout de `actualStartDate?: string`, `actualEndDate?: string`, `totalPrice?: number` sur `Rental`.
+- `dbTypes.ts` : ajout de `actual_start_date`, `actual_end_date`, `total_price` sur `DbRental`.
+- `apiMappers.ts` : mapping complet des 3 nouveaux champs (`mapRentalFromDb` / `mapRentalToDb`).
+- `supabase/schema.sql` : table `rentals` mise à jour avec les 3 nouvelles colonnes.
+
+### Security
+
+- Champ **tarif** (`price`) et **total** (`totalPrice`) : `disabled` pour les utilisateurs `isRestricted` (`sub_member` ou `owner` non éditeur).
+- Boutons "Réinitialiser tarif", "Appliquer ce tarif" et "Réinitialiser total" masqués pour les utilisateurs restreints.
+
+---
+
+## [0.3.2] — 2026-02-25
+
+### Added
+
+- **Demandes de réservation pour propriétaires non éditeurs et sous-membres** :
+  - Le bouton "Nouvelle location" et les clics sur les cellules du calendrier sont désormais disponibles pour ces rôles.
+  - Lors de la création : les champs "Propriétaire" et "Sous-membre" sont préremplis et verrouillés selon le compte connecté.
+  - Le statut est automatiquement défini à **"En attente"** et non modifiable — un message explicatif est affiché dans le formulaire.
+- **Sécurisation Supabase (RLS)** : politiques fines sur la table `rentals` (intégrées dans `supabase/schema.sql`) :
+  - `INSERT` : autorisé pour tous les rôles, avec forçage de `status='pending'`, `owner_id` et `sub_member_id` vérifié côté base de données pour les non-éditeurs.
+  - `UPDATE` / `DELETE` : réservés aux admins et propriétaires éditeurs.
+  - 4 fonctions `security definer` créées pour interroger le rôle du membre courant sans contourner le RLS.
+
+### Changed
+
+- `permissions.ts` :
+  - `sub_member` : `createLocations`, `viewLocations`, `viewCalendarDetails` passent à `true`.
+  - `owner` non éditeur : `createLocations` passe à `true`.
+  - Nouveau champ `createWithAnyStatus: boolean` (true uniquement pour admin et owner éditeur).
+- `RentalForm` : nouveau prop `currentMember` pour dériver le mode restreint.
+- Label du bouton submit passe à **"Envoyer la demande"** lors d'une création depuis une page calendrier ou locations.
+- `onCreateSubMember` désactivé pour les utilisateurs restreints.
+
+---
+
 ## [0.3.1] — 2026-02-25
 
 ### Breaking Changes

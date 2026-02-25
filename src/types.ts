@@ -46,7 +46,7 @@ export interface Rental {
   endDate: string;
   /** Propriétaire principal */
   ownerId: string;
-  /** Enfant / sous-membre / locataire */
+  /** Enfant / sous-membre */
   subMemberId?: string;
   /** Nombre de personnes */
   guestCount: number;
@@ -57,6 +57,12 @@ export interface Rental {
   notes?: string;
   /** Coût électricité (€) */
   electricityCost?: number;
+  /** Total final (tarif location + coût électrique) — modifiable en clôture */
+  totalPrice?: number;
+  /** Date de début réelle (si différente de la date prévue — départ anticipé, arrivée tardive…) */
+  actualStartDate?: string;
+  /** Date de fin réelle (si différente de la date prévue) */
+  actualEndDate?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -16,6 +16,8 @@ interface RentalFormProps {
   initialValues?: Partial<RentalFormValues>;
   members: Member[];
   canEdit?: boolean;
+  /** Membre connecté — permet de dériver le mode restreint (propriétaire non éditeur / sous-membre) */
+  currentMember?: Member;
   onSubmit: (values: RentalFormValues) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
@@ -27,6 +29,12 @@ interface RentalFormProps {
     ownerId?: string;
   }) => Promise<Member>;
 }
+
+// ------------------------------------------------------------
+// Constants
+// ------------------------------------------------------------
+
+const PRICE_PER_NIGHT_PER_PERSON = 5; // € par nuit et par personne
 
 // ------------------------------------------------------------
 // Helpers
@@ -90,6 +98,9 @@ const buildDefaultValues = (): RentalFormValues => {
     status: "pending",
     notes: undefined,
     electricityCost: undefined,
+    totalPrice: undefined,
+    actualStartDate: undefined,
+    actualEndDate: undefined,
   };
 };
 
@@ -101,15 +112,59 @@ export const RentalForm = ({
   initialValues,
   members,
   canEdit = true,
+  currentMember,
   onSubmit,
   onCancel,
   submitLabel = "Enregistrer",
   onCreateSubMember,
 }: RentalFormProps) => {
-  const [values, setValues] = useState<RentalFormValues>({
-    ...buildDefaultValues(),
-    ...initialValues,
+  // Mode restreint : propriétaire non éditeur ou sous-membre
+  const isRestricted =
+    !!currentMember &&
+    (currentMember.role === "sub_member" ||
+      (currentMember.role === "owner" && !currentMember.isEditor));
+
+  // Identifiant du propriétaire imposé selon le rôle du membre connecté
+  const restrictedOwnerId: string | undefined =
+    currentMember?.role === "sub_member"
+      ? (currentMember.ownerId ?? "")
+      : currentMember?.role === "owner" && !currentMember.isEditor
+        ? currentMember.id
+        : undefined;
+
+  // Identifiant du sous-membre imposé (soi-même si sous-membre)
+  const restrictedSubMemberId: string | undefined =
+    currentMember?.role === "sub_member" ? currentMember.id : undefined;
+
+  const [values, setValues] = useState<RentalFormValues>(() => {
+    const base: RentalFormValues = {
+      ...buildDefaultValues(),
+      ...initialValues,
+    };
+    // En mode restreint et lors d'une création (pas d'id), forcer les champs
+    if (isRestricted && !initialValues?.status) {
+      if (restrictedOwnerId !== undefined) base.ownerId = restrictedOwnerId;
+      base.subMemberId = restrictedSubMemberId;
+      base.status = "pending";
+    }
+    // Dates réelles : par défaut = dates prévues si non renseignées
+    if (!base.actualStartDate) base.actualStartDate = base.startDate;
+    if (!base.actualEndDate) base.actualEndDate = base.endDate;
+    // Tarif auto-calculé à la création uniquement
+    if (!initialValues?.price) {
+      const nights = getRentalDurationDays(base.startDate, base.endDate);
+      base.price = nights * base.guestCount * PRICE_PER_NIGHT_PER_PERSON;
+    }
+    return base;
   });
+  // true = l'utilisateur a saisi un tarif manuellement (pas de recalcul automatique)
+  const [isPriceLocked, setIsPriceLocked] = useState(
+    () => !!initialValues?.price,
+  );
+  // true = l'utilisateur a saisi un total manuellement
+  const [isTotalLocked, setIsTotalLocked] = useState(
+    () => !!initialValues?.totalPrice,
+  );
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<
     Partial<Record<keyof RentalFormValues, string>>
@@ -138,7 +193,41 @@ export const RentalForm = ({
     key: K,
     value: RentalFormValues[K],
   ) => {
-    setValues((prev) => ({ ...prev, [key]: value }));
+    setValues((prev) => {
+      const next = { ...prev, [key]: value };
+      // Recalcul automatique du tarif si non verrouillé
+      // Utilise les dates réelles si disponibles (statut = completed), sinon les dates prévues
+      if (
+        !isPriceLocked &&
+        (key === "startDate" ||
+          key === "endDate" ||
+          key === "actualStartDate" ||
+          key === "actualEndDate" ||
+          key === "guestCount")
+      ) {
+        const effectiveStart = next.actualStartDate ?? next.startDate;
+        const effectiveEnd = next.actualEndDate ?? next.endDate;
+        const nights = getRentalDurationDays(effectiveStart, effectiveEnd);
+        const guests =
+          typeof next.guestCount === "number" ? next.guestCount : 1;
+        next.price = nights * guests * PRICE_PER_NIGHT_PER_PERSON;
+      }
+      // Recalcul automatique du total si non verrouillé
+      if (
+        !isTotalLocked &&
+        (key === "price" ||
+          key === "electricityCost" ||
+          key === "startDate" ||
+          key === "endDate" ||
+          key === "actualStartDate" ||
+          key === "actualEndDate" ||
+          key === "guestCount")
+      ) {
+        const basePrice = key === "price" ? (value as number) : next.price;
+        next.totalPrice = basePrice + (next.electricityCost ?? 0);
+      }
+      return next;
+    });
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
@@ -164,7 +253,11 @@ export const RentalForm = ({
     if (!validate()) return;
     setLoading(true);
     try {
-      await onSubmit(values);
+      // Sécurité supplémentaire côté client : forcer le statut pending pour les utilisateurs restreints
+      const submittedValues: RentalFormValues = isRestricted
+        ? { ...values, status: "pending" }
+        : values;
+      await onSubmit(submittedValues);
     } finally {
       setLoading(false);
     }
@@ -240,6 +333,15 @@ export const RentalForm = ({
     : "Début";
   const endDateLabel = values.endDate ? formatDateLabel(values.endDate) : "Fin";
   const durationDays = getRentalDurationDays(values.startDate, values.endDate);
+  const actualDurationDays = getRentalDurationDays(
+    values.actualStartDate,
+    values.actualEndDate,
+  );
+  const actualDatesChanged =
+    values.actualStartDate !== values.startDate ||
+    values.actualEndDate !== values.endDate;
+  const recalculatedPrice =
+    actualDurationDays * values.guestCount * PRICE_PER_NIGHT_PER_PERSON;
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -287,7 +389,7 @@ export const RentalForm = ({
         }}
         placeholder="Sélectionner un propriétaire"
         error={errors.ownerId}
-        disabled={!canEdit}
+        disabled={!canEdit || isRestricted}
         required
       >
         {owners.map((m) => (
@@ -299,23 +401,27 @@ export const RentalForm = ({
 
       {/* Sous-membre */}
       <Combobox
-        label="Sous-membre / locataire"
+        label="Sous-membre"
         value={values.subMemberId ?? ""}
         options={subMemberOptions}
         onChange={(id) => {
           set("subMemberId", id || undefined);
           if (id) setNewMember((prev) => ({ ...prev, active: false }));
         }}
-        onCreate={onCreateSubMember ? handleCreateSubMemberTrigger : undefined}
-        placeholder="Rechercher ou créer un sous-membre…"
-        disabled={!canEdit}
+        onCreate={
+          !isRestricted && onCreateSubMember
+            ? handleCreateSubMemberTrigger
+            : undefined
+        }
+        placeholder={isRestricted ? "—" : "Rechercher ou créer un sous-membre…"}
+        disabled={!canEdit || isRestricted}
       />
 
       {/* Mini-formulaire de création de sous-membre */}
       {newMember.active && (
         <div className="rounded-lg border border-primary-200 bg-primary-50/50 p-4 flex flex-col gap-3">
           <p className="text-sm font-medium text-primary-700">
-            Nouveau sous-membre / locataire
+            Nouveau sous-membre
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
@@ -421,36 +527,189 @@ export const RentalForm = ({
           onChange={(e) => {
             const val = e.target.value;
             if (val === "") {
+              setIsPriceLocked(false);
               set("price", 0);
             } else {
               const num = Number(val);
-              if (!isNaN(num)) set("price", num);
+              if (!isNaN(num)) {
+                setIsPriceLocked(true);
+                set("price", num);
+              }
             }
           }}
           error={errors.price}
-          disabled={!canEdit}
+          disabled={!canEdit || isRestricted}
         />
       </div>
-
-      {/* Statut */}
-      <div className="flex flex-col gap-1">
-        <Select
-          label="Statut"
-          value={values.status}
-          onChange={(e) => set("status", e.target.value as RentalStatus)}
-          disabled={!canEdit}
-          required
-        >
-          <option value="pending">En attente</option>
-          <option value="confirmed">Confirmé</option>
-          <option value="rejected">Refusé</option>
-          <option value="completed">Terminé</option>
-        </Select>
+      {/* Hint tarif */}
+      <div className="-mt-2 flex flex-wrap items-center gap-2">
+        <p className="text-xs text-gray-500">
+          Calcul : {durationDays} nuit{durationDays > 1 ? "s" : ""} ×{" "}
+          {values.guestCount} pers. × {PRICE_PER_NIGHT_PER_PERSON} €{" = "}
+          <span className="font-medium text-gray-700">
+            {(
+              durationDays *
+              values.guestCount *
+              PRICE_PER_NIGHT_PER_PERSON
+            ).toFixed(2)}{" "}
+            €
+          </span>
+        </p>
+        {isPriceLocked && canEdit && !isRestricted && (
+          <button
+            type="button"
+            className="text-xs text-primary-600 underline hover:text-primary-800 transition-colors"
+            onClick={() => {
+              setIsPriceLocked(false);
+              const effectiveStart = values.actualStartDate ?? values.startDate;
+              const effectiveEnd = values.actualEndDate ?? values.endDate;
+              const nights = getRentalDurationDays(
+                effectiveStart,
+                effectiveEnd,
+              );
+              set(
+                "price",
+                nights * values.guestCount * PRICE_PER_NIGHT_PER_PERSON,
+              );
+            }}
+          >
+            Réinitialiser
+          </button>
+        )}
       </div>
+
+      {/* Statut — masqué en mode restreint (toujours "En attente") */}
+      {isRestricted ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          ⏳ Votre demande sera soumise avec le statut{" "}
+          <span className="font-semibold">En attente</span> et devra être
+          validée par un administrateur.
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1">
+          <Select
+            label="Statut"
+            value={values.status}
+            onChange={(e) => set("status", e.target.value as RentalStatus)}
+            disabled={!canEdit}
+            required
+          >
+            <option value="pending">En attente</option>
+            <option value="confirmed">Confirmé</option>
+            <option value="rejected">Refusé</option>
+            <option value="completed">Terminé</option>
+          </Select>
+        </div>
+      )}
 
       {/* Infos post-location — visibles seulement si statut = completed */}
       {values.status === "completed" && (
         <>
+          {/* Dates réelles */}
+          <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">
+                📅 Dates réelles du séjour
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input
+                label={
+                  values.actualStartDate
+                    ? formatDateLabel(values.actualStartDate)
+                    : "Début réel"
+                }
+                type="datetime-local"
+                value={
+                  values.actualStartDate
+                    ? toDatetimeLocal(values.actualStartDate)
+                    : ""
+                }
+                onChange={(e) =>
+                  set(
+                    "actualStartDate",
+                    e.target.value
+                      ? new Date(e.target.value).toISOString()
+                      : undefined,
+                  )
+                }
+                disabled={!canEdit}
+              />
+              <Input
+                label={
+                  values.actualEndDate
+                    ? formatDateLabel(values.actualEndDate)
+                    : "Fin réelle"
+                }
+                type="datetime-local"
+                value={
+                  values.actualEndDate
+                    ? toDatetimeLocal(values.actualEndDate)
+                    : ""
+                }
+                onChange={(e) =>
+                  set(
+                    "actualEndDate",
+                    e.target.value
+                      ? new Date(e.target.value).toISOString()
+                      : undefined,
+                  )
+                }
+                disabled={!canEdit}
+              />
+            </div>
+            {actualDurationDays > 0 && (
+              <p className="mt-2 text-xs text-gray-500">
+                Durée réelle :{" "}
+                <span className="font-medium text-gray-700">
+                  {actualDurationDays} jour{actualDurationDays > 1 ? "s" : ""}
+                </span>
+              </p>
+            )}
+            {values.actualStartDate &&
+              values.actualEndDate &&
+              (values.actualStartDate !== values.startDate ||
+                values.actualEndDate !== values.endDate) && (
+                <p className="mt-2 text-xs text-amber-600">
+                  ⚠️ Les dates réelles diffèrent des dates prévues.
+                </p>
+              )}
+          </div>
+          {/* Tarif recalculé sur dates réelles */}
+          {actualDatesChanged && (
+            <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/60 p-4 flex flex-col gap-2">
+              <p className="text-sm font-medium text-amber-800">
+                💶 Recalcul sur dates réelles
+              </p>
+              <p className="text-xs text-amber-700">
+                {actualDurationDays} nuit{actualDurationDays > 1 ? "s" : ""} ×{" "}
+                {values.guestCount} pers. × {PRICE_PER_NIGHT_PER_PERSON} €
+                {" = "}
+                <span className="font-semibold">
+                  {recalculatedPrice.toFixed(2)} €
+                </span>
+              </p>
+              {canEdit &&
+                !isRestricted &&
+                recalculatedPrice !== values.price && (
+                  <button
+                    type="button"
+                    className="self-start text-xs font-medium text-amber-800 underline hover:text-amber-900 transition-colors"
+                    onClick={() => {
+                      setIsPriceLocked(true);
+                      set("price", recalculatedPrice);
+                    }}
+                  >
+                    Appliquer ce tarif
+                  </button>
+                )}
+              {recalculatedPrice === values.price && (
+                <p className="text-xs text-green-700">
+                  ✅ Le tarif actuel correspond aux dates réelles.
+                </p>
+              )}
+            </div>
+          )}
           {/* Relevé électrique */}
           <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
             <div className="mb-3 flex items-center gap-2">
@@ -473,6 +732,62 @@ export const RentalForm = ({
               disabled={!canEdit}
               placeholder="Montant de la facture d'électricité"
             />
+          </div>
+          {/* Tarif total */}
+          <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">
+                💰 Total final
+              </span>
+            </div>
+            <Input
+              label="Total (tarif + électricité)"
+              type="number"
+              min={0}
+              step={0.01}
+              value={values.totalPrice === undefined ? "" : values.totalPrice}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "") {
+                  setIsTotalLocked(false);
+                  set("totalPrice", undefined);
+                } else {
+                  const num = Number(val);
+                  if (!isNaN(num)) {
+                    setIsTotalLocked(true);
+                    set("totalPrice", num);
+                  }
+                }
+              }}
+              disabled={!canEdit || isRestricted}
+              placeholder="Auto-calculé"
+            />
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <p className="text-xs text-gray-500">
+                Tarif : {values.price.toFixed(2)} €
+                {values.electricityCost !== undefined &&
+                  ` + électricité : ${values.electricityCost.toFixed(2)} €`}
+                {" = "}
+                <span className="font-medium text-gray-700">
+                  {(values.price + (values.electricityCost ?? 0)).toFixed(2)} €
+                </span>
+              </p>
+              {isTotalLocked && canEdit && !isRestricted && (
+                <button
+                  type="button"
+                  className="text-xs text-primary-600 underline hover:text-primary-800 transition-colors"
+                  onClick={() => {
+                    setIsTotalLocked(false);
+                    set(
+                      "totalPrice",
+                      values.price + (values.electricityCost ?? 0),
+                    );
+                  }}
+                >
+                  Réinitialiser
+                </button>
+              )}
+            </div>
           </div>
         </>
       )}

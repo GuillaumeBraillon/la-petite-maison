@@ -2,11 +2,13 @@
 // permissions.ts — Logique d'accès simple basée sur les rôles
 // ============================================================
 
-import type { Member } from "../types";
+import type { Member, Rental } from "../types";
 
 export interface Permissions {
   viewLocations: boolean;
   createLocations: boolean;
+  /** true = peut choisir n'importe quel statut ; false = forcé à "pending" */
+  createWithAnyStatus: boolean;
   editLocations: boolean;
   deleteLocations: boolean;
   viewMembers: boolean;
@@ -31,6 +33,7 @@ export const getPermissions = (member: Member | null): Permissions => {
     return {
       viewLocations: false,
       createLocations: false,
+      createWithAnyStatus: false,
       editLocations: false,
       deleteLocations: false,
       viewMembers: false,
@@ -48,6 +51,7 @@ export const getPermissions = (member: Member | null): Permissions => {
     return {
       viewLocations: true,
       createLocations: true,
+      createWithAnyStatus: true,
       editLocations: true,
       deleteLocations: true,
       viewMembers: true,
@@ -65,7 +69,8 @@ export const getPermissions = (member: Member | null): Permissions => {
     const isEditor = member.isEditor;
     return {
       viewLocations: true,
-      createLocations: isEditor,
+      createLocations: true, // non-éditeur peut créer des demandes (statut = pending)
+      createWithAnyStatus: isEditor,
       editLocations: isEditor,
       deleteLocations: isEditor,
       viewMembers: true,
@@ -78,10 +83,11 @@ export const getPermissions = (member: Member | null): Permissions => {
     };
   }
 
-  // Sub_member : calendrier seul
+  // Sub_member : peut voir le calendrier + ses locations, et créer des demandes
   return {
-    viewLocations: false,
-    createLocations: false,
+    viewLocations: true,
+    createLocations: true,
+    createWithAnyStatus: false,
     editLocations: false,
     deleteLocations: false,
     viewMembers: false,
@@ -89,7 +95,7 @@ export const getPermissions = (member: Member | null): Permissions => {
     editMembers: false,
     deleteMembers: false,
     viewCalendar: true,
-    viewCalendarDetails: false,
+    viewCalendarDetails: true,
     authorizeUsers: false,
   };
 };
@@ -103,4 +109,26 @@ export const hasPermission = (
 ): boolean => {
   const permissions = getPermissions(member);
   return permissions[permission];
+};
+
+/**
+ * Détermine si une location concerne directement un membre (i.e. ses propres données).
+ * Peut être utilisé partout dans l'app pour restreindre la visibilité aux données personnelles.
+ * - Admin / owner éditeur : toujours vrai (accès global)
+ * - Owner non-éditeur : ses propres locations uniquement
+ * - Sub_member : ses locations + les locations de son propriétaire parent
+ */
+export const isMemberRental = (
+  member: Member | null,
+  rental: Rental,
+): boolean => {
+  if (!member) return false;
+  if (getPermissions(member).createWithAnyStatus) return true;
+  if (member.role === "owner") return rental.ownerId === member.id;
+  if (member.role === "sub_member") {
+    return (
+      rental.subMemberId === member.id || rental.ownerId === member.ownerId
+    );
+  }
+  return false;
 };
