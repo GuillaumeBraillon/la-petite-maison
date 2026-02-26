@@ -69,6 +69,14 @@ export const TOAST_MESSAGES = {
       title: "Erreur",
       message: "Impossible de modifier l'autorisation.",
     },
+    passwordResetSent: (fullName: string) => ({
+      title: "Email envoyé",
+      message: `Lien de réinitialisation envoyé à ${fullName}.`,
+    }),
+    passwordResetError: {
+      title: "Erreur",
+      message: "Impossible d'envoyer le lien de réinitialisation.",
+    },
   },
   notification: {
     deleted: {

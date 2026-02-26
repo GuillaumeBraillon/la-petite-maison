@@ -6,6 +6,7 @@
 
 export interface DbMember {
   id: string;
+  auth_user_id: string | null;
   is_allowed: boolean;
   label: string;
   first_name: string;

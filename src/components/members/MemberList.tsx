@@ -10,6 +10,9 @@ interface MemberListProps {
   members: Member[];
   canEdit?: boolean;
   canDelete?: boolean;
+  canSendPasswordReset?: boolean;
+  onSendPasswordReset?: (member: Member) => void;
+  sendingPasswordResetForId?: string | null;
   onEdit: (member: Member) => void;
   onDelete: (member: Member) => void;
 }
@@ -40,6 +43,9 @@ export const MemberList = ({
   members,
   canEdit = true,
   canDelete = true,
+  canSendPasswordReset = false,
+  onSendPasswordReset,
+  sendingPasswordResetForId = null,
   onEdit,
   onDelete,
 }: MemberListProps) => {
@@ -66,6 +72,9 @@ export const MemberList = ({
           }
           canEdit={canEdit}
           canDelete={canDelete}
+          canSendPasswordReset={canSendPasswordReset}
+          onSendPasswordReset={onSendPasswordReset}
+          sendingPasswordReset={sendingPasswordResetForId === member.id}
           onEdit={onEdit}
           onDelete={onDelete}
         />

@@ -7,6 +7,29 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.10] — 2026-02-26
+
+### Changed
+
+- **Synchronisation email Auth ↔ membres** :
+  - Renforcement de `useAuthorization` pour lier un membre à `auth.users.id` via `auth_user_id`.
+  - Recherche prioritaire par `auth_user_id`, fallback par email, puis synchronisation de l'email/avatar.
+  - Objectif : éviter la création de doublons `members` lors d'un changement d'email Supabase Auth.
+
+- **Schéma SQL consolidé** :
+  - Le schéma `from scratch` intègre explicitement `members.auth_user_id` + index unique partiel.
+  - Documentation SQL "base existante" mise à jour en bas de `schema.sql`.
+
+### Removed
+
+- Suppression du fichier de migration dédié à `auth_user_id` pour conserver une source unique de vérité dans `supabase/schema.sql`.
+
+### Key files touched
+
+- `src/hooks/useAuthorization.ts`
+- `supabase/schema.sql`
+- `CHANGELOG.md`
+
 ## [0.3.9] — 2026-02-26
 
 ### Added

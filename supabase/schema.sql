@@ -37,6 +37,7 @@ drop table if exists public.push_subscriptions cascade;
 -- ------------------------------------------------------------
 create table public.members (
   id uuid primary key default gen_random_uuid(),
+  auth_user_id uuid references auth.users(id) on delete set null,
   is_allowed boolean not null default false,
   label text not null default '',
   first_name text not null default '',
@@ -64,6 +65,7 @@ create index members_last_name_idx on public.members(last_name);
 create index members_role_idx on public.members(role);
 create index members_owner_id_idx on public.members(owner_id);
 create index members_is_allowed_idx on public.members(is_allowed);
+create unique index members_auth_user_id_unique_idx on public.members(auth_user_id) where auth_user_id is not null;
 create unique index members_email_unique_idx on public.members(lower(email)) where email is not null;
 
 create trigger trg_members_set_updated_at
@@ -223,3 +225,5 @@ commit;
 -- Migration disponible: supabase/migrations/20260225_add_last_login.sql
 -- SQL utile pour une base existante:
 -- ALTER TABLE public.members ADD COLUMN IF NOT EXISTS last_login timestamptz;
+-- ALTER TABLE public.members ADD COLUMN IF NOT EXISTS auth_user_id uuid references auth.users(id) on delete set null;
+-- CREATE UNIQUE INDEX IF NOT EXISTS members_auth_user_id_unique_idx ON public.members(auth_user_id) WHERE auth_user_id is not null;

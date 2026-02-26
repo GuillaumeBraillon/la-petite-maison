@@ -9,6 +9,7 @@ interface AuthorizedUserRow {
   role: string;
   is_allowed: boolean;
   avatar_url: string | null;
+  auth_user_id: string | null;
 }
 
 const NOT_FOUND_ERROR_CODE = "PGRST116";
@@ -84,20 +85,35 @@ export const useAuthorization = (session: Session | null) => {
         const lastName = nameParts.slice(1).join(" ");
         const label = userName ?? "Demande en attente";
 
-        const { data, error: dbError } = await supabase
+        const { data: byAuthUserId, error: byAuthUserIdError } = await supabase
           .from("members")
-          .select("id, email, role, is_allowed, avatar_url")
-          .ilike("email", normalizedEmail)
-          .single();
+          .select("id, email, role, is_allowed, avatar_url, auth_user_id")
+          .eq("auth_user_id", currentUser.id)
+          .maybeSingle();
 
-        if (dbError && dbError.code !== NOT_FOUND_ERROR_CODE) {
-          throw dbError;
+        if (byAuthUserIdError) {
+          throw byAuthUserIdError;
         }
 
-        const authorizedUser = (data ?? null) as AuthorizedUserRow | null;
+        let authorizedUser = (byAuthUserId ?? null) as AuthorizedUserRow | null;
+
+        if (!authorizedUser) {
+          const { data: byEmail, error: byEmailError } = await supabase
+            .from("members")
+            .select("id, email, role, is_allowed, avatar_url, auth_user_id")
+            .ilike("email", normalizedEmail)
+            .maybeSingle();
+
+          if (byEmailError && byEmailError.code !== NOT_FOUND_ERROR_CODE) {
+            throw byEmailError;
+          }
+
+          authorizedUser = (byEmail ?? null) as AuthorizedUserRow | null;
+        }
 
         if (!authorizedUser) {
           const { error: insertError } = await supabase.from("members").insert({
+            auth_user_id: currentUser.id,
             email: normalizedEmail,
             is_allowed: false,
             label,
@@ -122,17 +138,35 @@ export const useAuthorization = (session: Session | null) => {
 
         const authorized = authorizedUser.is_allowed === true;
 
+        const normalizedMemberEmail = authorizedUser.email
+          ?.trim()
+          .toLowerCase();
+        const syncPayload: {
+          auth_user_id?: string;
+          email?: string;
+          avatar_url?: string;
+        } = {};
+
+        if (authorizedUser.auth_user_id !== currentUser.id) {
+          syncPayload.auth_user_id = currentUser.id;
+        }
+
+        if (normalizedMemberEmail !== normalizedEmail) {
+          syncPayload.email = normalizedEmail;
+        }
+
         if (avatarUrl && avatarUrl !== authorizedUser.avatar_url) {
-          const { error: avatarUpdateError } = await supabase
+          syncPayload.avatar_url = avatarUrl;
+        }
+
+        if (Object.keys(syncPayload).length > 0) {
+          const { error: syncError } = await supabase
             .from("members")
-            .update({ avatar_url: avatarUrl })
+            .update(syncPayload)
             .eq("id", authorizedUser.id);
 
-          if (avatarUpdateError) {
-            logger.error(
-              "Authorization avatar update error:",
-              avatarUpdateError,
-            );
+          if (syncError) {
+            logger.error("Authorization sync error:", syncError);
           }
         }
 

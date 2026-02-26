@@ -12,6 +12,7 @@ import { useError } from "../contexts/ErrorContext";
 import { useToast } from "../contexts/ToastContext";
 import { createMember, updateMember, deleteMember } from "../services/apiCrud";
 import { TOAST_MESSAGES } from "../services/messageCatalog";
+import { supabase } from "../services/supabaseClient";
 
 // ----------------------------------------------- -------
 // Props
@@ -36,9 +37,15 @@ export const MembersPage = ({
   const [editing, setEditing] = useState<Member | null>(null);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
   const [deletingMember, setDeletingMember] = useState(false);
+  const [sendingPasswordResetForId, setSendingPasswordResetForId] = useState<
+    string | null
+  >(null);
   const { error, setError, clearError } = useError();
   const { showToast } = useToast();
   const permissions = getPermissions(currentMember ?? null);
+  const canSendPasswordReset =
+    currentMember?.role === "admin" ||
+    (currentMember?.role === "owner" && currentMember.isEditor);
 
   // Les administrateurs ne doivent être visibles que par d'autres administrateurs
   const visibleMembers = members.filter((m) => {
@@ -186,6 +193,52 @@ export const MembersPage = ({
     }
   };
 
+  const handleSendPasswordReset = async (member: Member) => {
+    const email = member.email?.trim().toLowerCase();
+    if (!email) {
+      showToast({
+        variant: "error",
+        title: TOAST_MESSAGES.member.passwordResetError.title,
+        message: "Ce membre n'a pas d'email renseigné.",
+      });
+      return;
+    }
+
+    if (sendingPasswordResetForId) return;
+
+    setSendingPasswordResetForId(member.id);
+
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: window.location.origin,
+        },
+      );
+
+      if (resetError) {
+        throw resetError;
+      }
+
+      const fullName = `${member.firstName} ${member.lastName}`.trim();
+      showToast({
+        variant: "success",
+        ...TOAST_MESSAGES.member.passwordResetSent(fullName || email),
+      });
+    } catch (err) {
+      showToast({
+        variant: "error",
+        title: TOAST_MESSAGES.member.passwordResetError.title,
+        message:
+          err instanceof Error
+            ? err.message
+            : TOAST_MESSAGES.member.passwordResetError.message,
+      });
+    } finally {
+      setSendingPasswordResetForId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -209,6 +262,9 @@ export const MembersPage = ({
         members={visibleMembers}
         canEdit={permissions.editMembers}
         canDelete={permissions.deleteMembers}
+        canSendPasswordReset={canSendPasswordReset}
+        onSendPasswordReset={handleSendPasswordReset}
+        sendingPasswordResetForId={sendingPasswordResetForId}
         onEdit={openEdit}
         onDelete={handleDelete}
       />

@@ -23,6 +23,9 @@ interface MemberCardProps {
   ownerName?: string; // nom du propriétaire parent si sub_member
   canEdit?: boolean;
   canDelete?: boolean;
+  canSendPasswordReset?: boolean;
+  onSendPasswordReset?: (member: Member) => void;
+  sendingPasswordReset?: boolean;
   onEdit: (member: Member) => void;
   onDelete: (member: Member) => void;
 }
@@ -36,6 +39,9 @@ export const MemberCard = ({
   ownerName,
   canEdit = true,
   canDelete = true,
+  canSendPasswordReset = false,
+  onSendPasswordReset,
+  sendingPasswordReset = false,
   onEdit,
   onDelete,
 }: MemberCardProps) => {
@@ -102,7 +108,20 @@ export const MemberCard = ({
         {member.email && (
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <Mail size={12} className="shrink-0" />
-            <span className="truncate">{member.email}</span>
+            <span className="truncate flex-1">{member.email}</span>
+            {canSendPasswordReset && onSendPasswordReset && (
+              <button
+                type="button"
+                onClick={() => onSendPasswordReset(member)}
+                disabled={sendingPasswordReset}
+                className="text-[10px] leading-none text-primary-700 hover:text-primary-800 whitespace-nowrap disabled:opacity-50"
+                aria-label={`Réinitialiser le mot de passe de ${member.firstName} ${member.lastName}`}
+              >
+                {sendingPasswordReset
+                  ? "Envoi..."
+                  : "Réinitialiser le mot de passe"}
+              </button>
+            )}
           </div>
         )}
         {member.address && (
