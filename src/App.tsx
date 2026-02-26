@@ -5,7 +5,6 @@ import {
   Users,
   CalendarDays,
   List,
-  LogOut,
   Home,
   Download,
 } from "lucide-react";
@@ -25,6 +24,7 @@ import { useAuthorization } from "./hooks/useAuthorization";
 import { LoginView } from "./components/Auth/LoginView";
 import { ResetPasswordView } from "./components/Auth/ResetPasswordView";
 import { UnauthorizedView } from "./components/Auth/UnauthorizedView";
+import { UserMenu } from "./components/ui/UserMenu";
 
 // ------------------------------------------------------------
 // Types
@@ -179,20 +179,8 @@ const AppShell = ({ session }: AppShellProps) => {
   const [loading, setLoading] = useState(true);
   const { error, clearError, setError } = useError();
   const { isInstallable, install } = usePWAInstall();
-  const userAvatar =
-    session.user.user_metadata?.avatar_url ??
-    session.user.user_metadata?.picture ??
-    null;
 
-  // Récupérer le nom depuis session OU depuis la DB
-  const defaultUserName =
-    session.user.user_metadata?.full_name ??
-    session.user.user_metadata?.name ??
-    "Utilisateur";
   const currentMember = members.find((m) => m.email === session.user.email);
-  const userName = currentMember
-    ? `${currentMember.firstName} ${currentMember.lastName}`
-    : defaultUserName;
 
   // Helper pour filtrer les items de nav basés sur le rôle
   const getAvailableNavItems = (): NavItem[] => {
@@ -249,7 +237,7 @@ const AppShell = ({ session }: AppShellProps) => {
   return (
     <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
       {/* Sidebar */}
-      <aside className="hidden md:flex md:w-56 bg-white border-r border-gray-200 flex-col shrink-0 overflow-y-auto">
+      <aside className="hidden md:flex md:w-56 bg-white border-r border-gray-200 flex-col shrink-0 overflow-visible relative z-30">
         {/* Logo */}
         <div className="flex items-center gap-2 px-5 py-5 border-b border-gray-100">
           <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
@@ -263,7 +251,7 @@ const AppShell = ({ session }: AppShellProps) => {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
           {getAvailableNavItems().map((item) => (
             <button
               key={item.id}
@@ -283,28 +271,11 @@ const AppShell = ({ session }: AppShellProps) => {
 
         {/* Profil + Sign out */}
         <div className="px-3 py-4 border-t border-gray-100 flex flex-col gap-2">
-          <div className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-100 flex items-center gap-2">
-            {userAvatar ? (
-              <img
-                src={userAvatar}
-                alt={String(userName)}
-                className="w-7 h-7 rounded-full object-cover border border-gray-200 shrink-0"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-primary-100 text-primary-700 text-xs font-semibold flex items-center justify-center shrink-0">
-                {String(userName).charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-gray-700 truncate">
-                {userName}
-              </p>
-              <p className="text-[11px] text-gray-500 truncate">
-                {session.user.email ?? ""}
-              </p>
-            </div>
-          </div>
+          <UserMenu
+            session={session}
+            userEmail={session.user.email ?? undefined}
+            onLogout={handleSignOut}
+          />
 
           {isInstallable && (
             <button
@@ -315,14 +286,6 @@ const AppShell = ({ session }: AppShellProps) => {
               Installer l&apos;app
             </button>
           )}
-
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 w-full transition-colors"
-          >
-            <LogOut size={16} />
-            Déconnexion
-          </button>
 
           <div className="px-3 py-2 text-center">
             <p className="text-[10px] text-gray-400">v{packageJson.version}</p>
@@ -353,13 +316,12 @@ const AppShell = ({ session }: AppShellProps) => {
                   <Download size={18} />
                 </button>
               )}
-              <button
-                onClick={handleSignOut}
-                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
-                aria-label="Déconnexion"
-              >
-                <LogOut size={18} />
-              </button>
+              <UserMenu
+                session={session}
+                userEmail={session.user.email ?? undefined}
+                onLogout={handleSignOut}
+                compact
+              />
             </div>
           </div>
           {loading ? (

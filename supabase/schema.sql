@@ -29,6 +29,7 @@ $$;
 -- Commenter ce bloc si vous ne voulez pas supprimer les tables existantes.
 drop table if exists public.rentals cascade;
 drop table if exists public.members cascade;
+drop table if exists public.push_subscriptions cascade;
 
 -- ------------------------------------------------------------
 -- Table: members
@@ -103,10 +104,26 @@ for each row
 execute function public.set_updated_at();
 
 -- ------------------------------------------------------------
+-- Table: push_subscriptions
+-- ------------------------------------------------------------
+create table public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+
+create index push_subscriptions_user_id_idx
+  on public.push_subscriptions(user_id);
+
+-- ------------------------------------------------------------
 -- Row Level Security
 -- ------------------------------------------------------------
 alter table public.members enable row level security;
 alter table public.rentals enable row level security;
+alter table public.push_subscriptions enable row level security;
 
 -- Policies minimales de démarrage:
 -- - utilisateur authentifié: CRUD complet
@@ -153,6 +170,12 @@ create policy "rentals_delete_authenticated"
 on public.rentals
 for delete
 using (auth.role() = 'authenticated');
+
+create policy "Users manage own subscriptions"
+on public.push_subscriptions
+for all
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
 
 commit;
 

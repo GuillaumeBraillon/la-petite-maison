@@ -3,8 +3,14 @@
 // C'est LE SEUL endroit autorisé pour ces conversions.
 // ============================================================
 
-import type { Member, Rental, MemberRole, RentalStatus } from "../types";
-import type { DbMember, DbRental } from "./dbTypes";
+import type {
+  Member,
+  Rental,
+  MemberRole,
+  RentalStatus,
+  PushSubscriptionRecord,
+} from "../types";
+import type { DbMember, DbRental, DbPushSubscription } from "./dbTypes";
 
 // ------------------------------------------------------------
 // Member mappers
@@ -107,4 +113,19 @@ export const mapRentalToDb = (
   ...("actualEndDate" in rental && {
     actual_end_date: rental.actualEndDate ?? null,
   }),
+});
+
+// ------------------------------------------------------------
+// Push subscription mappers
+// ------------------------------------------------------------
+
+export const mapPushSubscriptionFromDb = (
+  db: DbPushSubscription,
+): PushSubscriptionRecord => ({
+  id: db.id,
+  userId: db.user_id,
+  endpoint: db.endpoint,
+  p256dh: db.p256dh,
+  auth: db.auth,
+  createdAt: db.created_at,
 });

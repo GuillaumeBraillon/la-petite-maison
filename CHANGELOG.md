@@ -7,6 +7,55 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.5] — 2026-02-26
+
+### Added
+
+- **Notifications Push PWA (Web Push + VAPID)** :
+  - Ajout des types `NotificationType`, `NotificationPayload` et `PushSubscriptionRecord` dans `types.ts`.
+  - Nouveau service `pushNotifications.ts` : demande de permission, souscription/désouscription navigateur, persistance Supabase, vérification d'abonnement.
+  - Nouveau hook `usePushNotifications` pour exposer l'état (support, permission, loading, erreurs) et les actions `subscribe` / `unsubscribe`.
+  - Nouveau composant UI `NotificationToggle` (Bell / BellOff) intégré à l'interface utilisateur.
+- **Edge Function Supabase `send-push`** :
+  - Réception d'un payload de notification + ciblage par `userId` / `userIds` / `topic`.
+  - Envoi via Web Push API avec clés VAPID stockées en secrets Supabase.
+  - Purge automatique des subscriptions expirées (erreurs HTTP `404` / `410`).
+- **Service Worker enrichi** :
+  - Gestion des événements `push` avec affichage natif (`showNotification`) et fallback de payload.
+  - Gestion `notificationclick` pour focus/ouverture de l'application et navigation vers l'URL cible.
+
+### Changed
+
+- `App.tsx` : intégration du contrôle d'activation/désactivation des notifications dans les zones utilisateur (desktop + mobile).
+- `.env.example` : ajout de `VITE_VAPID_PUBLIC_KEY`.
+- `apiMappers.ts` et `dbTypes.ts` : ajout des mappings/types DB pour `push_subscriptions`.
+
+### Database / Schema
+
+- `supabase/schema.sql` mis à jour avec la table `push_subscriptions` :
+  - colonnes `user_id`, `endpoint` (unique), `p256dh`, `auth`, `created_at`
+  - activation RLS
+  - policy `Users manage own subscriptions` (gestion limitée à ses propres subscriptions)
+
+### Security
+
+- Clé VAPID privée **non exposée au frontend** ; usage uniquement côté Supabase Edge Function via secrets.
+- Vérifications de support navigateur avant toute action push (`Notification`, `serviceWorker`, `PushManager`).
+- Gestion explicite du cas iOS Safari hors PWA installée (message de fallback utilisateur).
+
+### Key files touched
+
+- `src/types.ts`
+- `src/services/dbTypes.ts`
+- `src/services/apiMappers.ts`
+- `src/services/pushNotifications.ts`
+- `src/hooks/usePushNotifications.ts`
+- `src/components/ui/NotificationToggle.tsx`
+- `public/sw.js`
+- `supabase/functions/send-push/index.ts`
+- `supabase/schema.sql`
+- `.env.example`
+
 ## [0.3.4] — 2026-02-25
 
 ### Added

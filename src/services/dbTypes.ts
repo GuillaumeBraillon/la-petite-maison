@@ -38,3 +38,12 @@ export interface DbRental {
   created_at: string;
   updated_at: string;
 }
+
+export interface DbPushSubscription {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  created_at: string;
+}

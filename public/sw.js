@@ -18,3 +18,69 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   event.respondWith(fetch(event.request));
 });
+
+self.addEventListener("push", (event) => {
+  const fallbackPayload = {
+    title: "La Petite Maison",
+    body: "Vous avez une nouvelle notification.",
+    url: "/",
+    type: "request_pending",
+  };
+
+  let payload = fallbackPayload;
+
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch (_error) {
+      payload = {
+        ...fallbackPayload,
+        body: event.data.text() || fallbackPayload.body,
+      };
+    }
+  }
+
+  const options = {
+    body: payload.body,
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    data: {
+      url: payload.url || "/",
+      type: payload.type,
+    },
+    actions: [
+      { action: "open", title: "Ouvrir" },
+      { action: "close", title: "Fermer" },
+    ],
+  };
+
+  event.waitUntil(self.registration.showNotification(payload.title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  if (event.action === "close") {
+    return;
+  }
+
+  const targetUrl = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientsList) => {
+        for (const client of clientsList) {
+          const url = new URL(client.url);
+          if (url.origin === self.location.origin) {
+            client.focus();
+            if ("navigate" in client) {
+              return client.navigate(targetUrl);
+            }
+            return undefined;
+          }
+        }
+        return self.clients.openWindow(targetUrl);
+      }),
+  );
+});

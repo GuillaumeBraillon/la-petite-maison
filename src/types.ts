@@ -4,6 +4,12 @@
 
 export type MemberRole = "admin" | "owner" | "sub_member";
 export type RentalStatus = "pending" | "confirmed" | "rejected" | "completed";
+export type NotificationType =
+  | "rental_created"
+  | "rental_confirmed"
+  | "rental_rejected"
+  | "rental_reminder"
+  | "request_pending";
 
 // ------------------------------------------------------------
 // Member
@@ -65,6 +71,26 @@ export interface Rental {
   actualEndDate?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// ------------------------------------------------------------
+// Push notifications
+// ------------------------------------------------------------
+
+export interface PushSubscriptionRecord {
+  id: string;
+  userId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  createdAt: string;
+}
+
+export interface NotificationPayload {
+  type: NotificationType;
+  title: string;
+  body: string;
+  url?: string;
 }
 
 // ------------------------------------------------------------
