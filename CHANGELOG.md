@@ -7,6 +7,23 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.12] — 2026-02-26
+
+### Added
+
+- **Filtres réutilisables** : nouveau composant `FilterBar` permettant de composer des filtres `select` et un bouton de réinitialisation.
+- **Intégration** : filtres ajoutés sur la liste des membres (`MembersPage`) et la liste des locations (`RentalsPage`) (statut + propriétaire).
+
+### Changed
+
+- **Locations** : utilisation centralisée de `RENTAL_STATUS_LIST` pour générer les options de filtre et garantir l'unicité des libellés.
+
+### Key files touched
+
+- `src/components/ui/FilterBar.tsx`
+- `src/pages/MembersPage.tsx`
+- `src/pages/RentalsPage.tsx`
+
 ## [0.3.11] — 2026-02-26
 
 ### Fixed

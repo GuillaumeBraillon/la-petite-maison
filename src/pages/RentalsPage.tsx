@@ -1,10 +1,16 @@
 import { PlusCircle } from "lucide-react";
-import type { Rental, Member } from "../types";
+import { useState } from "react";
+import type { Rental, Member, RentalStatus } from "../types";
 import { getPermissions, isMemberRental } from "../services/permissions";
 import { createMember } from "../services/apiCrud";
 import { RentalList } from "../components/rentals/RentalList";
 import { RentalDetail } from "../components/rentals/RentalDetail";
 import { RentalForm } from "../components/rentals/RentalForm";
+import { FilterBar } from "../components/ui/FilterBar";
+import {
+  RENTAL_STATUS_LIST,
+  getRentalStatusLabel,
+} from "../services/rentalStatus";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
@@ -59,6 +65,29 @@ export const RentalsPage = ({
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
   const permissions = getPermissions(currentMember ?? null);
+
+  // Filters
+  type StatusFilter = "all" | RentalStatus;
+  type OwnerFilter = "all" | string;
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>("all");
+
+  const ownerOptions = [
+    { value: "all", label: "Tous les propriétaires" },
+  ].concat(
+    members
+      .filter((m) => m.role === "owner")
+      .map((m) => ({
+        value: m.id,
+        label: m.label || `${m.firstName} ${m.lastName}`,
+      })),
+  );
+
+  const filteredRentals = rentals.filter((r) => {
+    if (statusFilter !== "all" && r.status !== statusFilter) return false;
+    if (ownerFilter !== "all" && r.ownerId !== ownerFilter) return false;
+    return true;
+  });
 
   const handleCreateSubMember = async (data: {
     firstName: string;
@@ -115,8 +144,39 @@ export const RentalsPage = ({
 
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
 
+      <FilterBar
+        controls={[
+          {
+            id: "status",
+            label: "Statut",
+            type: "select",
+            value: statusFilter,
+            options: [
+              { value: "all", label: "Tous (statut)" },
+              ...RENTAL_STATUS_LIST.map((s) => ({
+                value: s,
+                label: getRentalStatusLabel(s),
+              })),
+            ],
+            onChange: (v: string) => setStatusFilter(v as StatusFilter),
+          },
+          {
+            id: "owner",
+            label: "Propriétaire",
+            type: "select",
+            value: ownerFilter,
+            options: ownerOptions,
+            onChange: (v: string) => setOwnerFilter(v as OwnerFilter),
+          },
+        ]}
+        onReset={() => {
+          setStatusFilter("all");
+          setOwnerFilter("all");
+        }}
+      />
+
       <RentalList
-        rentals={rentals}
+        rentals={filteredRentals}
         members={members}
         currentMember={currentMember}
         canEdit={permissions.editLocations}

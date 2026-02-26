@@ -3,6 +3,7 @@ import { UserPlus } from "lucide-react";
 import type { Member } from "../types";
 import { getPermissions } from "../services/permissions";
 import { MemberList } from "../components/members/MemberList";
+import { FilterBar } from "../components/ui/FilterBar";
 import { MemberForm } from "../components/members/MemberForm";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Modal } from "../components/ui/Modal";
@@ -47,10 +48,31 @@ export const MembersPage = ({
     currentMember?.role === "admin" ||
     (currentMember?.role === "owner" && currentMember.isEditor);
 
+  // Filters
+  type RoleOption = "all" | "admin" | "owner" | "sub_member";
+  type BoolFilter = "all" | "yes" | "no";
+  const [roleFilter, setRoleFilter] = useState<RoleOption>("all");
+  const [isAllowedFilter, setIsAllowedFilter] = useState<BoolFilter>("all");
+  const [isEditorFilter, setIsEditorFilter] = useState<BoolFilter>("all");
+
   // Les administrateurs ne doivent être visibles que par d'autres administrateurs
   const visibleMembers = members.filter((m) => {
     if (m.role === "admin") {
       return currentMember?.role === "admin";
+    }
+    return true;
+  });
+
+  // Apply UI filters (role + boolean fields)
+  const filteredMembers = visibleMembers.filter((m) => {
+    if (roleFilter !== "all" && m.role !== roleFilter) return false;
+    if (isAllowedFilter !== "all") {
+      if (isAllowedFilter === "yes" && !m.isAllowed) return false;
+      if (isAllowedFilter === "no" && m.isAllowed) return false;
+    }
+    if (isEditorFilter !== "all") {
+      if (isEditorFilter === "yes" && !m.isEditor) return false;
+      if (isEditorFilter === "no" && m.isEditor) return false;
     }
     return true;
   });
@@ -258,8 +280,54 @@ export const MembersPage = ({
 
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
 
+      <FilterBar
+        controls={[
+          {
+            id: "role",
+            label: "Rôle",
+            type: "select",
+            value: roleFilter,
+            options: [
+              { value: "all", label: "Tous les rôles" },
+              { value: "owner", label: "Propriétaires" },
+              { value: "sub_member", label: "Membres" },
+            ],
+            onChange: (v: string) => setRoleFilter(v as RoleOption),
+          },
+          {
+            id: "isAllowed",
+            label: "Autorisé",
+            type: "select",
+            value: isAllowedFilter,
+            options: [
+              { value: "all", label: "Tous (autorisation)" },
+              { value: "yes", label: "Autorisé" },
+              { value: "no", label: "Non autorisé" },
+            ],
+            onChange: (v: string) => setIsAllowedFilter(v as BoolFilter),
+          },
+          {
+            id: "isEditor",
+            label: "Éditeur",
+            type: "select",
+            value: isEditorFilter,
+            options: [
+              { value: "all", label: "Tous (éditeur)" },
+              { value: "yes", label: "Éditeur" },
+              { value: "no", label: "Non éditeur" },
+            ],
+            onChange: (v: string) => setIsEditorFilter(v as BoolFilter),
+          },
+        ]}
+        onReset={() => {
+          setRoleFilter("all");
+          setIsAllowedFilter("all");
+          setIsEditorFilter("all");
+        }}
+      />
+
       <MemberList
-        members={visibleMembers}
+        members={filteredMembers}
         canEdit={permissions.editMembers}
         canDelete={permissions.deleteMembers}
         canSendPasswordReset={canSendPasswordReset}
