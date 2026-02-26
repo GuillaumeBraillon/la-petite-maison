@@ -6,6 +6,7 @@ type NotificationType =
   | "rental_confirmed"
   | "rental_rejected"
   | "rental_reminder"
+  | "rental_completed"
   | "request_pending";
 
 interface NotificationPayload {
@@ -19,6 +20,8 @@ interface SendPushRequest {
   payload?: NotificationPayload;
   userId?: string;
   userIds?: string[];
+  /** Emails de membres (members.email) — résolus en auth user IDs côté serveur */
+  memberEmails?: string[];
   ownerUserId?: string;
   editorUserId?: string;
   topic?: "admins_and_owner_editors" | "owner";
@@ -36,6 +39,14 @@ interface DbPushSubscription {
   endpoint: string;
   p256dh: string;
   auth: string;
+}
+
+interface DbUserNotificationInsert {
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  url: string | null;
 }
 
 interface MemberRecipient {
@@ -128,6 +139,13 @@ const buildPayload = (request: SendPushRequest): NotificationPayload => {
             : "Rappel : votre séjour commence demain",
         url: request.url,
       };
+    case "rental_completed":
+      return {
+        type,
+        title: "Séjour terminé",
+        body: "Votre séjour est terminé.",
+        url: request.url,
+      };
     case "request_pending":
       return {
         type,
@@ -206,6 +224,15 @@ const getRecipientUserIds = async (
     topicRecipients.forEach((id) => recipients.add(id));
   }
 
+  // Résolution des memberEmails → auth user IDs
+  if (request.memberEmails && request.memberEmails.length > 0) {
+    const usersByEmail = await listAuthUsersByEmail();
+    request.memberEmails.forEach((email) => {
+      const authId = usersByEmail.get(email.trim().toLowerCase());
+      if (authId) recipients.add(authId);
+    });
+  }
+
   return Array.from(recipients);
 };
 
@@ -219,6 +246,24 @@ const removeExpiredSubscriptions = async (
     .delete()
     .in("id", subscriptionIds);
 
+  if (error) throw error;
+};
+
+const persistUserNotifications = async (
+  userIds: string[],
+  payload: NotificationPayload,
+): Promise<void> => {
+  if (userIds.length === 0) return;
+
+  const rows: DbUserNotificationInsert[] = userIds.map((userId) => ({
+    user_id: userId,
+    type: payload.type,
+    title: payload.title,
+    body: payload.body,
+    url: payload.url ?? null,
+  }));
+
+  const { error } = await supabase.from("user_notifications").insert(rows);
   if (error) throw error;
 };
 
@@ -249,6 +294,8 @@ Deno.serve(async (request: Request): Promise<Response> => {
         },
       );
     }
+
+    await persistUserNotifications(recipientUserIds, payload);
 
     const { data, error } = await supabase
       .from("push_subscriptions")

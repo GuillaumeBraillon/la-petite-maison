@@ -29,6 +29,7 @@ $$;
 -- Commenter ce bloc si vous ne voulez pas supprimer les tables existantes.
 drop table if exists public.rentals cascade;
 drop table if exists public.members cascade;
+drop table if exists public.user_notifications cascade;
 drop table if exists public.push_subscriptions cascade;
 
 -- ------------------------------------------------------------
@@ -119,11 +120,35 @@ create index push_subscriptions_user_id_idx
   on public.push_subscriptions(user_id);
 
 -- ------------------------------------------------------------
+-- Table: user_notifications
+-- ------------------------------------------------------------
+create table public.user_notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  type text not null check (type in ('rental_created', 'rental_confirmed', 'rental_rejected', 'rental_reminder', 'rental_completed', 'request_pending')),
+  title text not null,
+  body text not null,
+  url text,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index user_notifications_user_id_idx
+  on public.user_notifications(user_id);
+
+create index user_notifications_user_id_created_at_idx
+  on public.user_notifications(user_id, created_at desc);
+
+create index user_notifications_user_id_is_read_idx
+  on public.user_notifications(user_id, is_read);
+
+-- ------------------------------------------------------------
 -- Row Level Security
 -- ------------------------------------------------------------
 alter table public.members enable row level security;
 alter table public.rentals enable row level security;
 alter table public.push_subscriptions enable row level security;
+alter table public.user_notifications enable row level security;
 
 -- Policies minimales de démarrage:
 -- - utilisateur authentifié: CRUD complet
@@ -174,6 +199,17 @@ using (auth.role() = 'authenticated');
 create policy "Users manage own subscriptions"
 on public.push_subscriptions
 for all
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+create policy "Users read own notifications"
+on public.user_notifications
+for select
+using (auth.uid() = user_id);
+
+create policy "Users update own notifications"
+on public.user_notifications
+for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 

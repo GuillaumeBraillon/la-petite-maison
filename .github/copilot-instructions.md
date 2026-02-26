@@ -487,6 +487,197 @@ alter table rentals enable row level security;
 
 ---
 
+## Push Notifications
+
+### Vue d'ensemble
+
+Le système repose sur **Web Push + VAPID** (sans Firebase). L'architecture implique :
+
+1. Le browser souscrit via l'API `PushManager` et stocke l'abonnement en base
+2. L'app déclenche l'Edge Function Supabase `send-push` (fire-and-forget) sur les événements métier
+3. L'Edge Function résout les destinataires, envoie les notifications via `web-push`, purge les souscriptions invalides
+4. Le Service Worker reçoit l'événement `push` et affiche la notification
+
+### Variables d'environnement requises
+
+```env
+# Côté frontend (Vite)
+VITE_VAPID_PUBLIC_KEY=<clé-publique-VAPID>
+
+# Côté Supabase Edge Function (secrets Supabase)
+VAPID_PUBLIC_KEY=<clé-publique-VAPID>
+VAPID_PRIVATE_KEY=<clé-privée-VAPID>
+VAPID_SUBJECT=mailto:notifications@lapetitemaison.guillaumebraillon.fr
+```
+
+Génération des clés : `npx web-push generate-vapid-keys`
+
+### Types (`types.ts`)
+
+```typescript
+export type NotificationType =
+  | "rental_created" // nouvelle demande de location
+  | "rental_confirmed" // location confirmée
+  | "rental_rejected" // location refusée
+  | "rental_reminder" // rappel J-7 / J-1
+  | "rental_completed" // location clôturée
+  | "request_pending"; // demande en attente de validation
+
+export interface PushSubscriptionRecord {
+  id: string;
+  userId: string; // auth.users.id
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  createdAt: string;
+}
+
+export interface NotificationPayload {
+  type: NotificationType;
+  title: string;
+  body: string;
+  url?: string;
+}
+```
+
+### Table Supabase (`push_subscriptions`)
+
+```sql
+create table push_subscriptions (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  endpoint   text not null unique,
+  p256dh     text not null,
+  auth       text not null,
+  created_at timestamptz default now()
+);
+
+create index on push_subscriptions (user_id);
+
+alter table push_subscriptions enable row level security;
+create policy "Users manage own subscriptions"
+  on push_subscriptions for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+```
+
+### Service `pushNotifications.ts`
+
+Gère la souscription côté navigateur :
+
+- `requestPermission()` → demande la permission browser
+- `subscribeToPush(userId)` → souscrit via `PushManager` et persiste dans Supabase
+- `unsubscribeFromPush(userId)` → désabonne et supprime de Supabase
+- `isSubscribed()` → vérifie l'état courant
+
+La clé publique VAPID est lue depuis `import.meta.env.VITE_VAPID_PUBLIC_KEY`.
+
+### Hook `usePushNotifications`
+
+```typescript
+const {
+  isSupported,
+  isSubscribed,
+  permission,
+  subscribe,
+  unsubscribe,
+  loading,
+  error,
+} = usePushNotifications();
+```
+
+Expose l'état complet de la souscription. Utilisé par `NotificationToggle`.
+
+### Composant `NotificationToggle`
+
+Bouton Bell/BellOff dans `UserInfoCard`. Affiche l'état d'abonnement et permet de basculer la souscription. N'est rendu que si `isSupported === true`.
+
+### Service Worker (`public/sw.js`)
+
+Gère deux événements :
+
+```javascript
+// Réception d'un push
+self.addEventListener("push", (event) => {
+  const { title, body, url } = event.data.json();
+  event.waitUntil(
+    self.registration.showNotification(title, { body, data: { url } }),
+  );
+});
+
+// Clic sur la notification
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data?.url ?? "/"));
+});
+```
+
+### Edge Function `send-push` (`supabase/functions/send-push/index.ts`)
+
+Déployée sur Supabase (Deno runtime). Utilise `npm:web-push@3.6.7`.
+
+**Résolution des destinataires** — trois mécanismes d'adressage :
+
+| Champ de la requête                 | Description                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `userId` / `userIds`                | Auth user IDs directs                                                      |
+| `memberEmails`                      | Emails des membres → résolus en auth user IDs via `auth.admin.listUsers()` |
+| `topic: "admins_and_owner_editors"` | Tous les admins + tous les owners ayant `is_editor = true`                 |
+
+**Purge automatique** : les endpoints qui retournent HTTP 404 ou 410 sont supprimés de `push_subscriptions`.
+
+**Déploiement** :
+
+```bash
+supabase functions deploy send-push
+```
+
+### Déclencheurs métier (`rentalNotifications.ts`)
+
+Trois fonctions **fire-and-forget** (ne bloquent jamais le flux CRUD) :
+
+```typescript
+// 1. Nouvelle demande → notifie tous les admins + owners editors
+void notifyNewRental(rental);
+
+// 2. Changement de statut (pending/confirmed/rejected) → notifie owner + subMember
+//    Le 3ème param évite une notification si le statut n'a pas changé
+void notifyStatusChange(rental, previousStatus?);
+
+// 3. Clôture (status → completed) → notifie owner + subMember avec récapitulatif
+//    (dates prévues/réelles, prix, coût électricité, total)
+void notifyCompleted(rental);
+```
+
+### Intégration dans `apiCrud.ts`
+
+```typescript
+// createRental → après insert
+const created = mapRentalFromDb(data);
+void notifyNewRental(created);
+return created;
+
+// updateRental → après update, si status modifié
+if (updates.status !== undefined) {
+  if (updates.status === "completed") void notifyCompleted(updated);
+  else void notifyStatusChange(updated, previousStatus); // previousStatus = 3ème param optionnel
+}
+```
+
+### Appel de `updateRental` — bonne pratique
+
+Passer le statut courant comme 3ème argument pour éviter les fausses notifications :
+
+```typescript
+// ✅ RECOMMANDÉ — pas de notification si le statut n'a pas changé
+await updateRental(rental.id, updates, rental.status);
+
+// ⚠️ ACCEPTABLE — notifie toujours quand updates.status est défini
+await updateRental(rental.id, updates);
+```
+
+---
+
 ## Conventions de code — rappels rapides
 
 - **Toujours** typer explicitement les props des composants React

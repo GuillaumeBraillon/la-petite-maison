@@ -7,6 +7,63 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.6] — 2026-02-26
+
+### Added
+
+- **Notification Center dans la User Card** :
+  - Affichage des dernières notifications reçues (liste récente), état lu/non lu, compteur de non lues.
+  - Action **"Tout marquer lu"**.
+  - Ouverture d'une notification en **modal de lecture détaillée** (titre, date, message complet).
+  - Bouton **"Ouvrir"** dans la modal quand une URL cible est disponible.
+- **Badge non lues sur le User Menu** :
+  - Indicateur du nombre de notifications non lues sur l'avatar (desktop + mobile compact).
+  - Limite d'affichage `99+`.
+- **Nouveau hook `useUserNotifications`** :
+  - Chargement des notifications utilisateur depuis Supabase.
+  - Marquage unitaire en lu.
+  - Marquage global en lu.
+
+### Changed
+
+- **`UserInfoCard` refondue en mode compact + notification center** :
+  - Actions notifications/déconnexion compactes en haut à droite.
+  - Affichage identité optimisé (libellé prioritaire, nom/prénom en secondaire).
+  - Simplification de la carte : suppression des informations de compte non essentielles.
+- **`UserMenu` amélioré** :
+  - Affichage du nom basé sur le membre lié à l'email (libellé prioritaire, nom secondaire).
+  - Intégration du badge de notifications non lues.
+- **Edge Function `send-push`** :
+  - Persistance de chaque notification envoyée par destinataire dans une table dédiée (`user_notifications`) avant envoi Web Push.
+
+### Database / Schema
+
+- **Nouvelle table `user_notifications`** dans `supabase/schema.sql` :
+  - Colonnes : `user_id`, `type`, `title`, `body`, `url`, `is_read`, `created_at`.
+  - Index : `user_id`, `(user_id, created_at desc)`, `(user_id, is_read)`.
+  - RLS activée + policies :
+    - `Users read own notifications`
+    - `Users update own notifications`
+- Conservation de la table `push_subscriptions` pour la gestion technique des endpoints push.
+
+### Security
+
+- Séparation claire des responsabilités de données :
+  - `push_subscriptions` = abonnements techniques navigateur.
+  - `user_notifications` = historique métier des notifications utilisateur.
+- RLS sur `user_notifications` restreint la lecture et la mise à jour au propriétaire (`auth.uid() = user_id`).
+
+### Key files touched
+
+- `src/components/ui/UserInfoCard.tsx`
+- `src/components/ui/UserMenu.tsx`
+- `src/hooks/useUserNotifications.ts`
+- `src/types.ts`
+- `src/services/dbTypes.ts`
+- `src/services/apiMappers.ts`
+- `supabase/functions/send-push/index.ts`
+- `supabase/schema.sql`
+
 ## [0.3.5] — 2026-02-26
 
 ### Added

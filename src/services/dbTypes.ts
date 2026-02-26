@@ -47,3 +47,14 @@ export interface DbPushSubscription {
   auth: string;
   created_at: string;
 }
+
+export interface DbUserNotification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string;
+  url: string | null;
+  is_read: boolean;
+  created_at: string;
+}

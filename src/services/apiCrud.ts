@@ -11,7 +11,12 @@ import {
   mapRentalToDb,
 } from "./apiMappers";
 import type { DbMember, DbRental } from "./dbTypes";
-import type { Member, Rental } from "../types";
+import type { Member, Rental, RentalStatus } from "../types";
+import {
+  notifyNewRental,
+  notifyStatusChange,
+  notifyCompleted,
+} from "./rentalNotifications";
 
 // ------------------------------------------------------------
 // Member CRUD
@@ -68,12 +73,16 @@ export const createRental = async (
     .single();
 
   if (error) throw error;
-  return mapRentalFromDb(data as DbRental);
+
+  const created = mapRentalFromDb(data as DbRental);
+  void notifyNewRental(created);
+  return created;
 };
 
 export const updateRental = async (
   id: string,
   updates: Partial<Omit<Rental, "id" | "createdAt" | "updatedAt">>,
+  previousStatus?: RentalStatus,
 ): Promise<Rental> => {
   const dbPayload = mapRentalToDb(updates);
   const { data, error } = await supabase
@@ -84,7 +93,18 @@ export const updateRental = async (
     .single();
 
   if (error) throw error;
-  return mapRentalFromDb(data as DbRental);
+
+  const updated = mapRentalFromDb(data as DbRental);
+
+  if (updates.status !== undefined) {
+    if (updates.status === "completed") {
+      void notifyCompleted(updated);
+    } else {
+      void notifyStatusChange(updated, previousStatus);
+    }
+  }
+
+  return updated;
 };
 
 export const deleteRental = async (id: string): Promise<void> => {

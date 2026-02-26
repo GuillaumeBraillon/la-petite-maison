@@ -9,8 +9,14 @@ import type {
   MemberRole,
   RentalStatus,
   PushSubscriptionRecord,
+  UserNotification,
 } from "../types";
-import type { DbMember, DbRental, DbPushSubscription } from "./dbTypes";
+import type {
+  DbMember,
+  DbRental,
+  DbPushSubscription,
+  DbUserNotification,
+} from "./dbTypes";
 
 // ------------------------------------------------------------
 // Member mappers
@@ -127,5 +133,18 @@ export const mapPushSubscriptionFromDb = (
   endpoint: db.endpoint,
   p256dh: db.p256dh,
   auth: db.auth,
+  createdAt: db.created_at,
+});
+
+export const mapUserNotificationFromDb = (
+  db: DbUserNotification,
+): UserNotification => ({
+  id: db.id,
+  userId: db.user_id,
+  type: db.type as UserNotification["type"],
+  title: db.title,
+  body: db.body,
+  url: db.url ?? undefined,
+  isRead: db.is_read,
   createdAt: db.created_at,
 });

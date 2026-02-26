@@ -9,6 +9,7 @@ export type NotificationType =
   | "rental_confirmed"
   | "rental_rejected"
   | "rental_reminder"
+  | "rental_completed"
   | "request_pending";
 
 // ------------------------------------------------------------
@@ -91,6 +92,17 @@ export interface NotificationPayload {
   title: string;
   body: string;
   url?: string;
+}
+
+export interface UserNotification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  url?: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 // ------------------------------------------------------------

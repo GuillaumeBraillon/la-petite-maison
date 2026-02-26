@@ -1,6 +1,12 @@
-import { UserCircle, Mail, Calendar, Shield, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { UserCircle, Mail, LogOut } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import { NotificationToggle } from "./NotificationToggle";
+import { Modal } from "./Modal";
+import { Button } from "./Button";
+import { supabase } from "../../services/supabaseClient";
+import { useUserNotifications } from "../../hooks/useUserNotifications";
+import type { UserNotification } from "../../types";
 
 interface UserInfoCardProps {
   session: Session | null;
@@ -11,6 +17,76 @@ interface UserInfoCardProps {
  * Carte affichant les informations de connexion de l'utilisateur Google.
  */
 export const UserInfoCard = ({ session, onLogout }: UserInfoCardProps) => {
+  const [memberLabel, setMemberLabel] = useState<string | null>(null);
+  const [memberFullName, setMemberFullName] = useState<string | null>(null);
+  const [selectedNotification, setSelectedNotification] =
+    useState<UserNotification | null>(null);
+  const {
+    notifications,
+    unreadCount,
+    loading: notificationsLoading,
+    error: notificationsError,
+    markAsRead,
+    markAllAsRead,
+  } = useUserNotifications();
+
+  const sessionUser = session?.user;
+  const userName =
+    sessionUser?.user_metadata?.full_name || sessionUser?.user_metadata?.name;
+  const userEmail = sessionUser?.email;
+  const primaryDisplayName = memberLabel || userName || null;
+  const secondaryDisplayName =
+    memberFullName && memberFullName !== primaryDisplayName
+      ? memberFullName
+      : null;
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadMemberName = async (): Promise<void> => {
+      const normalizedEmail = userEmail?.trim().toLowerCase();
+      if (!normalizedEmail) {
+        if (!isCancelled) {
+          setMemberLabel(null);
+          setMemberFullName(null);
+        }
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("members")
+        .select("first_name, last_name, label")
+        .ilike("email", normalizedEmail)
+        .maybeSingle();
+
+      if (isCancelled || error || !data) {
+        if (!isCancelled) {
+          setMemberLabel(null);
+          setMemberFullName(null);
+        }
+        return;
+      }
+
+      const firstName =
+        (data as { first_name?: string | null }).first_name?.trim() ?? "";
+      const lastName =
+        (data as { last_name?: string | null }).last_name?.trim() ?? "";
+      const fullName = `${firstName} ${lastName}`.trim();
+      const label = (data as { label?: string | null }).label?.trim() ?? "";
+
+      if (!isCancelled) {
+        setMemberLabel(label || null);
+        setMemberFullName(fullName || null);
+      }
+    };
+
+    void loadMemberName();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [userEmail]);
+
   if (!session || !session.user) {
     return (
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
@@ -23,58 +99,82 @@ export const UserInfoCard = ({ session, onLogout }: UserInfoCardProps) => {
     );
   }
 
-  const { user } = session;
-  const userName = user.user_metadata?.full_name || user.user_metadata?.name;
+  const user = session.user;
+
   const avatarUrl =
     user.user_metadata?.avatar_url || user.user_metadata?.picture;
 
-  const createdAt = user.created_at
-    ? new Date(user.created_at).toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : "N/A";
+  const formatNotificationDate = (value: string): string => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
 
-  const lastSignIn = user.last_sign_in_at
-    ? new Date(user.last_sign_in_at).toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "N/A";
+  const handleNotificationClick = async (
+    notificationId: string,
+    url?: string,
+  ): Promise<void> => {
+    await markAsRead(notificationId);
+
+    const clicked = notifications.find((item) => item.id === notificationId);
+    if (!clicked) return;
+
+    setSelectedNotification({
+      ...clicked,
+      isRead: true,
+      ...(url !== undefined && { url }),
+    });
+  };
+
+  const handleOpenNotificationUrl = (): void => {
+    if (!selectedNotification?.url) return;
+    window.location.assign(selectedNotification.url);
+  };
 
   return (
     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
-      <h3 className="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
-        <UserCircle size={18} className="text-primary-600" />
-        Informations de Connexion
-      </h3>
+      <div className="flex justify-end">
+        <div className="flex items-center gap-1">
+          <NotificationToggle compact className="text-gray-500 p-1.5" />
+          <button
+            type="button"
+            onClick={onLogout}
+            className="inline-flex items-center justify-center p-1.5 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+            aria-label="Déconnexion"
+            title="Déconnexion"
+          >
+            <LogOut size={13} />
+          </button>
+        </div>
+      </div>
 
       <div className="space-y-3">
         {/* Avatar & Nom */}
-        {(avatarUrl || userName) && (
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-            {avatarUrl && (
-              <img
-                src={avatarUrl}
-                alt="Avatar"
-                className="w-10 h-10 rounded-full border border-gray-200"
-                referrerPolicy="no-referrer"
-              />
-            )}
-            {userName && (
-              <div>
-                <div className="text-xs font-medium text-gray-500">
-                  Nom complet
+        {(avatarUrl || primaryDisplayName) && (
+          <div className="flex items-center justify-between gap-1.5 pb-2 border-b border-gray-100 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              {avatarUrl && (
+                <img
+                  src={avatarUrl}
+                  alt="Avatar"
+                  className="w-7 h-7 rounded-full border border-gray-200 flex-shrink-0"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              {primaryDisplayName && (
+                <div className="min-w-0">
+                  <div className="text-xs text-gray-900 font-semibold truncate leading-tight">
+                    {primaryDisplayName}
+                    {secondaryDisplayName ? ` · ${secondaryDisplayName}` : ""}
+                  </div>
                 </div>
-                <div className="text-sm text-gray-900 font-semibold">
-                  {userName}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -89,55 +189,122 @@ export const UserInfoCard = ({ session, onLogout }: UserInfoCardProps) => {
           </div>
         </div>
 
-        {/* Provider */}
-        {user.app_metadata?.provider && (
-          <div className="flex items-start gap-3">
-            <Shield size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <div className="text-xs font-medium text-gray-500">
-                Fournisseur
-              </div>
-              <div className="text-sm text-gray-900 font-medium capitalize">
-                {user.app_metadata.provider}
-              </div>
+        <div className="pt-2 border-t border-gray-100 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs font-medium text-gray-600">
+              Notifications
+              {unreadCount > 0 && (
+                <span className="ml-1 text-primary-600">
+                  ({unreadCount} non lue{unreadCount > 1 ? "s" : ""})
+                </span>
+              )}
             </div>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  void markAllAsRead();
+                }}
+                className="text-[11px] text-gray-500 hover:text-gray-700"
+              >
+                Tout marquer lu
+              </button>
+            )}
           </div>
-        )}
 
-        {/* Compte créé le */}
-        <div className="flex items-start gap-3">
-          <Calendar size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-          <div>
-            <div className="text-xs font-medium text-gray-500">
-              Compte créé le
-            </div>
-            <div className="text-sm text-gray-900">{createdAt}</div>
-          </div>
-        </div>
+          {notificationsLoading && (
+            <p className="text-[11px] text-gray-500">Chargement…</p>
+          )}
 
-        {/* Dernière connexion */}
-        <div className="flex items-start gap-3">
-          <Calendar size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-          <div>
-            <div className="text-xs font-medium text-gray-500">
-              Dernière connexion
-            </div>
-            <div className="text-sm text-gray-900">{lastSignIn}</div>
-          </div>
-        </div>
+          {!notificationsLoading && notificationsError && (
+            <p className="text-[11px] text-red-600">{notificationsError}</p>
+          )}
 
-        <div className="pt-3 border-t border-gray-100 space-y-2">
-          <NotificationToggle className="w-full" />
-          <button
-            type="button"
-            onClick={onLogout}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 w-full transition-colors"
-          >
-            <LogOut size={16} />
-            Déconnexion
-          </button>
+          {!notificationsLoading &&
+            !notificationsError &&
+            notifications.length === 0 && (
+              <p className="text-[11px] text-gray-500">
+                Aucune notification récente.
+              </p>
+            )}
+
+          {!notificationsLoading &&
+            !notificationsError &&
+            notifications.length > 0 && (
+              <ul className="space-y-1.5">
+                {notifications.map((notification) => (
+                  <li key={notification.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleNotificationClick(
+                          notification.id,
+                          notification.url,
+                        );
+                      }}
+                      className={[
+                        "w-full text-left rounded-md px-2 py-1.5 border transition-colors",
+                        notification.isRead
+                          ? "border-gray-100 bg-gray-50"
+                          : "border-primary-200 bg-primary-50/40",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs font-medium text-gray-800 line-clamp-1">
+                          {notification.title}
+                        </p>
+                        <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                          {formatNotificationDate(notification.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-600 line-clamp-2 mt-0.5">
+                        {notification.body}
+                      </p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
         </div>
       </div>
+
+      <Modal
+        isOpen={selectedNotification !== null}
+        onClose={() => setSelectedNotification(null)}
+        title={selectedNotification?.title ?? "Notification"}
+        size="md"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setSelectedNotification(null)}
+            >
+              Fermer
+            </Button>
+            {selectedNotification?.url && (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleOpenNotificationUrl}
+              >
+                Ouvrir
+              </Button>
+            )}
+          </>
+        }
+      >
+        {selectedNotification && (
+          <div className="space-y-3">
+            <p className="text-xs text-gray-500">
+              {formatNotificationDate(selectedNotification.createdAt)}
+            </p>
+            <p className="text-sm text-gray-800 whitespace-pre-wrap">
+              {selectedNotification.body}
+            </p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
