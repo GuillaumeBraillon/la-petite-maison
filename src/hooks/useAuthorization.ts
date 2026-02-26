@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../services/supabaseClient";
 import { logger } from "../services/logger";
+import { PUSH_MESSAGES } from "../services/messageCatalog";
 
 interface AuthorizedUserRow {
   id: string;
@@ -24,6 +25,33 @@ const getErrorMessage = (err: unknown): string => {
     }
   }
   return "Erreur lors de la vérification";
+};
+
+const notifyPendingMemberAccess = (params: {
+  fullName: string | null;
+  email: string;
+}): void => {
+  const { fullName, email } = params;
+
+  supabase.functions
+    .invoke("send-push", {
+      body: {
+        topic: "admins_and_owner_editors",
+        payload: {
+          type: "request_pending",
+          title: PUSH_MESSAGES.memberAccess.pendingTitle,
+          body: PUSH_MESSAGES.memberAccess.pendingBody({ fullName, email }),
+        },
+      },
+    })
+    .then(({ error }) => {
+      if (error) {
+        logger.error("Authorization pending notification error:", error);
+      }
+    })
+    .catch((err: unknown) => {
+      logger.error("Authorization pending notification exception:", err);
+    });
 };
 
 export const useAuthorization = (session: Session | null) => {
@@ -83,6 +111,7 @@ export const useAuthorization = (session: Session | null) => {
         const nameParts = userName?.trim().split(/\s+/) ?? [];
         const firstName = nameParts[0] ?? "";
         const lastName = nameParts.slice(1).join(" ");
+        const fullName = `${firstName} ${lastName}`.trim();
         const label = userName ?? "Demande en attente";
 
         const { data: byAuthUserId, error: byAuthUserIdError } = await supabase
@@ -124,6 +153,11 @@ export const useAuthorization = (session: Session | null) => {
 
           if (insertError) throw insertError;
 
+          notifyPendingMemberAccess({
+            fullName: fullName || null,
+            email: normalizedEmail,
+          });
+
           logger.debug("authorization", "Auto-création membre pending", {
             email: userEmail,
             userName,
@@ -160,6 +194,11 @@ export const useAuthorization = (session: Session | null) => {
         }
 
         if (Object.keys(syncPayload).length > 0) {
+          const linkedNow =
+            syncPayload.auth_user_id !== undefined &&
+            !authorizedUser.auth_user_id &&
+            authorizedUser.is_allowed === false;
+
           const { error: syncError } = await supabase
             .from("members")
             .update(syncPayload)
@@ -167,6 +206,13 @@ export const useAuthorization = (session: Session | null) => {
 
           if (syncError) {
             logger.error("Authorization sync error:", syncError);
+          } else if (linkedNow) {
+            const existingFullName =
+              [firstName, lastName].filter(Boolean).join(" ") || null;
+            notifyPendingMemberAccess({
+              fullName: existingFullName,
+              email: normalizedEmail,
+            });
           }
         }
 

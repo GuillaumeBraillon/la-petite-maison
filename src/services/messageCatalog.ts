@@ -91,6 +91,19 @@ export const TOAST_MESSAGES = {
 } as const;
 
 export const PUSH_MESSAGES = {
+  memberAccess: {
+    pendingTitle: "Nouvel utilisateur en attente",
+    pendingBody: (params: {
+      fullName: string | null;
+      email: string;
+    }): string => {
+      const { fullName, email } = params;
+      if (fullName && fullName.trim().length > 0) {
+        return `${fullName} (${email}) a rejoint l'application et attend une autorisation.`;
+      }
+      return `${email} a rejoint l'application et attend une autorisation.`;
+    },
+  },
   rental: {
     newRequestTitle: "Nouvelle demande de location",
     newRequestForEditors: (params: {
