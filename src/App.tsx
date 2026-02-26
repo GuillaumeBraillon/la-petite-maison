@@ -1,18 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Session } from "@supabase/supabase-js";
-import {
-  LayoutDashboard,
-  Users,
-  CalendarDays,
-  List,
-  Home,
-  Download,
-} from "lucide-react";
+import { LayoutDashboard, Users, CalendarDays, List, Home } from "lucide-react";
 import type { Member, Rental } from "./types";
 import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
 import { fetchMembers, fetchRentals } from "./services/api";
 import { ErrorProvider, useError } from "./contexts/ErrorContext";
+import { usePWAInstall } from "./hooks/usePWAInstall";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ErrorModal } from "./components/ui/ErrorModal";
@@ -21,7 +15,6 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { MembersPage } from "./pages/MembersPage";
 import { RentalsPage } from "./pages/RentalsPage";
 import { CalendarPage } from "./pages/CalendarPage";
-import { usePWAInstall } from "./hooks/usePWAInstall";
 import { useAuthorization } from "./hooks/useAuthorization";
 import { LoginView } from "./components/Auth/LoginView";
 import { ResetPasswordView } from "./components/Auth/ResetPasswordView";
@@ -180,7 +173,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(true);
   const { error, clearError, setError } = useError();
-  const { isInstallable, install } = usePWAInstall();
+  const { install, isInstallable } = usePWAInstall();
 
   const currentMember = members.find((m) => m.email === session.user.email);
 
@@ -303,15 +296,7 @@ const AppShell = ({ session }: AppShellProps) => {
             appVersion={packageJson.version}
           />
 
-          {!isInstallable && (
-            <button
-              onClick={install}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 w-full transition-colors"
-            >
-              <Download size={16} />
-              Installer l&apos;app
-            </button>
-          )}
+          {/* install button removed per UX decision; hint shown below */}
         </div>
       </aside>
 
@@ -329,15 +314,7 @@ const AppShell = ({ session }: AppShellProps) => {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {isInstallable && (
-                <button
-                  onClick={install}
-                  className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
-                  aria-label="Installer l'app"
-                >
-                  <Download size={18} />
-                </button>
-              )}
+              {/* install button removed on mobile; hint shown as fixed banner */}
               <UserMenu
                 session={session}
                 userEmail={session.user.email ?? undefined}
@@ -407,6 +384,19 @@ const AppShell = ({ session }: AppShellProps) => {
           ))}
         </div>
       </nav>
+
+      {isInstallable && (
+        <div className="md:hidden fixed bottom-14 inset-x-0 flex justify-center z-40 pointer-events-none">
+          <button
+            type="button"
+            onClick={() => void install()}
+            className="pointer-events-auto bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[11px] text-gray-600 shadow-sm cursor-pointer"
+          >
+            Pour installer : appuyez sur les ••• puis « Ajouter à l’écran
+            d’accueil »
+          </button>
+        </div>
+      )}
 
       {/* Error modal global */}
       {error && <ErrorModal error={error} onClose={clearError} />}

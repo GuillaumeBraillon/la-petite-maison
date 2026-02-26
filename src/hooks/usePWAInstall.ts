@@ -18,25 +18,10 @@ interface BeforeInstallPromptEvent extends Event {
  * @returns {boolean} isInstallable - True si l'app peut être installée
  * @returns {Function} promptInstall - Déclenche le prompt d'installation
  *
- * @example
- * ```tsx
- * const { isInstallable, promptInstall } = usePWAInstall();
- *
- * return (
- *   <>
- *     {isInstallable && (
- *       <button onClick={promptInstall}>
- *         Installer l'application
- *       </button>
- *     )}
- *   </>
- * );
- * ```
  */
 export const usePWAInstall = () => {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -44,7 +29,6 @@ export const usePWAInstall = () => {
       e.preventDefault();
       // Stocker l'événement pour le déclencher plus tard
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setIsInstallable(true);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -63,11 +47,10 @@ export const usePWAInstall = () => {
     // Attendre la réponse de l'utilisateur
     const { outcome } = await deferredPrompt.userChoice;
 
-    if (outcome === "accepted") {
-      setDeferredPrompt(null);
-      setIsInstallable(false);
-    }
+    if (outcome === "accepted") setDeferredPrompt(null);
   };
 
-  return { isInstallable, install };
+  const isInstallable = !!deferredPrompt;
+
+  return { install, isInstallable } as const;
 };
