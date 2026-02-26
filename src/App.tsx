@@ -275,6 +275,7 @@ const AppShell = ({ session }: AppShellProps) => {
             session={session}
             userEmail={session.user.email ?? undefined}
             onLogout={handleSignOut}
+            appVersion={packageJson.version}
           />
 
           {isInstallable && (
@@ -286,10 +287,6 @@ const AppShell = ({ session }: AppShellProps) => {
               Installer l&apos;app
             </button>
           )}
-
-          <div className="px-3 py-2 text-center">
-            <p className="text-[10px] text-gray-400">v{packageJson.version}</p>
-          </div>
         </div>
       </aside>
 
@@ -320,6 +317,7 @@ const AppShell = ({ session }: AppShellProps) => {
                 session={session}
                 userEmail={session.user.email ?? undefined}
                 onLogout={handleSignOut}
+                appVersion={packageJson.version}
                 compact
               />
             </div>

@@ -9,6 +9,7 @@ interface UserMenuProps {
   userEmail?: string;
   onLogout: () => void;
   session: Session | null;
+  appVersion?: string;
   className?: string;
   compact?: boolean;
 }
@@ -22,6 +23,7 @@ export const UserMenu = ({
   userEmail,
   onLogout,
   session,
+  appVersion,
   className = "",
   compact = false,
 }: UserMenuProps) => {
@@ -188,7 +190,11 @@ export const UserMenu = ({
             dropdownPositionClass,
           ].join(" ")}
         >
-          <UserInfoCard session={session} onLogout={onLogout} />
+          <UserInfoCard
+            session={session}
+            onLogout={onLogout}
+            appVersion={appVersion}
+          />
         </div>
       )}
     </div>

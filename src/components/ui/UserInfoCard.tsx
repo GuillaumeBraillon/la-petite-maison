@@ -11,12 +11,17 @@ import type { UserNotification } from "../../types";
 interface UserInfoCardProps {
   session: Session | null;
   onLogout: () => void;
+  appVersion?: string;
 }
 
 /**
  * Carte affichant les informations de connexion de l'utilisateur Google.
  */
-export const UserInfoCard = ({ session, onLogout }: UserInfoCardProps) => {
+export const UserInfoCard = ({
+  session,
+  onLogout,
+  appVersion,
+}: UserInfoCardProps) => {
   const [memberLabel, setMemberLabel] = useState<string | null>(null);
   const [memberFullName, setMemberFullName] = useState<string | null>(null);
   const [selectedNotification, setSelectedNotification] =
@@ -138,7 +143,10 @@ export const UserInfoCard = ({ session, onLogout }: UserInfoCardProps) => {
 
   return (
     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
-      <div className="flex justify-end">
+      <div className="relative flex items-center justify-end gap-2">
+        <p className="absolute left-1/2 -translate-x-1/2 text-[10px] text-gray-400">
+          {appVersion ? `Version : ${appVersion}` : ""}
+        </p>
         <div className="flex items-center gap-1">
           <NotificationToggle compact className="text-gray-500 p-1.5" />
           <button
@@ -170,7 +178,9 @@ export const UserInfoCard = ({ session, onLogout }: UserInfoCardProps) => {
                 <div className="min-w-0">
                   <div className="text-xs text-gray-900 font-semibold truncate leading-tight">
                     {primaryDisplayName}
-                    {secondaryDisplayName ? ` · ${secondaryDisplayName}` : ""}
+                    {secondaryDisplayName && (
+                      <span className="font-normal text-gray-500">{` · ${secondaryDisplayName}`}</span>
+                    )}
                   </div>
                 </div>
               )}
