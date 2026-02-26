@@ -7,6 +7,17 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.13] — 2026-02-26
+
+### Changed
+
+- **PWA / Installation** : affichage du bouton d'installation plus permissif — le bouton est désormais visible tant que l'application n'est pas déjà installée (mode standalone). Amélioration de la détection iOS et gestion d'un guide d'installation pour iPhone/iPad.
+
+### Key files touched
+
+- `src/hooks/usePWAInstall.ts` — meilleure détection iOS / standalone et exposition de `canInstall` / `isIOS` / `hasNativePrompt`
+- `src/App.tsx` — le bouton d'installation est affiché de manière plus fiable et affiche un guide iOS si nécessaire
+
 ## [0.3.12] — 2026-02-26
 
 ### Added

@@ -46,9 +46,12 @@ export const MemberCard = ({
   onDelete,
 }: MemberCardProps) => {
   const email = member.email?.trim().toLowerCase();
-  const isGmail =
-    !!email &&
-    (email.endsWith("@gmail.com") || email.endsWith("@googlemail.com"));
+  const maybeAuth = member as unknown as { authProvider?: string };
+  const authProvider = maybeAuth.authProvider;
+  const isGoogleAccount = authProvider
+    ? authProvider === "google"
+    : !!email &&
+      (email.endsWith("@gmail.com") || email.endsWith("@googlemail.com"));
   return (
     <Card hover className="flex flex-col gap-3">
       {/* Header */}
@@ -114,7 +117,7 @@ export const MemberCard = ({
             <Mail size={12} className="shrink-0" />
             <span className="truncate flex-1">{member.email}</span>
             {member.email &&
-              !isGmail &&
+              !isGoogleAccount &&
               canSendPasswordReset &&
               onSendPasswordReset && (
                 <button
