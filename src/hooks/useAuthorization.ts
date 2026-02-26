@@ -136,13 +136,6 @@ export const useAuthorization = (session: Session | null) => {
           }
         }
 
-        logger.debug("authorization", "Vérification autorisation", {
-          email: normalizedEmail,
-          isAllowed: authorized,
-          role: authorizedUser.role,
-          rawValue: authorizedUser.is_allowed,
-        });
-
         if (!isCancelled && currentEmailRef.current === normalizedEmail) {
           setIsAuthorized(authorized);
         }

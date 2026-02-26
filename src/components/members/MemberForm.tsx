@@ -181,7 +181,7 @@ export const MemberForm = ({
         >
           <option value="admin">Admin</option>
           <option value="owner">Propriétaire</option>
-          <option value="sub_member">Sous-membre</option>
+          <option value="sub_member">Membre</option>
         </Select>
       </div>
 

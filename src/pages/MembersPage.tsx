@@ -4,11 +4,14 @@ import type { Member } from "../types";
 import { getPermissions } from "../services/permissions";
 import { MemberList } from "../components/members/MemberList";
 import { MemberForm } from "../components/members/MemberForm";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useError } from "../contexts/ErrorContext";
+import { useToast } from "../contexts/ToastContext";
 import { createMember, updateMember, deleteMember } from "../services/apiCrud";
+import { TOAST_MESSAGES } from "../services/messageCatalog";
 
 // ----------------------------------------------- -------
 // Props
@@ -31,7 +34,10 @@ export const MembersPage = ({
 }: MembersPageProps) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+  const [deletingMember, setDeletingMember] = useState(false);
   const { error, setError, clearError } = useError();
+  const { showToast } = useToast();
   const permissions = getPermissions(currentMember ?? null);
 
   // Les administrateurs ne doivent être visibles que par d'autres administrateurs
@@ -63,12 +69,24 @@ export const MembersPage = ({
     try {
       if (editing) {
         await updateMember(editing.id, values);
+        showToast({
+          variant: "success",
+          ...TOAST_MESSAGES.member.updated,
+        });
       } else {
         await createMember(values);
+        showToast({
+          variant: "success",
+          ...TOAST_MESSAGES.member.created,
+        });
       }
       await onRefresh();
       closeModal();
     } catch (err) {
+      showToast({
+        variant: "error",
+        ...TOAST_MESSAGES.member.saveError,
+      });
       setError({
         message:
           err instanceof Error ? err.message : "Une erreur est survenue.",
@@ -77,17 +95,41 @@ export const MembersPage = ({
     }
   };
 
-  const handleDelete = async (m: Member) => {
-    if (!window.confirm(`Supprimer ${m.firstName} ${m.lastName} ?`)) return;
+  const handleDelete = (m: Member) => {
+    setMemberToDelete(m);
+  };
+
+  const closeDeleteModal = () => {
+    setMemberToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!memberToDelete || deletingMember) return;
+
     try {
-      await deleteMember(m.id);
+      setDeletingMember(true);
+      await deleteMember(memberToDelete.id);
       await onRefresh();
+      setMemberToDelete(null);
+      const deletedToast = TOAST_MESSAGES.member.deleted(
+        `${memberToDelete.firstName} ${memberToDelete.lastName}`,
+      );
+      showToast({
+        variant: "success",
+        ...deletedToast,
+      });
     } catch (err) {
+      showToast({
+        variant: "error",
+        ...TOAST_MESSAGES.member.deleteError,
+      });
       setError({
         message:
           err instanceof Error ? err.message : "Une erreur est survenue.",
         context: "Suppression du membre",
       });
+    } finally {
+      setDeletingMember(false);
     }
   };
 
@@ -124,7 +166,18 @@ export const MembersPage = ({
       await updateMember(m.id, { isAllowed: true });
       await onRefresh();
       closeModal();
+      const authorizedToast = TOAST_MESSAGES.member.authorized(
+        `${values.firstName} ${values.lastName}`,
+      );
+      showToast({
+        variant: "success",
+        ...authorizedToast,
+      });
     } catch (err) {
+      showToast({
+        variant: "error",
+        ...TOAST_MESSAGES.member.authorizeError,
+      });
       setError({
         message:
           err instanceof Error ? err.message : "Une erreur est survenue.",
@@ -179,7 +232,17 @@ export const MembersPage = ({
                     await updateMember(editing.id, { isAllowed });
                     await onRefresh();
                     closeModal();
+                    const authUpdatedToast =
+                      TOAST_MESSAGES.member.authUpdated(isAllowed);
+                    showToast({
+                      variant: "success",
+                      ...authUpdatedToast,
+                    });
                   } catch (err) {
+                    showToast({
+                      variant: "error",
+                      ...TOAST_MESSAGES.member.authUpdateError,
+                    });
                     setError({
                       message:
                         err instanceof Error
@@ -195,6 +258,23 @@ export const MembersPage = ({
           submitLabel={editing ? "Enregistrer" : "Créer"}
         />
       </Modal>
+
+      <ConfirmDialog
+        isOpen={memberToDelete !== null}
+        title="Confirmer la suppression"
+        message={
+          memberToDelete
+            ? `Supprimer ${memberToDelete.firstName} ${memberToDelete.lastName} ?`
+            : "Supprimer ce membre ?"
+        }
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          void confirmDelete();
+        }}
+        onCancel={closeDeleteModal}
+        loading={deletingMember}
+      />
     </div>
   );
 };

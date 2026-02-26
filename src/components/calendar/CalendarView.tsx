@@ -190,15 +190,36 @@ export const CalendarView = ({
                   className="flex flex-col gap-1"
                   onClick={(event) => event.stopPropagation()}
                 >
-                  {dayRentals.map((rental) => (
-                    <RentalBadge
-                      key={rental.id}
-                      rental={rental}
-                      owner={memberIndex.get(rental.ownerId)}
-                      cellDate={day}
-                      onClick={onRentalClick}
-                    />
-                  ))}
+                  {dayRentals.map((rental) =>
+                    (() => {
+                      const owner = memberIndex.get(rental.ownerId);
+                      const member = rental.subMemberId
+                        ? memberIndex.get(rental.subMemberId)
+                        : undefined;
+                      const displayMember = member ?? owner;
+                      const ownerLabel = owner
+                        ? `${owner.firstName} ${owner.lastName}`
+                        : "";
+                      const memberLabel = member
+                        ? `${member.firstName} ${member.lastName}`
+                        : undefined;
+                      const labelOverride =
+                        memberLabel && ownerLabel
+                          ? `${memberLabel} (${ownerLabel})`
+                          : undefined;
+
+                      return (
+                        <RentalBadge
+                          key={rental.id}
+                          rental={rental}
+                          owner={displayMember}
+                          labelOverride={labelOverride}
+                          cellDate={day}
+                          onClick={onRentalClick}
+                        />
+                      );
+                    })(),
+                  )}
                 </div>
               ) : (
                 <p className="text-xs text-gray-400">Aucune location</p>

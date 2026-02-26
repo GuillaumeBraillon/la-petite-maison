@@ -7,6 +7,7 @@ type NotificationType =
   | "rental_rejected"
   | "rental_reminder"
   | "rental_completed"
+  | "rental_deleted"
   | "request_pending";
 
 interface NotificationPayload {
@@ -53,10 +54,18 @@ interface MemberRecipient {
   email: string;
 }
 
+type AuthUsersByEmailResolver = () => Promise<Map<string, string>>;
+
+interface RecipientResolution {
+  userIds: string[];
+  unresolvedMemberEmails: string[];
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -96,6 +105,50 @@ const formatDate = (value?: string): string => {
   }).format(date);
 };
 
+const toErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  return String(error);
+};
+
+const logInfo = (event: string, meta?: Record<string, unknown>): void => {
+  console.log(
+    JSON.stringify({
+      level: "info",
+      event,
+      ...(meta ?? {}),
+    }),
+  );
+};
+
+const logError = (
+  event: string,
+  error: unknown,
+  meta?: Record<string, unknown>,
+): void => {
+  console.error(
+    JSON.stringify({
+      level: "error",
+      event,
+      error: toErrorMessage(error),
+      ...(meta ?? {}),
+    }),
+  );
+};
+
+const extractBearerToken = (request: Request): string | null => {
+  const authHeader =
+    request.headers.get("authorization") ??
+    request.headers.get("Authorization");
+  if (!authHeader) return null;
+
+  const [scheme, token] = authHeader.split(" ");
+  if (!scheme || !token) return null;
+  if (scheme.toLowerCase() !== "bearer") return null;
+
+  const trimmedToken = token.trim();
+  return trimmedToken.length > 0 ? trimmedToken : null;
+};
+
 const buildPayload = (request: SendPushRequest): NotificationPayload => {
   if (request.payload) return request.payload;
 
@@ -111,22 +164,22 @@ const buildPayload = (request: SendPushRequest): NotificationPayload => {
     case "rental_created":
       return {
         type,
-        title: "Nouvelle demande",
-        body: `Nouvelle demande de ${request.firstName ?? "membre"} du ${startDate} au ${endDate}`,
+        title: "Nouvelle demande de location",
+        body: `Nouvelle demande de ${request.firstName ?? "membre"}, du ${startDate} au ${endDate}.`,
         url: request.url,
       };
     case "rental_confirmed":
       return {
         type,
         title: "Séjour confirmé",
-        body: `Votre séjour du ${startDate} au ${endDate} est confirmé !`,
+        body: `Votre séjour du ${startDate} au ${endDate} est confirmé.`,
         url: request.url,
       };
     case "rental_rejected":
       return {
         type,
         title: "Demande refusée",
-        body: "Votre demande de séjour a été refusée",
+        body: "Votre demande de séjour a été refusée.",
         url: request.url,
       };
     case "rental_reminder":
@@ -135,8 +188,8 @@ const buildPayload = (request: SendPushRequest): NotificationPayload => {
         title: "Rappel séjour",
         body:
           request.reminderDays === 7
-            ? "Dans 7 jours : votre sejour a La Petite Maison"
-            : "Rappel : votre séjour commence demain",
+            ? "Dans 7 jours : votre séjour à La Petite Maison."
+            : "Rappel : votre séjour commence demain.",
         url: request.url,
       };
     case "rental_completed":
@@ -144,6 +197,13 @@ const buildPayload = (request: SendPushRequest): NotificationPayload => {
         type,
         title: "Séjour terminé",
         body: "Votre séjour est terminé.",
+        url: request.url,
+      };
+    case "rental_deleted":
+      return {
+        type,
+        title: "Location supprimée",
+        body: "Une location a été supprimée.",
         url: request.url,
       };
     case "request_pending":
@@ -182,8 +242,19 @@ const listAuthUsersByEmail = async (): Promise<Map<string, string>> => {
   return usersByEmail;
 };
 
+const createAuthUsersByEmailResolver = (): AuthUsersByEmailResolver => {
+  let cache: Map<string, string> | null = null;
+
+  return async () => {
+    if (cache) return cache;
+    cache = await listAuthUsersByEmail();
+    return cache;
+  };
+};
+
 const resolveTopicRecipients = async (
   topic: NonNullable<SendPushRequest["topic"]>,
+  getUsersByEmail: AuthUsersByEmailResolver,
 ): Promise<string[]> => {
   if (topic === "owner") {
     return [];
@@ -198,7 +269,7 @@ const resolveTopicRecipients = async (
 
   if (error) throw error;
 
-  const usersByEmail = await listAuthUsersByEmail();
+  const usersByEmail = await getUsersByEmail();
   const recipients = (data as MemberRecipient[] | null) ?? [];
 
   return recipients
@@ -208,8 +279,10 @@ const resolveTopicRecipients = async (
 
 const getRecipientUserIds = async (
   request: SendPushRequest,
-): Promise<string[]> => {
+  getUsersByEmail: AuthUsersByEmailResolver,
+): Promise<RecipientResolution> => {
   const recipients = new Set<string>();
+  const unresolvedMemberEmails = new Set<string>();
 
   if (request.userId) recipients.add(request.userId);
   request.userIds?.forEach((id) => recipients.add(id));
@@ -220,20 +293,28 @@ const getRecipientUserIds = async (
   }
 
   if (request.topic) {
-    const topicRecipients = await resolveTopicRecipients(request.topic);
+    const topicRecipients = await resolveTopicRecipients(
+      request.topic,
+      getUsersByEmail,
+    );
     topicRecipients.forEach((id) => recipients.add(id));
   }
 
   // Résolution des memberEmails → auth user IDs
   if (request.memberEmails && request.memberEmails.length > 0) {
-    const usersByEmail = await listAuthUsersByEmail();
+    const usersByEmail = await getUsersByEmail();
     request.memberEmails.forEach((email) => {
-      const authId = usersByEmail.get(email.trim().toLowerCase());
+      const normalizedEmail = email.trim().toLowerCase();
+      const authId = usersByEmail.get(normalizedEmail);
       if (authId) recipients.add(authId);
+      else unresolvedMemberEmails.add(normalizedEmail);
     });
   }
 
-  return Array.from(recipients);
+  return {
+    userIds: Array.from(recipients),
+    unresolvedMemberEmails: Array.from(unresolvedMemberEmails),
+  };
 };
 
 const removeExpiredSubscriptions = async (
@@ -273,20 +354,77 @@ const getHttpStatusCode = (error: unknown): number | null => {
   return typeof maybeStatusCode === "number" ? maybeStatusCode : null;
 };
 
+const ensureCallerIsAllowed = async (request: Request): Promise<string> => {
+  const token = extractBearerToken(request);
+  if (!token) {
+    throw new Error("Authorization Bearer token requis.");
+  }
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(token);
+
+  if (userError || !user) {
+    throw new Error("Utilisateur non authentifié.");
+  }
+
+  const email = user.email?.trim().toLowerCase();
+  if (!email) {
+    throw new Error("Email utilisateur introuvable.");
+  }
+
+  const { data, error } = await supabase
+    .from("members")
+    .select("id")
+    .eq("email", email)
+    .eq("is_allowed", true)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("Utilisateur non autorisé à envoyer des notifications.");
+  }
+
+  return user.id;
+};
+
 Deno.serve(async (request: Request): Promise<Response> => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  if (request.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Méthode non autorisée." }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
+    const callerUserId = await ensureCallerIsAllowed(request);
     const body = (await request.json()) as SendPushRequest;
     const payload = buildPayload(body);
-    const recipientUserIds = await getRecipientUserIds(body);
+    const getUsersByEmail = createAuthUsersByEmailResolver();
+    const recipientResolution = await getRecipientUserIds(
+      body,
+      getUsersByEmail,
+    );
+    const recipientUserIds = recipientResolution.userIds;
+
+    logInfo("send-push.received", {
+      callerUserId,
+      type: payload.type,
+      topic: body.topic ?? null,
+      recipientCandidateCount: recipientUserIds.length,
+      unresolvedMemberEmails: recipientResolution.unresolvedMemberEmails,
+    });
 
     if (recipientUserIds.length === 0) {
       return new Response(
         JSON.stringify({
           message: "Aucun destinataire pour cette notification.",
+          unresolvedMemberEmails: recipientResolution.unresolvedMemberEmails,
         }),
         {
           status: 400,
@@ -342,7 +480,12 @@ Deno.serve(async (request: Request): Promise<Response> => {
           if (statusCode === 404 || statusCode === 410) {
             expiredIds.push(subscription.id);
           } else {
-            console.error("send-push error", error);
+            logError("send-push.delivery_failed", error, {
+              subscriptionId: subscription.id,
+              userId: subscription.user_id,
+              payloadType: payload.type,
+              statusCode,
+            });
           }
         }
       }),
@@ -350,9 +493,19 @@ Deno.serve(async (request: Request): Promise<Response> => {
 
     await removeExpiredSubscriptions(expiredIds);
 
+    logInfo("send-push.completed", {
+      payloadType: payload.type,
+      recipientCount: recipientUserIds.length,
+      subscriptionCount: subscriptions.length,
+      unresolvedMemberEmails: recipientResolution.unresolvedMemberEmails,
+      sent: sentCount,
+      removed: expiredIds.length,
+    });
+
     return new Response(
       JSON.stringify({
         message: "Notifications traitées.",
+        unresolvedMemberEmails: recipientResolution.unresolvedMemberEmails,
         sent: sentCount,
         removed: expiredIds.length,
       }),
@@ -364,8 +517,16 @@ Deno.serve(async (request: Request): Promise<Response> => {
     const message =
       error instanceof Error ? error.message : "Erreur serveur send-push.";
 
+    logError("send-push.unhandled", error);
+
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status:
+        message === "Authorization Bearer token requis." ||
+        message === "Utilisateur non authentifié." ||
+        message === "Email utilisateur introuvable." ||
+        message === "Utilisateur non autorisé à envoyer des notifications."
+          ? 403
+          : 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

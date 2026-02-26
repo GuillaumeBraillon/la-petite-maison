@@ -54,7 +54,18 @@ self.addEventListener("push", (event) => {
     ],
   };
 
-  event.waitUntil(self.registration.showNotification(payload.title, options));
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(payload.title, options),
+      self.clients
+        .matchAll({ type: "window", includeUncontrolled: true })
+        .then((clientsList) => {
+          for (const client of clientsList) {
+            client.postMessage({ type: "user-notifications-updated" });
+          }
+        }),
+    ]),
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {

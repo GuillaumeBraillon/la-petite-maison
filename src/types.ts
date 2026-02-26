@@ -10,6 +10,7 @@ export type NotificationType =
   | "rental_rejected"
   | "rental_reminder"
   | "rental_completed"
+  | "rental_deleted"
   | "request_pending";
 
 // ------------------------------------------------------------
@@ -53,7 +54,7 @@ export interface Rental {
   endDate: string;
   /** Propriétaire principal */
   ownerId: string;
-  /** Enfant / sous-membre */
+  /** Enfant / membre */
   subMemberId?: string;
   /** Nombre de personnes */
   guestCount: number;

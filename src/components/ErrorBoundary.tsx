@@ -1,5 +1,6 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
+import { logger } from "../services/logger";
 
 // ------------------------------------------------------------
 // Props & State
@@ -33,7 +34,7 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error("[ErrorBoundary]", error, info.componentStack);
+    logger.error("[ErrorBoundary]", error, info.componentStack);
   }
 
   render(): ReactNode {

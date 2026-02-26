@@ -16,7 +16,7 @@ interface RentalFormProps {
   initialValues?: Partial<RentalFormValues>;
   members: Member[];
   canEdit?: boolean;
-  /** Membre connecté — permet de dériver le mode restreint (propriétaire non éditeur / sous-membre) */
+  /** Membre connecté — permet de dériver le mode restreint (propriétaire non éditeur / membre) */
   currentMember?: Member;
   onSubmit: (values: RentalFormValues) => Promise<void>;
   onCancel: () => void;
@@ -118,7 +118,9 @@ export const RentalForm = ({
   submitLabel = "Enregistrer",
   onCreateSubMember,
 }: RentalFormProps) => {
-  // Mode restreint : propriétaire non éditeur ou sous-membre
+  const isCurrentMemberSubMember = currentMember?.role === "sub_member";
+
+  // Mode restreint : propriétaire non éditeur ou membre
   const isRestricted =
     !!currentMember &&
     (currentMember.role === "sub_member" ||
@@ -132,7 +134,7 @@ export const RentalForm = ({
         ? currentMember.id
         : undefined;
 
-  // Identifiant du sous-membre imposé (soi-même si sous-membre)
+  // Identifiant du membre imposé (soi-même si membre)
   const restrictedSubMemberId: string | undefined =
     currentMember?.role === "sub_member" ? currentMember.id : undefined;
 
@@ -170,13 +172,12 @@ export const RentalForm = ({
     Partial<Record<keyof RentalFormValues, string>>
   >({});
 
-  // État du mini-formulaire de création de sous-membre
+  // État du mini-formulaire de création de membre
   const [newMember, setNewMember] = useState<{
     active: boolean;
     label: string;
     firstName: string;
     lastName: string;
-    role: "sub_member";
     loading: boolean;
     error: string;
   }>({
@@ -184,7 +185,6 @@ export const RentalForm = ({
     label: "",
     firstName: "",
     lastName: "",
-    role: "sub_member",
     loading: false,
     error: "",
   });
@@ -274,6 +274,9 @@ export const RentalForm = ({
     label: `${m.firstName} ${m.lastName}`,
     sublabel: m.label,
   }));
+  const canCreateSubMemberFromRequest =
+    !!onCreateSubMember && !isCurrentMemberSubMember;
+  const isSubMemberFieldDisabled = !canEdit || isCurrentMemberSubMember;
 
   const handleCreateSubMemberTrigger = (searchText: string) => {
     setNewMember({
@@ -281,7 +284,6 @@ export const RentalForm = ({
       label: searchText,
       firstName: "",
       lastName: "",
-      role: "sub_member",
       loading: false,
       error: "",
     });
@@ -306,7 +308,7 @@ export const RentalForm = ({
         firstName: newMember.firstName.trim(),
         lastName: newMember.lastName.trim(),
         label: newMember.label.trim(),
-        role: newMember.role,
+        role: "sub_member",
         ownerId: values.ownerId || undefined,
       });
       set("subMemberId", created.id);
@@ -315,7 +317,6 @@ export const RentalForm = ({
         label: "",
         firstName: "",
         lastName: "",
-        role: "sub_member",
         loading: false,
         error: "",
       });
@@ -399,9 +400,9 @@ export const RentalForm = ({
         ))}
       </Select>
 
-      {/* Sous-membre */}
+      {/* Membre */}
       <Combobox
-        label="Sous-membre"
+        label="Membre"
         value={values.subMemberId ?? ""}
         options={subMemberOptions}
         onChange={(id) => {
@@ -409,20 +410,20 @@ export const RentalForm = ({
           if (id) setNewMember((prev) => ({ ...prev, active: false }));
         }}
         onCreate={
-          !isRestricted && onCreateSubMember
+          canCreateSubMemberFromRequest
             ? handleCreateSubMemberTrigger
             : undefined
         }
-        placeholder={isRestricted ? "—" : "Rechercher ou créer un sous-membre…"}
-        disabled={!canEdit || isRestricted}
+        placeholder={
+          isCurrentMemberSubMember ? "—" : "Rechercher ou créer un membre…"
+        }
+        disabled={isSubMemberFieldDisabled}
       />
 
-      {/* Mini-formulaire de création de sous-membre */}
-      {newMember.active && (
+      {/* Mini-formulaire de création de membre */}
+      {newMember.active && canCreateSubMemberFromRequest && (
         <div className="rounded-lg border border-primary-200 bg-primary-50/50 p-4 flex flex-col gap-3">
-          <p className="text-sm font-medium text-primary-700">
-            Nouveau sous-membre
-          </p>
+          <p className="text-sm font-medium text-primary-700">Nouveau membre</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Prénom"
@@ -451,18 +452,6 @@ export const RentalForm = ({
               }
               required
             />
-            <Select
-              label="Rôle"
-              value={newMember.role}
-              onChange={(e) =>
-                setNewMember((prev) => ({
-                  ...prev,
-                  role: e.target.value as "sub_member",
-                }))
-              }
-            >
-              <option value="sub_member">Sous-membre</option>
-            </Select>
           </div>
           {newMember.error && (
             <p className="text-xs text-red-500">{newMember.error}</p>
@@ -478,7 +467,6 @@ export const RentalForm = ({
                   label: "",
                   firstName: "",
                   lastName: "",
-                  role: "sub_member",
                   loading: false,
                   error: "",
                 })

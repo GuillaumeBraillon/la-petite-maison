@@ -4,9 +4,26 @@ import type { Session } from "@supabase/supabase-js";
 import { NotificationToggle } from "./NotificationToggle";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
+import { Input } from "./Input";
 import { supabase } from "../../services/supabaseClient";
 import { useUserNotifications } from "../../hooks/useUserNotifications";
-import type { UserNotification } from "../../types";
+import { useToast } from "../../contexts/ToastContext";
+import { TOAST_MESSAGES } from "../../services/messageCatalog";
+import type { UserNotification, MemberRole } from "../../types";
+
+const roleLabelMap: Record<MemberRole, string> = {
+  admin: "Admin",
+  owner: "Propriétaire",
+  sub_member: "Membre",
+};
+
+interface MemberIdentityRow {
+  first_name: string | null;
+  last_name: string | null;
+  label: string | null;
+  role: MemberRole;
+  is_editor: boolean;
+}
 
 interface UserInfoCardProps {
   session: Session | null;
@@ -24,8 +41,26 @@ export const UserInfoCard = ({
 }: UserInfoCardProps) => {
   const [memberLabel, setMemberLabel] = useState<string | null>(null);
   const [memberFullName, setMemberFullName] = useState<string | null>(null);
+  const [memberRole, setMemberRole] = useState<MemberRole | null>(null);
+  const [memberIsEditor, setMemberIsEditor] = useState<boolean>(false);
   const [selectedNotification, setSelectedNotification] =
     useState<UserNotification | null>(null);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [accountActionMessage, setAccountActionMessage] = useState<
+    string | null
+  >(null);
+  const [accountActionError, setAccountActionError] = useState<string | null>(
+    null,
+  );
+  const [notificationModalError, setNotificationModalError] = useState<
+    string | null
+  >(null);
+  const [emailUpdateLoading, setEmailUpdateLoading] = useState(false);
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [deleteNotificationLoading, setDeleteNotificationLoading] =
+    useState(false);
+  const { showToast } = useToast();
   const {
     notifications,
     unreadCount,
@@ -33,6 +68,7 @@ export const UserInfoCard = ({
     error: notificationsError,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
   } = useUserNotifications();
 
   const sessionUser = session?.user;
@@ -44,6 +80,13 @@ export const UserInfoCard = ({
     memberFullName && memberFullName !== primaryDisplayName
       ? memberFullName
       : null;
+  const roleLabel = memberRole ? roleLabelMap[memberRole] : null;
+  const isOwnerEditor = memberRole === "owner" && memberIsEditor;
+  const authProvider =
+    typeof sessionUser?.app_metadata?.provider === "string"
+      ? sessionUser.app_metadata.provider
+      : null;
+  const isGoogleAccount = authProvider === "google";
 
   useEffect(() => {
     let isCancelled = false;
@@ -54,34 +97,38 @@ export const UserInfoCard = ({
         if (!isCancelled) {
           setMemberLabel(null);
           setMemberFullName(null);
+          setMemberRole(null);
+          setMemberIsEditor(false);
         }
         return;
       }
 
       const { data, error } = await supabase
         .from("members")
-        .select("first_name, last_name, label")
+        .select("first_name, last_name, label, role, is_editor")
         .ilike("email", normalizedEmail)
-        .maybeSingle();
+        .maybeSingle<MemberIdentityRow>();
 
       if (isCancelled || error || !data) {
         if (!isCancelled) {
           setMemberLabel(null);
           setMemberFullName(null);
+          setMemberRole(null);
+          setMemberIsEditor(false);
         }
         return;
       }
 
-      const firstName =
-        (data as { first_name?: string | null }).first_name?.trim() ?? "";
-      const lastName =
-        (data as { last_name?: string | null }).last_name?.trim() ?? "";
+      const firstName = data.first_name?.trim() ?? "";
+      const lastName = data.last_name?.trim() ?? "";
       const fullName = `${firstName} ${lastName}`.trim();
-      const label = (data as { label?: string | null }).label?.trim() ?? "";
+      const label = data.label?.trim() ?? "";
 
       if (!isCancelled) {
         setMemberLabel(label || null);
         setMemberFullName(fullName || null);
+        setMemberRole(data.role);
+        setMemberIsEditor(data.is_editor);
       }
     };
 
@@ -124,6 +171,7 @@ export const UserInfoCard = ({
     notificationId: string,
     url?: string,
   ): Promise<void> => {
+    setNotificationModalError(null);
     await markAsRead(notificationId);
 
     const clicked = notifications.find((item) => item.id === notificationId);
@@ -139,6 +187,98 @@ export const UserInfoCard = ({
   const handleOpenNotificationUrl = (): void => {
     if (!selectedNotification?.url) return;
     window.location.assign(selectedNotification.url);
+  };
+
+  const handleDeleteSelectedNotification = async (): Promise<void> => {
+    if (!selectedNotification) return;
+
+    setDeleteNotificationLoading(true);
+    setNotificationModalError(null);
+    try {
+      await deleteNotification(selectedNotification.id);
+      showToast({
+        variant: "success",
+        title: TOAST_MESSAGES.notification.deleted.title,
+        message: TOAST_MESSAGES.notification.deleted.message,
+      });
+      setSelectedNotification(null);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "Impossible de supprimer la notification.";
+      setNotificationModalError(message);
+      showToast({
+        variant: "error",
+        title: TOAST_MESSAGES.notification.deleteError.title,
+        message,
+      });
+    }
+    setDeleteNotificationLoading(false);
+  };
+
+  const handleOpenEmailModal = (): void => {
+    setAccountActionError(null);
+    setAccountActionMessage(null);
+    setNewEmail(user.email ?? "");
+    setIsEmailModalOpen(true);
+  };
+
+  const handleUpdateEmail = async (): Promise<void> => {
+    const normalizedEmail = newEmail.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setAccountActionError("Veuillez saisir un email valide.");
+      return;
+    }
+    if (normalizedEmail === (user.email ?? "").trim().toLowerCase()) {
+      setAccountActionError("Cet email est déjà utilisé sur ce compte.");
+      return;
+    }
+
+    setEmailUpdateLoading(true);
+    setAccountActionError(null);
+    setAccountActionMessage(null);
+
+    const { error } = await supabase.auth.updateUser({
+      email: normalizedEmail,
+    });
+
+    if (error) {
+      setAccountActionError(error.message);
+    } else {
+      setIsEmailModalOpen(false);
+      setAccountActionMessage(
+        "Email de confirmation envoyé. Vérifiez votre boîte de réception.",
+      );
+    }
+
+    setEmailUpdateLoading(false);
+  };
+
+  const handleRequestPasswordReset = async (): Promise<void> => {
+    const email = user.email?.trim();
+    if (!email) {
+      setAccountActionError("Aucun email disponible pour ce compte.");
+      return;
+    }
+
+    setPasswordResetLoading(true);
+    setAccountActionError(null);
+    setAccountActionMessage(null);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+
+    if (error) {
+      setAccountActionError(error.message);
+    } else {
+      setAccountActionMessage(
+        "Email de réinitialisation du mot de passe envoyé.",
+      );
+    }
+
+    setPasswordResetLoading(false);
   };
 
   return (
@@ -182,6 +322,12 @@ export const UserInfoCard = ({
                       <span className="font-normal text-gray-500">{` · ${secondaryDisplayName}`}</span>
                     )}
                   </div>
+                  {roleLabel && (
+                    <div className="text-[11px] text-gray-500 leading-tight mt-0.5">
+                      Rôle : {roleLabel}
+                      {isOwnerEditor ? " · Éditeur" : ""}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -196,6 +342,41 @@ export const UserInfoCard = ({
             <div className="text-sm text-gray-900 font-medium">
               {user.email || "N/A"}
             </div>
+            {!isGoogleAccount && (
+              <>
+                <div className="mt-1 flex items-center gap-3 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={handleOpenEmailModal}
+                    className="text-primary-600 hover:text-primary-700 underline"
+                  >
+                    Changer l&apos;email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleRequestPasswordReset();
+                    }}
+                    disabled={passwordResetLoading}
+                    className="text-primary-600 hover:text-primary-700 underline disabled:opacity-50"
+                  >
+                    {passwordResetLoading
+                      ? "Envoi..."
+                      : "Changer le mot de passe"}
+                  </button>
+                </div>
+                {accountActionMessage && (
+                  <p className="mt-1 text-[11px] text-blue-700">
+                    {accountActionMessage}
+                  </p>
+                )}
+                {accountActionError && (
+                  <p className="mt-1 text-[11px] text-red-600">
+                    {accountActionError}
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -279,15 +460,73 @@ export const UserInfoCard = ({
       </div>
 
       <Modal
-        isOpen={selectedNotification !== null}
-        onClose={() => setSelectedNotification(null)}
-        title={selectedNotification?.title ?? "Notification"}
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        title="Changer l'email"
         size="md"
         footer={
           <>
             <Button
               type="button"
               variant="secondary"
+              onClick={() => setIsEmailModalOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              loading={emailUpdateLoading}
+              onClick={() => {
+                void handleUpdateEmail();
+              }}
+            >
+              Enregistrer
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-2">
+          <Input
+            label="Nouvel email"
+            type="email"
+            value={newEmail}
+            onChange={(event) => setNewEmail(event.target.value)}
+            autoComplete="email"
+            required
+          />
+          <p className="text-xs text-gray-500">
+            Un email de confirmation sera envoyé à la nouvelle adresse.
+          </p>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={selectedNotification !== null}
+        onClose={() => {
+          if (deleteNotificationLoading) return;
+          setSelectedNotification(null);
+        }}
+        title={selectedNotification?.title ?? "Notification"}
+        size="md"
+        footer={
+          <>
+            {selectedNotification && (
+              <Button
+                type="button"
+                variant="danger"
+                loading={deleteNotificationLoading}
+                onClick={() => {
+                  void handleDeleteSelectedNotification();
+                }}
+              >
+                Supprimer
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={deleteNotificationLoading}
               onClick={() => setSelectedNotification(null)}
             >
               Fermer
@@ -306,6 +545,9 @@ export const UserInfoCard = ({
       >
         {selectedNotification && (
           <div className="space-y-3">
+            {notificationModalError && (
+              <p className="text-xs text-red-600">{notificationModalError}</p>
+            )}
             <p className="text-xs text-gray-500">
               {formatNotificationDate(selectedNotification.createdAt)}
             </p>

@@ -61,10 +61,13 @@ src/
 │   ├── api.ts                      # READ — chargement initial des données
 │   ├── apiCrud.ts                  # CREATE / UPDATE / DELETE
 │   ├── apiMappers.ts               # Conversion DB (snake_case) ↔ App (camelCase)
-│   └── dbTypes.ts                  # Types PostgreSQL (snake_case) — interfaces DB brutes
+│   ├── dbTypes.ts                  # Types PostgreSQL (snake_case) — interfaces DB brutes
+│   ├── rentalStatus.ts             # Référentiel statuts (labels, couleurs, variants)
+│   └── messageCatalog.ts           # Textes centralisés (toasts + notifications push)
 │
 ├── contexts/
-│   └── ErrorContext.tsx            # State management global des erreurs
+│   ├── ErrorContext.tsx            # State management global des erreurs
+│   └── ToastContext.tsx            # State management global des toasts
 │
 ├── components/
 │   ├── ErrorBoundary.tsx           # Capture des erreurs React
@@ -77,7 +80,9 @@ src/
 │   │   ├── Badge.tsx
 │   │   ├── Card.tsx
 │   │   ├── ErrorDisplay.tsx        # Composant réutilisable d'affichage d'erreur
-│   │   └── ErrorModal.tsx          # Modal pour erreurs handlers
+│   │   ├── ErrorModal.tsx          # Modal pour erreurs handlers
+│   │   ├── ConfirmDialog.tsx       # Confirmation d'action destructive (suppression, etc.)
+│   │   └── ToastViewport.tsx       # Rendu global des toasts
 │   │
 │   ├── members/                    # Gestion des membres
 │   │   ├── MemberForm.tsx
@@ -189,7 +194,7 @@ export interface Rental {
   startDate: string; // ISO date — par défaut dimanche midi
   endDate: string; // ISO date — par défaut dimanche midi suivant
   ownerId: string; // propriétaire principal
-  subMemberId?: string; // enfant / sous-membre
+  subMemberId?: string; // enfant / membre
   guestCount: number; // nombre de personnes
   price: number; // tarif libre
   status: RentalStatus;
@@ -359,6 +364,44 @@ export const useError = (): ErrorContextValue => {
 };
 ```
 
+### `contexts/ToastContext.tsx` et `components/ui/ToastViewport.tsx`
+
+Le feedback utilisateur rapide (succès/erreur d'action) passe par le service global de toast.
+
+```typescript
+import { useToast } from "../contexts/ToastContext";
+
+const { showToast } = useToast();
+
+showToast({
+  variant: "success",
+  title: "Membre créé",
+  message: "Le membre a été ajouté.",
+});
+
+showToast({
+  variant: "error",
+  title: "Erreur",
+  message: "Impossible d'enregistrer les modifications.",
+});
+```
+
+Règles d'usage :
+
+- Utiliser les toasts pour les retours d'action non bloquants (CRUD réussi/échoué, statut mis à jour, etc.)
+- Conserver `ErrorContext` pour l'état d'erreur affiché dans les vues/modales
+- Ne pas appeler de toast directement dans les services API (`api.ts`, `apiCrud.ts`) : déclencher côté hook/page/composant UI
+- Garder des messages courts, clairs, orientés action
+
+Checklist PR — Toast vs ErrorContext :
+
+- Action utilisateur réussie (create/update/delete, statut changé) → `showToast({ variant: "success", ... })`
+- Échec d'action non bloquant (on reste sur la même vue) → `showToast({ variant: "error", ... })`
+- Erreur qui doit rester visible dans la vue/modale (blocage fonctionnel) → `setError(...)` via `ErrorContext`
+- En cas d'échec critique, combiner les deux : toast court + `setError` avec `context`
+- Ne jamais émettre de toast depuis `api.ts` / `apiCrud.ts` (seulement dans hooks/pages/composants)
+- Vérifier les textes : titre court, message actionnable, vocabulaire cohérent dans toute l'app
+
 ---
 
 ## Authentification & Rôles
@@ -395,6 +438,7 @@ const {
 - Vue calendrier et vue tableau (basculement)
 - Sélection de période : par défaut **dimanche midi → dimanche midi suivant**
 - Affichage sur la période : nom du locataire, libellé, tarif
+- En mobile, si un membre est renseigné : affichage **Membre (Owner)**
 - Clic sur une période → vue détail complète
 - Création rapide de membre si inexistant
 - Modification de la location depuis la vue détail
@@ -410,8 +454,11 @@ const {
 ### 📋 Location
 
 - Sélection du membre propriétaire (autocomplete)
-- Sélection du sous-membre (autocomplete)
+- Sélection du membre (autocomplete)
 - Création rapide de membre inline
+- En demande de location, un `owner` (même non éditeur) peut créer un membre inline
+- Un `sub_member` ne peut pas créer de membre inline (champ membre figé)
+- Dans le mini-formulaire inline, le rôle est forcé à `sub_member` (pas de select de rôle)
 - Nombre de personnes
 - Tarif libre
 - Infos post-location : commentaires, relevé électrique (début / fin)
@@ -419,6 +466,8 @@ const {
 ### 📊 Dashboard
 
 - KPI cards : nombre de locations, revenus, taux d'occupation, prochain séjour
+- Bloc statuts global compact (4 statuts sur une ligne, même style que le détail par propriétaire)
+- KPI propriétaire additionnelle : **Sous location** (locations avec membre)
 - Vue synthétique du calendrier
 - Alertes / demandes en attente (pour les admins)
 
@@ -592,6 +641,17 @@ Expose l'état complet de la souscription. Utilisé par `NotificationToggle`.
 
 Bouton Bell/BellOff dans `UserInfoCard`. Affiche l'état d'abonnement et permet de basculer la souscription. N'est rendu que si `isSupported === true`.
 
+### `UserInfoCard` — compte & notifications
+
+Règles d'implémentation :
+
+- Afficher le rôle membre (`Admin` / `Propriétaire` / `Membre`) et `Éditeur` si `role=owner && isEditor=true`
+- Comptes Google OAuth : **ne pas** afficher les actions "Changer l'email" / "Changer le mot de passe"
+- Comptes email/password : autoriser changement d'email (modale) et reset mot de passe (email de réinitialisation)
+- Modal notification : autoriser la suppression (`deleteNotification`) avec état `loading`
+- En cas d'échec suppression : garder la modal ouverte + afficher l'erreur + toast error
+- En cas de succès suppression : fermer la modal + toast success
+
 ### Service Worker (`public/sw.js`)
 
 Gère deux événements :
@@ -612,6 +672,8 @@ self.addEventListener("notificationclick", (event) => {
 });
 ```
 
+En plus, le Service Worker notifie les onglets ouverts (`clients.postMessage`) avec un événement `user-notifications-updated` pour déclencher un refresh côté app (compteur non lues + données métiers).
+
 ### Edge Function `send-push` (`supabase/functions/send-push/index.ts`)
 
 Déployée sur Supabase (Deno runtime). Utilise `npm:web-push@3.6.7`.
@@ -623,6 +685,13 @@ Déployée sur Supabase (Deno runtime). Utilise `npm:web-push@3.6.7`.
 | `userId` / `userIds`                | Auth user IDs directs                                                      |
 | `memberEmails`                      | Emails des membres → résolus en auth user IDs via `auth.admin.listUsers()` |
 | `topic: "admins_and_owner_editors"` | Tous les admins + tous les owners ayant `is_editor = true`                 |
+
+**Durcissement et diagnostics** :
+
+- Contrôle d'accès explicite du caller (Bearer token valide + membre `is_allowed = true`)
+- Résolution `memberEmails` avec diagnostic `unresolvedMemberEmails` dans la réponse JSON
+- Logs structurés (`received`, `completed`, `delivery_failed`, `unhandled`)
+- Cache local par requête de `auth.admin.listUsers()` pour éviter les scans répétés
 
 **Purge automatique** : les endpoints qui retournent HTTP 404 ou 410 sont supprimés de `push_subscriptions`.
 
@@ -637,17 +706,27 @@ supabase functions deploy send-push
 Trois fonctions **fire-and-forget** (ne bloquent jamais le flux CRUD) :
 
 ```typescript
-// 1. Nouvelle demande → notifie tous les admins + owners editors
+// 1. Nouvelle demande → notifie is_editor=true + owner + subMember (si applicable)
+//    Messages personnalisés par destinataire (owner/subMember)
 void notifyNewRental(rental);
 
 // 2. Changement de statut (pending/confirmed/rejected) → notifie owner + subMember
-//    Le 3ème param évite une notification si le statut n'a pas changé
+//    Messages personnalisés selon destinataire, avec nom du subMember côté owner
+//    Le 2ème param évite une notification si le statut n'a pas changé
 void notifyStatusChange(rental, previousStatus?);
 
 // 3. Clôture (status → completed) → notifie owner + subMember avec récapitulatif
-//    (dates prévues/réelles, prix, coût électricité, total)
+//    (dates prévues/réelles, durée, personnes, coût électricité, coût/jour, total)
 void notifyCompleted(rental);
+
+// 4. Suppression d'une location (deleteRental) → notifie owner + subMember
+void notifyDeletedRental(rental);
 ```
+
+Règles de contenu :
+
+- Les textes utilisateurs (toasts + push) sont centralisés dans `services/messageCatalog.ts`
+- Ne pas écrire de texte métier inline dans les hooks/pages/services quand un message existe déjà dans le catalogue
 
 ### Intégration dans `apiCrud.ts`
 
@@ -662,6 +741,9 @@ if (updates.status !== undefined) {
   if (updates.status === "completed") void notifyCompleted(updated);
   else void notifyStatusChange(updated, previousStatus); // previousStatus = 3ème param optionnel
 }
+
+// deleteRental → après delete
+void notifyDeletedRental(deletedRental);
 ```
 
 ### Appel de `updateRental` — bonne pratique
@@ -686,7 +768,10 @@ await updateRental(rental.id, updates);
 - **Jamais** de sous-composant dans le corps d'un composant parent
 - **Toujours** extraire la logique métier dans des hooks custom (`hooks/useRentals.ts`, etc.)
 - **Toujours** passer par les mappers pour les conversions snake_case ↔ camelCase
+- **Toujours** centraliser les textes utilisateur dans `services/messageCatalog.ts` (toasts + notifications)
 - Les `console.error` sont tolérés uniquement dans les `catch` blocks — passer par `ErrorContext` pour l'affichage
+- **Toujours** utiliser `ToastContext` (`showToast`) pour les feedbacks utilisateurs de succès/échec non bloquants
+- **Toujours** utiliser une modale de confirmation (`ConfirmDialog` / `Modal`) pour les actions destructives ; ne pas utiliser `window.confirm`
 - Tailwind : pas de style inline sauf cas exceptionnel justifié
 
 ---

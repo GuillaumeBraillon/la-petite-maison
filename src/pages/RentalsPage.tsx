@@ -5,10 +5,13 @@ import { createMember } from "../services/apiCrud";
 import { RentalList } from "../components/rentals/RentalList";
 import { RentalDetail } from "../components/rentals/RentalDetail";
 import { RentalForm } from "../components/rentals/RentalForm";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
+import { useToast } from "../contexts/ToastContext";
+import { TOAST_MESSAGES } from "../services/messageCatalog";
 
 // ------------------------------------------------------------
 // Props
@@ -31,20 +34,26 @@ export const RentalsPage = ({
   currentMember,
   onRefresh,
 }: RentalsPageProps) => {
+  const { showToast } = useToast();
   const {
     formOpen,
     detailOpen,
     editing,
     selected,
+    rentalToDelete,
+    deletingRental,
+    deleteConfirmationOpen,
     error,
     openCreate,
     openEdit,
     openDetail,
     closeForm,
     closeDetail,
+    cancelDelete,
     clearError,
     handleSubmit,
     handleDelete,
+    confirmDelete,
     handleStatusChange,
   } = useRentalModals(onRefresh);
 
@@ -58,19 +67,33 @@ export const RentalsPage = ({
     role: "sub_member";
     ownerId?: string;
   }) => {
-    const newMember = await createMember({
-      firstName: data.firstName,
-      lastName: data.lastName,
-      label: data.label,
-      role: data.role,
-      email: undefined,
-      address: undefined,
-      ownerId: data.ownerId,
-      isAllowed: false,
-      isEditor: false,
-    });
-    await onRefresh();
-    return newMember;
+    try {
+      const newMember = await createMember({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        label: data.label,
+        role: data.role,
+        email: undefined,
+        address: undefined,
+        ownerId: data.ownerId,
+        isAllowed: false,
+        isEditor: false,
+      });
+      await onRefresh();
+      showToast({
+        variant: "success",
+        title: TOAST_MESSAGES.member.created.title,
+        message: TOAST_MESSAGES.member.created.message,
+      });
+      return newMember;
+    } catch (error) {
+      showToast({
+        variant: "error",
+        title: TOAST_MESSAGES.member.saveError.title,
+        message: TOAST_MESSAGES.member.saveError.message,
+      });
+      throw error;
+    }
   };
 
   return (
@@ -118,7 +141,9 @@ export const RentalsPage = ({
           onSubmit={handleSubmit}
           onCancel={closeForm}
           onCreateSubMember={
-            permissions.createMembers ? handleCreateSubMember : undefined
+            permissions.createMembers || currentMember?.role === "owner"
+              ? handleCreateSubMember
+              : undefined
           }
           submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
         />
@@ -148,6 +173,23 @@ export const RentalsPage = ({
           />
         )}
       </Modal>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmationOpen}
+        title="Confirmer la suppression"
+        message={`Supprimer cette location${
+          rentalToDelete
+            ? ` du ${new Date(rentalToDelete.startDate).toLocaleDateString("fr-FR")} au ${new Date(rentalToDelete.endDate).toLocaleDateString("fr-FR")}`
+            : ""
+        } ?`}
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          void confirmDelete();
+        }}
+        onCancel={cancelDelete}
+        loading={deletingRental}
+      />
     </div>
   );
 };

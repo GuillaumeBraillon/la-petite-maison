@@ -66,7 +66,7 @@ interface RentalDetailProps {
   subMember?: Member;
   /** true = admin ou owner éditeur — accès complet (statut, infos post-location, boutons) */
   canEdit?: boolean;
-  /** true = admin, owner éditeur, owner non éditeur et sous-membre — peut voir le tarif (lecture seule) */
+  /** true = admin, owner éditeur, owner non éditeur et membre — peut voir le tarif (lecture seule) */
   canViewPrice?: boolean;
   onEdit: (rental: Rental) => void;
   onDelete: (rental: Rental) => void;
@@ -192,7 +192,7 @@ export const RentalDetail = ({
                 <User size={16} />
               )
             }
-            label="Sous-membre"
+            label="Membre"
             value={`${subMember.firstName} ${subMember.lastName} — ${subMember.label}`}
           />
         )}

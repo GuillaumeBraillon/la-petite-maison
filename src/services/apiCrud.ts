@@ -16,6 +16,7 @@ import {
   notifyNewRental,
   notifyStatusChange,
   notifyCompleted,
+  notifyDeletedRental,
 } from "./rentalNotifications";
 
 // ------------------------------------------------------------
@@ -108,7 +109,18 @@ export const updateRental = async (
 };
 
 export const deleteRental = async (id: string): Promise<void> => {
+  const { data: existingData, error: fetchError } = await supabase
+    .from("rentals")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (fetchError) throw fetchError;
+
   const { error } = await supabase.from("rentals").delete().eq("id", id);
 
   if (error) throw error;
+
+  const deletedRental = mapRentalFromDb(existingData as DbRental);
+  void notifyDeletedRental(deletedRental);
 };

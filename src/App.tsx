@@ -13,8 +13,10 @@ import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
 import { fetchMembers, fetchRentals } from "./services/api";
 import { ErrorProvider, useError } from "./contexts/ErrorContext";
+import { ToastProvider } from "./contexts/ToastContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ErrorModal } from "./components/ui/ErrorModal";
+import { ToastViewport } from "./components/ui/ToastViewport";
 import { DashboardPage } from "./pages/DashboardPage";
 import { MembersPage } from "./pages/MembersPage";
 import { RentalsPage } from "./pages/RentalsPage";
@@ -228,6 +230,29 @@ const AppShell = ({ session }: AppShellProps) => {
       await refresh();
       setLoading(false);
     })();
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      const message = event.data as { type?: string } | null;
+      if (message?.type === "user-notifications-updated") {
+        void refresh();
+      }
+    };
+
+    navigator.serviceWorker.addEventListener(
+      "message",
+      handleServiceWorkerMessage,
+    );
+
+    return () => {
+      navigator.serviceWorker.removeEventListener(
+        "message",
+        handleServiceWorkerMessage,
+      );
+    };
   }, [refresh]);
 
   const handleSignOut = async () => {
@@ -546,7 +571,10 @@ const AppRoot = () => {
 const App = () => (
   <ErrorBoundary>
     <ErrorProvider>
-      <AppRoot />
+      <ToastProvider>
+        <AppRoot />
+        <ToastViewport />
+      </ToastProvider>
     </ErrorProvider>
   </ErrorBoundary>
 );

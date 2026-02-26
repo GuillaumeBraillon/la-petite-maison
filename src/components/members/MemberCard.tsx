@@ -11,7 +11,7 @@ import { Button } from "../ui/Button";
 const roleLabelMap: Record<Member["role"], string> = {
   admin: "Admin",
   owner: "Propriétaire",
-  sub_member: "Sous-membre",
+  sub_member: "Membre",
 };
 
 // ------------------------------------------------------------

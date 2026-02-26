@@ -7,6 +7,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { Member } from "../types";
 import { fetchMembers } from "../services/api";
 import { getPermissions, type Permissions } from "../services/permissions";
+import { logger } from "../services/logger";
 
 /**
  * Hook custom pour récupérer les permissions de l'utilisateur actuel
@@ -27,7 +28,7 @@ export const usePermissions = (session: Session | null): Permissions => {
         const userMember = members.find((m) => m.email === session.user.email);
         setMember(userMember ?? null);
       } catch (error) {
-        console.error("Failed to load member permissions:", error);
+        logger.error("Failed to load member permissions:", error);
         setMember(null);
       }
     };

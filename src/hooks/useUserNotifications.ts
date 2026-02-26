@@ -3,6 +3,7 @@ import { supabase } from "../services/supabaseClient";
 import { mapUserNotificationFromDb } from "../services/apiMappers";
 import type { DbUserNotification } from "../services/dbTypes";
 import type { UserNotification } from "../types";
+const USER_NOTIFICATIONS_UPDATED_EVENT = "user-notifications-updated";
 
 interface UseUserNotificationsReturn {
   notifications: UserNotification[];
@@ -12,6 +13,7 @@ interface UseUserNotificationsReturn {
   refresh: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
 }
 
 const getErrorMessage = (err: unknown): string => {
@@ -57,6 +59,10 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
       setLoading(false);
     }
   }, [userId]);
+  const broadcastNotificationsUpdated = useCallback((): void => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent(USER_NOTIFICATIONS_UPDATED_EVENT));
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
@@ -83,6 +89,74 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleLocalUpdate = () => {
+      void refresh();
+    };
+
+    window.addEventListener(
+      USER_NOTIFICATIONS_UPDATED_EVENT,
+      handleLocalUpdate,
+    );
+
+    return () => {
+      window.removeEventListener(
+        USER_NOTIFICATIONS_UPDATED_EVENT,
+        handleLocalUpdate,
+      );
+    };
+  }, [refresh]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      const message = event.data as { type?: string } | null;
+      if (message?.type === USER_NOTIFICATIONS_UPDATED_EVENT) {
+        void refresh();
+      }
+    };
+
+    navigator.serviceWorker.addEventListener(
+      "message",
+      handleServiceWorkerMessage,
+    );
+
+    return () => {
+      navigator.serviceWorker.removeEventListener(
+        "message",
+        handleServiceWorkerMessage,
+      );
+    };
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`user-notifications-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          void refresh();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [userId, refresh]);
 
   const markAsRead = useCallback(
     async (id: string): Promise<void> => {
@@ -102,11 +176,12 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
             item.id === id ? { ...item, isRead: true } : item,
           ),
         );
+        broadcastNotificationsUpdated();
       } catch (err: unknown) {
         setError(getErrorMessage(err));
       }
     },
-    [notifications],
+    [notifications, broadcastNotificationsUpdated],
   );
 
   const markAllAsRead = useCallback(async (): Promise<void> => {
@@ -124,10 +199,46 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
       setNotifications((prev) =>
         prev.map((item) => ({ ...item, isRead: true })),
       );
+      broadcastNotificationsUpdated();
     } catch (err: unknown) {
       setError(getErrorMessage(err));
     }
-  }, [notifications, userId]);
+  }, [notifications, userId, broadcastNotificationsUpdated]);
+
+  const deleteNotification = useCallback(
+    async (id: string): Promise<void> => {
+      if (!userId) {
+        const noSessionError = new Error("Session utilisateur introuvable.");
+        setError(noSessionError.message);
+        throw noSessionError;
+      }
+
+      try {
+        const { data, error: deleteError } = await supabase
+          .from("user_notifications")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", userId)
+          .select("id")
+          .maybeSingle<{ id: string }>();
+
+        if (deleteError) throw deleteError;
+        if (!data) {
+          throw new Error(
+            "Suppression impossible: notification introuvable ou non autorisée.",
+          );
+        }
+
+        setNotifications((prev) => prev.filter((item) => item.id !== id));
+        broadcastNotificationsUpdated();
+      } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        setError(message);
+        throw new Error(message);
+      }
+    },
+    [broadcastNotificationsUpdated, userId],
+  );
 
   return {
     notifications,
@@ -137,5 +248,6 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
     refresh,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
   };
 };

@@ -155,7 +155,7 @@ src/
 
 ### 📋 Gestion des locations
 
-- Sélection du propriétaire et sous-membre (autocomplete)
+- Sélection du propriétaire et membre (autocomplete)
 - Nombre de personnes et Tarif libre
 - Statut modifiable : `pending`, `confirmed`, `rejected`, `completed`
 - Notes et relevés électriques (début/fin)

@@ -125,7 +125,7 @@ create index push_subscriptions_user_id_idx
 create table public.user_notifications (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  type text not null check (type in ('rental_created', 'rental_confirmed', 'rental_rejected', 'rental_reminder', 'rental_completed', 'request_pending')),
+  type text not null check (type in ('rental_created', 'rental_confirmed', 'rental_rejected', 'rental_reminder', 'rental_completed', 'rental_deleted', 'request_pending')),
   title text not null,
   body text not null,
   url text,
@@ -212,6 +212,11 @@ on public.user_notifications
 for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+create policy "Users delete own notifications"
+on public.user_notifications
+for delete
+using (auth.uid() = user_id);
 
 commit;
 

@@ -2,6 +2,11 @@ import { CalendarDays, Euro, Home, Clock, Zap } from "lucide-react";
 import type { Rental, Member, RentalStatus } from "../../types";
 import { KpiCard } from "./KpiCard";
 import { Card } from "../ui/Card";
+import {
+  RENTAL_STATUS_LIST,
+  RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP,
+  getRentalStatusLabel,
+} from "../../services/rentalStatus";
 
 // ------------------------------------------------------------
 // Helpers
@@ -79,13 +84,7 @@ const computeStats = (rentals: Rental[]) => {
       : 0;
 
   // Stats par statut — dynamique
-  const statusList: RentalStatus[] = [
-    "pending",
-    "confirmed",
-    "rejected",
-    "completed",
-  ];
-  const byStatus = statusList.reduce(
+  const byStatus = RENTAL_STATUS_LIST.reduce(
     (acc, status) => {
       const filtered = thisYear.filter((r) => r.status === status);
       acc[status] = {
@@ -146,6 +145,7 @@ export const DashboardStats = ({
       );
       const totalRevenue = ownerRentals.reduce((sum, r) => sum + r.price, 0);
       const avgRevenue = count > 0 ? totalRevenue / count : 0;
+      const subRentalCount = ownerRentals.filter((r) => !!r.subMemberId).length;
       const totalElectricity = ownerRentals.reduce(
         (sum, r) => sum + (r.electricityCost ?? 0),
         0,
@@ -170,13 +170,7 @@ export const DashboardStats = ({
         electricityDays > 0 ? totalElectricity / electricityDays : 0;
 
       // Stats par statut pour ce propriétaire
-      const statusList: RentalStatus[] = [
-        "pending",
-        "confirmed",
-        "rejected",
-        "completed",
-      ];
-      const byStatus = statusList.reduce(
+      const byStatus = RENTAL_STATUS_LIST.reduce(
         (acc, status) => {
           const filtered = ownerRentals.filter((r) => r.status === status);
           acc[status] = {
@@ -194,6 +188,7 @@ export const DashboardStats = ({
         days,
         totalRevenue,
         avgRevenue,
+        subRentalCount,
         totalElectricity,
         avgElectricity,
         avgElectricityPerDay,
@@ -204,6 +199,34 @@ export const DashboardStats = ({
 
   return (
     <div>
+      {/* Par statut */}
+      <div className="mt-4 mb-4 rounded-xl border border-primary-100 bg-primary-50 p-3">
+        <h3 className="text-sm font-semibold text-primary-800">
+          Locations ({currentYear})
+        </h3>
+        <div className="grid grid-cols-4 gap-2 mt-2">
+          {RENTAL_STATUS_LIST.map((status) => {
+            return (
+              <div
+                key={status}
+                className="rounded border border-primary-100 bg-white p-2 text-center"
+              >
+                <p className="text-[10px] text-gray-600 mb-1">
+                  {getRentalStatusLabel(status)}
+                </p>
+                <p
+                  className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}
+                >
+                  {stats.byStatus[status].count}
+                </p>
+                <p className="text-[10px] text-gray-500">
+                  {Math.round(stats.byStatus[status].days)}j
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KpiCard
           label={`Locations (${currentYear})`}
@@ -250,44 +273,6 @@ export const DashboardStats = ({
         />
       </div>
 
-      {/* Par statut */}
-      <div className="mt-6">
-        <h3 className="text-sm font-semibold text-gray-700">
-          Par statut ({currentYear})
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
-          {(
-            ["pending", "confirmed", "rejected", "completed"] as RentalStatus[]
-          ).map((status) => {
-            const colorMap: Record<RentalStatus, string> = {
-              pending: "text-amber-700",
-              confirmed: "text-green-700",
-              rejected: "text-red-700",
-              completed: "text-gray-700",
-            };
-            const labelMap: Record<RentalStatus, string> = {
-              pending: "En attente",
-              confirmed: "Confirmé",
-              rejected: "Refusé",
-              completed: "Terminé",
-            };
-            return (
-              <Card key={status} className="p-3">
-                <p className={`text-xs font-medium ${colorMap[status]} mb-2`}>
-                  {labelMap[status]}
-                </p>
-                <p className="text-lg font-bold text-gray-900">
-                  {stats.byStatus[status].count}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {Math.round(stats.byStatus[status].days)} jour(s)
-                </p>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Par propriétaire */}
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-gray-700">
@@ -307,68 +292,21 @@ export const DashboardStats = ({
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <KpiCard
-                  label="Revenus totaux"
-                  value={`${s.totalRevenue.toFixed(0)} €`}
-                  icon={<Euro size={16} />}
-                />
-                <KpiCard
-                  label="Revenu moyen"
-                  value={`${s.avgRevenue.toFixed(2)} €`}
-                  icon={<Euro size={16} />}
-                />
-                <KpiCard
-                  label="Conso totale"
-                  value={`${s.totalElectricity.toFixed(2)} €`}
-                  icon={<Zap size={16} />}
-                />
-                <KpiCard
-                  label="Conso moyenne"
-                  value={`${s.avgElectricity.toFixed(2)} €`}
-                  icon={<Zap size={16} />}
-                />
-                <KpiCard
-                  label="Conso / jour"
-                  value={`${s.avgElectricityPerDay.toFixed(2)} €`}
-                  icon={<Zap size={16} />}
-                />
-              </div>
               {/* Détail par statut */}
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <p className="text-xs font-semibold text-gray-600 mb-2">
-                  Détail par statut
-                </p>
+              <div className=" mb-3">
                 <div className="grid grid-cols-4 gap-2">
-                  {(
-                    [
-                      "pending",
-                      "confirmed",
-                      "rejected",
-                      "completed",
-                    ] as RentalStatus[]
-                  ).map((status) => {
-                    const colorMap: Record<RentalStatus, string> = {
-                      pending: "text-amber-600",
-                      confirmed: "text-green-600",
-                      rejected: "text-red-600",
-                      completed: "text-gray-600",
-                    };
-                    const labelMap: Record<RentalStatus, string> = {
-                      pending: "Attente",
-                      confirmed: "Confirmé",
-                      rejected: "Refusé",
-                      completed: "Terminé",
-                    };
+                  {RENTAL_STATUS_LIST.map((status) => {
                     return (
                       <div
                         key={status}
                         className="bg-gray-50 rounded p-2 text-center"
                       >
                         <p className="text-[10px] text-gray-600 mb-1">
-                          {labelMap[status]}
+                          {getRentalStatusLabel(status)}
                         </p>
-                        <p className={`text-sm font-bold ${colorMap[status]}`}>
+                        <p
+                          className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}
+                        >
                           {s.byStatus[status].count}
                         </p>
                         <p className="text-[10px] text-gray-500">
@@ -378,6 +316,44 @@ export const DashboardStats = ({
                     );
                   })}
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <KpiCard
+                  compact
+                  label="Revenus totaux"
+                  value={`${s.totalRevenue.toFixed(0)} €`}
+                  icon={<Euro size={16} />}
+                />
+                <KpiCard
+                  compact
+                  label="Revenu moyen"
+                  value={`${s.avgRevenue.toFixed(2)} €`}
+                  icon={<Euro size={16} />}
+                />
+                <KpiCard
+                  compact
+                  label="Sous location"
+                  value={s.subRentalCount}
+                  icon={<Home size={16} />}
+                />
+                <KpiCard
+                  compact
+                  label="Conso totale"
+                  value={`${s.totalElectricity.toFixed(2)} €`}
+                  icon={<Zap size={16} />}
+                />
+                <KpiCard
+                  compact
+                  label="Conso moyenne"
+                  value={`${s.avgElectricity.toFixed(2)} €`}
+                  icon={<Zap size={16} />}
+                />
+                <KpiCard
+                  compact
+                  label="Conso / jour"
+                  value={`${s.avgElectricityPerDay.toFixed(2)} €`}
+                  icon={<Zap size={16} />}
+                />
               </div>
             </Card>
           ))}

@@ -1,7 +1,10 @@
 import { useState, useCallback } from "react";
 import type { Rental, RentalStatus } from "../types";
 import { useError } from "../contexts/ErrorContext";
+import { useToast } from "../contexts/ToastContext";
 import { createRental, updateRental, deleteRental } from "../services/apiCrud";
+import { TOAST_MESSAGES } from "../services/messageCatalog";
+import { getRentalStatusLabel } from "../services/rentalStatus";
 
 // ------------------------------------------------------------
 // Hook
@@ -12,7 +15,10 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [editing, setEditing] = useState<Rental | null>(null);
   const [selected, setSelected] = useState<Rental | null>(null);
+  const [rentalToDelete, setRentalToDelete] = useState<Rental | null>(null);
+  const [deletingRental, setDeletingRental] = useState(false);
   const { error, setError, clearError } = useError();
+  const { showToast } = useToast();
 
   const openCreate = useCallback(
     (
@@ -64,12 +70,24 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
       try {
         if (editing && editing.id) {
           await updateRental(editing.id, values);
+          showToast({
+            variant: "success",
+            ...TOAST_MESSAGES.rental.updated,
+          });
         } else {
           await createRental(values);
+          showToast({
+            variant: "success",
+            ...TOAST_MESSAGES.rental.created,
+          });
         }
         await onRefresh();
         closeForm();
       } catch (err) {
+        showToast({
+          variant: "error",
+          ...TOAST_MESSAGES.rental.saveError,
+        });
         setError({
           message:
             err instanceof Error ? err.message : "Une erreur est survenue.",
@@ -80,26 +98,59 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
         });
       }
     },
-    [editing, onRefresh, closeForm, setError],
+    [editing, onRefresh, closeForm, setError, showToast],
   );
+
+  const requestDelete = useCallback((rental: Rental) => {
+    setRentalToDelete(rental);
+  }, []);
+
+  const cancelDelete = useCallback(() => {
+    setRentalToDelete(null);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!rentalToDelete || deletingRental) return;
+
+    try {
+      setDeletingRental(true);
+      await deleteRental(rentalToDelete.id);
+      await onRefresh();
+      closeDetail();
+      closeForm();
+      setRentalToDelete(null);
+      showToast({
+        variant: "success",
+        ...TOAST_MESSAGES.rental.deleted,
+      });
+    } catch (err) {
+      showToast({
+        variant: "error",
+        ...TOAST_MESSAGES.rental.deleteError,
+      });
+      setError({
+        message:
+          err instanceof Error ? err.message : "Une erreur est survenue.",
+        context: "Suppression de la location",
+      });
+    } finally {
+      setDeletingRental(false);
+    }
+  }, [
+    rentalToDelete,
+    deletingRental,
+    onRefresh,
+    closeDetail,
+    closeForm,
+    setError,
+    showToast,
+  ]);
 
   const handleDelete = useCallback(
     async (rental: Rental) => {
-      if (!window.confirm("Supprimer cette location ?")) return;
-      try {
-        await deleteRental(rental.id);
-        await onRefresh();
-        closeDetail();
-        closeForm();
-      } catch (err) {
-        setError({
-          message:
-            err instanceof Error ? err.message : "Une erreur est survenue.",
-          context: "Suppression de la location",
-        });
-      }
+      requestDelete(rental);
     },
-    [onRefresh, closeDetail, closeForm, setError],
+    [requestDelete],
   );
 
   const handleStatusChange = useCallback(
@@ -107,7 +158,18 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
       try {
         await updateRental(rentalId, { status: newStatus });
         await onRefresh();
+        const statusToast = TOAST_MESSAGES.rental.statusUpdated(
+          getRentalStatusLabel(newStatus),
+        );
+        showToast({
+          variant: "success",
+          ...statusToast,
+        });
       } catch (err) {
+        showToast({
+          variant: "error",
+          ...TOAST_MESSAGES.rental.statusError,
+        });
         setError({
           message:
             err instanceof Error ? err.message : "Une erreur est survenue.",
@@ -115,7 +177,7 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
         });
       }
     },
-    [onRefresh, setError],
+    [onRefresh, setError, showToast],
   );
 
   return {
@@ -124,6 +186,9 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
     detailOpen,
     editing,
     selected,
+    rentalToDelete,
+    deletingRental,
+    deleteConfirmationOpen: rentalToDelete !== null,
     error,
     // Actions
     openCreate,
@@ -131,10 +196,12 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
     openDetail,
     closeForm,
     closeDetail,
+    cancelDelete,
     clearError,
     // Handlers
     handleSubmit,
     handleDelete,
+    confirmDelete,
     handleStatusChange,
   };
 };

@@ -7,6 +7,128 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.9] — 2026-02-26
+
+### Added
+
+- **User Card — gestion du compte** :
+  - Affichage du rôle du membre dans `UserInfoCard` (`Admin`, `Propriétaire`, `Membre`) avec indicateur `Éditeur` pour les owners éditeurs.
+  - Actions compte pour les comptes email/password : changement d’email (modale) + envoi de lien de réinitialisation mot de passe.
+  - Suppression d’une notification depuis la modale de détail (`Supprimer`) avec état `loading`.
+
+- **Dashboard — KPIs propriétaires enrichies** :
+  - Nouvelle KPI `Sous location` par propriétaire (nombre de locations avec `subMemberId`).
+  - Nouveau mode `compact` dans `KpiCard`, appliqué aux cartes KPI propriétaires.
+
+### Changed
+
+- **User Card / Notifications** :
+  - Pour les comptes Google OAuth, les liens de changement d’email/mot de passe sont masqués.
+  - Ajout de toasts succès/erreur lors de la suppression d’une notification.
+  - La suppression ne ferme plus la modale en faux-positif : fermeture uniquement si suppression DB réussie.
+
+- **Demandes de location — création de membre** :
+  - Les owners (y compris non éditeurs) peuvent créer un membre inline depuis `RentalForm` lors d’une demande de location.
+  - Les `sub_member` conservent la restriction (pas de création inline).
+  - Simplification du mini-formulaire : suppression du `Select` de rôle (rôle forcé à `sub_member`).
+  - Ajout de toasts succès/erreur lors de la création inline de membre (pages location et calendrier).
+
+- **Calendrier mobile** :
+  - Le badge affiche désormais `Membre (Owner)` quand un membre est renseigné, au lieu d’afficher uniquement l’owner.
+
+- **Dashboard — lisibilité et densité** :
+  - Le bloc global des statuts est passé en mini-cartes compactes sur une ligne, alignées visuellement avec le détail par propriétaire.
+  - Ajout d’un fond contrasté sur le bloc “Par statut”.
+
+### Security
+
+- **RLS notifications utilisateur** :
+  - Ajout de la policy `Users delete own notifications` sur `public.user_notifications`.
+
+### Key files touched
+
+- `src/components/ui/UserInfoCard.tsx`
+- `src/hooks/useUserNotifications.ts`
+- `src/services/messageCatalog.ts`
+- `src/components/rentals/RentalForm.tsx`
+- `src/pages/RentalsPage.tsx`
+- `src/pages/CalendarPage.tsx`
+- `src/components/calendar/CalendarView.tsx`
+- `src/components/calendar/RentalBadge.tsx`
+- `src/components/dashboard/DashboardStats.tsx`
+- `src/components/dashboard/KpiCard.tsx`
+- `supabase/schema.sql`
+
+## [0.3.8] — 2026-02-26
+
+### Added
+
+- **Catalogue central des messages** :
+  - Nouveau fichier `src/services/messageCatalog.ts` pour centraliser les textes **toasts** et **notifications push**.
+  - Réutilisation dans les hooks/pages/services pour éviter les divergences de wording.
+
+- **Confirmation destructive réutilisable** :
+  - Nouveau composant `ConfirmDialog` basé sur `Modal` + `Button`.
+  - Utilisé pour la suppression de membres et de locations.
+
+### Changed
+
+- **Suppression sans `window.confirm`** :
+  - `window.confirm` retiré des flux membres/locations.
+  - Confirmation via modale dédiée + état `loading` pour bloquer les doubles clics.
+
+- **Toasts harmonisés** :
+  - Textes homogénéisés (style, ton, ponctuation).
+  - Alignement avec les messages push.
+
+- **Statuts centralisés** :
+  - Labels/listes/couleurs/variants centralisés dans `services/rentalStatus.ts`.
+  - Réutilisation dans dashboard, cards et toasts de statut.
+
+- **Notifications push métier enrichies** :
+  - `notifyNewRental` cible explicitement : membres `is_editor = true` + owner de la demande + membre (si applicable).
+  - Messages personnalisés selon destinataire (owner vs membre), avec nom du membre pour l’owner.
+  - Personnalisation étendue à `rental_created`, changements de statut, `rental_completed`, `rental_deleted`.
+  - Récapitulatif de fin de séjour enrichi : durée, nombre de personnes, coût élec par jour (`X €/j`), total.
+
+- **Synchronisation temps réel de l'app** :
+  - À la réception d’un push, le Service Worker émet `user-notifications-updated` vers les onglets.
+  - `useUserNotifications` rafraîchit le centre de notifications.
+  - `App.tsx` rafraîchit aussi les données métiers (`members` / `rentals`) sans rechargement manuel.
+
+- **Logs et bootstrap frontend** :
+  - Nettoyage des logs console bruyants.
+  - Enregistrement du Service Worker déplacé de `index.html` vers `main.tsx`.
+  - `ErrorBoundary` passe par le logger central.
+
+### Security
+
+- **Edge Function `send-push` durcie** :
+  - Vérification explicite du caller (Bearer token + membre `is_allowed = true`).
+  - Méthodes HTTP strictes (`POST`/`OPTIONS`) avec codes d’erreur cohérents.
+  - Logs structurés (`received`, `completed`, `delivery_failed`, `unhandled`).
+  - Cache par requête de `auth.admin.listUsers()` pour réduire les scans répétés.
+  - Diagnostic `unresolvedMemberEmails` renvoyé en réponse pour tracer les emails membres non mappés à `auth.users`.
+
+### Key files touched
+
+- `src/services/messageCatalog.ts`
+- `src/services/rentalStatus.ts`
+- `src/services/rentalNotifications.ts`
+- `src/hooks/useRentalModals.ts`
+- `src/hooks/useUserNotifications.ts`
+- `src/pages/MembersPage.tsx`
+- `src/pages/RentalsPage.tsx`
+- `src/components/ui/ConfirmDialog.tsx`
+- `src/components/ui/UserMenu.tsx`
+- `src/components/ui/UserInfoCard.tsx`
+- `src/App.tsx`
+- `src/main.tsx`
+- `index.html`
+- `src/components/ErrorBoundary.tsx`
+- `supabase/functions/send-push/index.ts`
+- `.github/copilot-instructions.md`
+
 ## [0.3.7] — 2026-02-26
 
 ### Changed
@@ -225,9 +347,9 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ### Added
 
-- **Demandes de réservation pour propriétaires non éditeurs et sous-membres** :
+- **Demandes de réservation pour propriétaires non éditeurs et membres** :
   - Le bouton "Nouvelle location" et les clics sur les cellules du calendrier sont désormais disponibles pour ces rôles.
-  - Lors de la création : les champs "Propriétaire" et "Sous-membre" sont préremplis et verrouillés selon le compte connecté.
+  - Lors de la création : les champs "Propriétaire" et "Membre" sont préremplis et verrouillés selon le compte connecté.
   - Le statut est automatiquement défini à **"En attente"** et non modifiable — un message explicatif est affiché dans le formulaire.
 - **Sécurisation Supabase (RLS)** : politiques fines sur la table `rentals` (intégrées dans `supabase/schema.sql`) :
   - `INSERT` : autorisé pour tous les rôles, avec forçage de `status='pending'`, `owner_id` et `sub_member_id` vérifié côté base de données pour les non-éditeurs.
@@ -395,7 +517,7 @@ Notes:
 
 ### Added
 
-- Inline création de sous-membre depuis le formulaire de location (mini-form / Combobox).
+- Inline création de membre depuis le formulaire de location (mini-form / Combobox).
 - Nouveau composant UI: `src/components/ui/Combobox.tsx`.
 - KPI tableau de bord: coût électrique et cartes par propriétaire triées.
 
@@ -470,7 +592,7 @@ Notes:
   - Case à cocher "Éditeur" dans `MemberForm`, visible uniquement pour `role = owner`
   - Reset automatique de `isEditor` à `false` si le rôle passe de `owner` à autre chose (formulaire + mapper)
 
-- **Création inline de sous-membre depuis `RentalForm`**
+- **Création inline de membre depuis `RentalForm`**
   - Nouveau composant `Combobox.tsx` : champ recherche avec filtre + option "Créer «…»"
   - Mini-formulaire inline : prénom, nom, libellé, rôle (`external` / `sub_member`)
   - Rôle sélectionnable directement à la création (défaut : `external`)
@@ -483,11 +605,11 @@ Notes:
   - Email rendu optionnel dans `MemberForm` et dans la DB (`NOT NULL` levé)
   - Liste triée alphabétiquement par libellé dans `MemberList`
   - Bouton "Autoriser" retiré de `MemberCard` (accessible uniquement via la modal d'édition)
-  - Préférence du sous-membre pour l'affichage de l'avatar dans les cartes de location
+  - Préférence du membre pour l'affichage de l'avatar dans les cartes de location
 
 - **Locations**
   - Section post-location (notes + coût électrique) conditionnelle : visible uniquement si `statut = Terminé`
-  - Option "— Aucun —" dans le select sous-membre pour permettre la désélection
+  - Option "— Aucun —" dans le select membre pour permettre la désélection
   - Handlers de clic optionnels dans les composants calendrier et location
 
 - **DB / Services**
@@ -500,7 +622,7 @@ Notes:
 
 ### Corrigé
 
-- Erreur 409 lors de la création inline d'un sous-membre : `email: ""` provoquait un conflit sur la contrainte `UNIQUE(email)` → remplacé par `email: undefined` → `NULL` en DB
+- Erreur 409 lors de la création inline d'un membre : `email: ""` provoquait un conflit sur la contrainte `UNIQUE(email)` → remplacé par `email: undefined` → `NULL` en DB
 - Erreur 400 sur l'INSERT membre : champ `email` absent du payload quand `undefined` → le mapper envoie désormais `null` explicitement
 - `isEditor` non réinitialisé lors d'un changement de rôle via le formulaire ou le mapper → reset garanti à `false` si `role !== "owner"`
 
@@ -558,7 +680,7 @@ Notes:
 - **Affichage des avatars**
   - Avatars utilisateurs dans les cartes membres
   - Avatars propriétaires dans les cartes de location
-  - Avatars dans la vue détail des locations (propriétaire et sous-membre)
+  - Avatars dans la vue détail des locations (propriétaire et membre)
   - Mini avatars dans les badges du calendrier
   - Avatar utilisateur dans la sidebar de navigation
   - Fallback avec initiale si pas d'avatar

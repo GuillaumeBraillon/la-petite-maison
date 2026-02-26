@@ -11,27 +11,14 @@ import type { Rental, Member } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import {
+  RENTAL_STATUS_BADGE_VARIANT_MAP,
+  getRentalStatusLabel,
+} from "../../services/rentalStatus";
 
 // ------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------
-
-const statusVariantMap: Record<
-  Rental["status"],
-  "warning" | "success" | "danger" | "default"
-> = {
-  pending: "warning",
-  confirmed: "success",
-  rejected: "danger",
-  completed: "default",
-};
-
-const statusLabelMap: Record<Rental["status"], string> = {
-  pending: "En attente",
-  confirmed: "Confirmé",
-  rejected: "Refusé",
-  completed: "Terminé",
-};
 
 const formatDate = (iso: string): string =>
   new Date(iso).toLocaleDateString("fr-FR", {
@@ -138,10 +125,10 @@ export const RentalCard = ({
           </div>
         </div>
         <Badge
-          variant={statusVariantMap[rental.status]}
+          variant={RENTAL_STATUS_BADGE_VARIANT_MAP[rental.status]}
           className="self-start sm:self-auto"
         >
-          {statusLabelMap[rental.status]}
+          {getRentalStatusLabel(rental.status)}
         </Badge>
       </div>
 

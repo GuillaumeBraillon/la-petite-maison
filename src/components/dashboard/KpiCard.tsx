@@ -12,6 +12,7 @@ interface KpiCardProps {
   trend?: string;
   trendUp?: boolean;
   className?: string;
+  compact?: boolean;
 }
 
 // ------------------------------------------------------------
@@ -25,23 +26,33 @@ export const KpiCard = ({
   trend,
   trendUp,
   className = "",
+  compact = false,
 }: KpiCardProps) => {
   return (
-    <Card padding="sm" className={`flex flex-col gap-2 ${className}`}>
+    <Card
+      padding="none"
+      className={`flex flex-col ${compact ? "p-2" : "p-2.5"} ${className}`}
+    >
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500">
+        <p
+          className={`${compact ? "text-[8px]" : "text-[9px]"} font-medium uppercase tracking-wide text-gray-500 leading-tight`}
+        >
           {label}
         </p>
-        <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600 text-[10px]">
+        <div
+          className={`${compact ? "w-6 h-6" : "w-7 h-7"} rounded-md bg-primary-50 flex items-center justify-center text-primary-600 text-[10px]`}
+        >
           {icon}
         </div>
       </div>
-      <p className="text-xl font-semibold text-gray-900 leading-tight">
+      <p
+        className={`${compact ? "text-base" : "text-lg"} font-semibold text-gray-900 leading-tight mt-0.5`}
+      >
         {value}
       </p>
       {trend && (
         <p
-          className={`text-[10px] font-medium ${trendUp ? "text-green-600" : "text-red-500"}`}
+          className={`${compact ? "text-[8px]" : "text-[9px]"} font-medium leading-tight ${trendUp ? "text-green-600" : "text-red-500"}`}
         >
           {trend}
         </p>

@@ -7,6 +7,8 @@ import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
 import { getPermissions, isMemberRental } from "../services/permissions";
 import { createMember } from "../services/apiCrud";
+import { useToast } from "../contexts/ToastContext";
+import { TOAST_MESSAGES } from "../services/messageCatalog";
 
 // ------------------------------------------------------------
 // Props
@@ -29,6 +31,7 @@ export const CalendarPage = ({
   currentMember,
   onRefresh,
 }: CalendarPageProps) => {
+  const { showToast } = useToast();
   const permissions = getPermissions(currentMember ?? null);
   const {
     formOpen,
@@ -56,19 +59,33 @@ export const CalendarPage = ({
     role: "sub_member";
     ownerId?: string;
   }) => {
-    const newMember = await createMember({
-      firstName: data.firstName,
-      lastName: data.lastName,
-      label: data.label,
-      role: data.role,
-      email: undefined,
-      address: undefined,
-      ownerId: data.ownerId,
-      isAllowed: false,
-      isEditor: false,
-    });
-    await onRefresh();
-    return newMember;
+    try {
+      const newMember = await createMember({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        label: data.label,
+        role: data.role,
+        email: undefined,
+        address: undefined,
+        ownerId: data.ownerId,
+        isAllowed: false,
+        isEditor: false,
+      });
+      await onRefresh();
+      showToast({
+        variant: "success",
+        title: TOAST_MESSAGES.member.created.title,
+        message: TOAST_MESSAGES.member.created.message,
+      });
+      return newMember;
+    } catch (error) {
+      showToast({
+        variant: "error",
+        title: TOAST_MESSAGES.member.saveError.title,
+        message: TOAST_MESSAGES.member.saveError.message,
+      });
+      throw error;
+    }
   };
 
   const handleDayClick = (date: Date) => {
@@ -162,7 +179,8 @@ export const CalendarPage = ({
           onSubmit={handleSubmit}
           onCancel={closeForm}
           onCreateSubMember={
-            getPermissions(currentMember ?? null).createMembers
+            getPermissions(currentMember ?? null).createMembers ||
+            currentMember?.role === "owner"
               ? handleCreateSubMember
               : undefined
           }

@@ -7,6 +7,7 @@ import type { Rental, Member } from "../../types";
 interface RentalBadgeProps {
   rental: Rental;
   owner?: Member;
+  labelOverride?: string;
   /** Date de la cellule calendrier — permet de détecter arrivée tardive / départ anticipé */
   cellDate?: Date;
   onClick?: (rental: Rental) => void;
@@ -45,10 +46,14 @@ const formatDate = (iso: string): string =>
 export const RentalBadge = ({
   rental,
   owner,
+  labelOverride,
   cellDate,
   onClick,
 }: RentalBadgeProps) => {
-  const label = owner ? `${owner.firstName} ${owner.lastName}` : "Location";
+  const ownerLabel = owner
+    ? `${owner.firstName} ${owner.lastName}`
+    : "Location";
+  const label = labelOverride ?? ownerLabel;
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
   const title = `${label} — ${formatDate(rental.startDate)} → ${formatDate(rental.endDate)} (${durationDays} jour${durationDays > 1 ? "s" : ""})`;
 
