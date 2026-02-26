@@ -18,6 +18,14 @@ import type {
   DbUserNotification,
 } from "./dbTypes";
 
+const normalizeOptionalTextToNull = (
+  value: string | undefined,
+): string | null => {
+  if (value === undefined) return null;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
+};
+
 // ------------------------------------------------------------
 // Member mappers
 // ------------------------------------------------------------
@@ -50,14 +58,18 @@ export const mapMemberToDb = (
     ...(member.role !== undefined && { role: member.role }),
     // 'email' in member distingue "champ absent d'un update partiel" (pas inclus)
     // de "champ undefined dans un create" → on envoie null pour insérer NULL en DB
-    ...("email" in member && { email: member.email ?? null }),
+    ...("email" in member && {
+      email: normalizeOptionalTextToNull(member.email),
+    }),
     ...(member.avatarUrl !== undefined && {
-      avatar_url: member.avatarUrl ?? null,
+      avatar_url: normalizeOptionalTextToNull(member.avatarUrl),
     }),
     ...(member.lastLogin !== undefined && {
       last_login: member.lastLogin ?? null,
     }),
-    ...(member.address !== undefined && { address: member.address ?? null }),
+    ...(member.address !== undefined && {
+      address: normalizeOptionalTextToNull(member.address),
+    }),
     ...("ownerId" in member && { owner_id: member.ownerId ?? null }),
   };
 

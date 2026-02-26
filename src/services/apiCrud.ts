@@ -33,7 +33,41 @@ export const createMember = async (
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    const isConflict = error.code === "23505" || error.code === "409";
+    const normalizedEmail = member.email?.trim().toLowerCase();
+
+    if (isConflict && normalizedEmail) {
+      const { data: existingMember, error: existingMemberError } =
+        await supabase
+          .from("members")
+          .select("id")
+          .ilike("email", normalizedEmail)
+          .maybeSingle();
+
+      if (existingMemberError) {
+        throw existingMemberError;
+      }
+
+      if (existingMember?.id) {
+        const { data: updatedData, error: updateError } = await supabase
+          .from("members")
+          .update(dbPayload)
+          .eq("id", existingMember.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        return mapMemberFromDb(updatedData as DbMember);
+      }
+    }
+
+    throw error;
+  }
+
   return mapMemberFromDb(data as DbMember);
 };
 
