@@ -7,6 +7,21 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.11] — 2026-02-26
+
+### Fixed
+
+- **Membres — autorisation utilisateur (toggle)** :
+  - Correction d'une erreur HTTP `400` lors de l'activation de `Accès autorisé à l'application`.
+  - Cause : la contrainte SQL `members_allow_requires_profile_chk` rejetait certains updates qui n'envoyaient que `is_allowed`.
+  - Correctif : le flux d'autorisation envoie désormais aussi `label`, `first_name` et `last_name` (trimés) quand l'accès est accordé.
+  - Renforcement des garde-fous côté formulaire/page pour bloquer l'autorisation si le profil requis est incomplet.
+
+### Key files touched
+
+- `src/pages/MembersPage.tsx`
+- `src/components/members/MemberForm.tsx`
+
 ## [0.3.10] — 2026-02-26
 
 ### Changed

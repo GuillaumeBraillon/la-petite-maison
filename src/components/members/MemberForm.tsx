@@ -18,7 +18,10 @@ interface MemberFormProps {
   canToggleAuth?: boolean;
   onSubmit: (values: MemberFormValues) => Promise<void>;
   onAuthorize?: (email: string, values: MemberFormValues) => Promise<void>;
-  onToggleAuthorization?: (isAllowed: boolean) => Promise<void>;
+  onToggleAuthorization?: (
+    isAllowed: boolean,
+    values: MemberFormValues,
+  ) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
 }
@@ -73,11 +76,24 @@ export const MemberForm = ({
   };
 
   const handleToggleAllowed = async (checked: boolean) => {
+    if (checked) {
+      const profileComplete =
+        values.label.trim().length > 0 &&
+        values.firstName.trim().length > 0 &&
+        values.lastName.trim().length > 0;
+
+      if (!profileComplete) {
+        validate();
+        return;
+      }
+    }
+
     set("isAllowed", checked);
+
     if (onToggleAuthorization && initialValues?.isAllowed !== undefined) {
       setIsAuthorizing(true);
       try {
-        await onToggleAuthorization(checked);
+        await onToggleAuthorization(checked, values);
       } finally {
         setIsAuthorizing(false);
       }
@@ -238,7 +254,7 @@ export const MemberForm = ({
           </label>
           <p className="text-xs text-gray-500 mt-1 ml-7">
             {values.isAllowed
-              ? "Ce membre peut se connecter et utiliser l&apos;application"
+              ? "Ce membre peut se connecter et utiliser l'application"
               : "Ce membre ne peut pas se connecter"}
           </p>
         </div>

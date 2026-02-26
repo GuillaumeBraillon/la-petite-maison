@@ -283,9 +283,39 @@ export const MembersPage = ({
           onAuthorize={handleAuthorizeFromForm}
           onToggleAuthorization={
             editing
-              ? async (isAllowed: boolean) => {
+              ? async (
+                  isAllowed: boolean,
+                  values: Omit<Member, "id" | "createdAt" | "updatedAt">,
+                ) => {
                   try {
-                    await updateMember(editing.id, { isAllowed });
+                    if (isAllowed) {
+                      const isProfileComplete =
+                        values.label.trim().length > 0 &&
+                        values.firstName.trim().length > 0 &&
+                        values.lastName.trim().length > 0;
+
+                      if (!isProfileComplete) {
+                        setError({
+                          message:
+                            "Complétez prénom, nom et libellé avant autorisation.",
+                          context: "Modification de l'autorisation",
+                        });
+                        return;
+                      }
+                    }
+
+                    const authorizationPayload: Partial<
+                      Omit<Member, "id" | "createdAt" | "updatedAt">
+                    > = isAllowed
+                      ? {
+                          isAllowed: true,
+                          label: values.label.trim(),
+                          firstName: values.firstName.trim(),
+                          lastName: values.lastName.trim(),
+                        }
+                      : { isAllowed: false };
+
+                    await updateMember(editing.id, authorizationPayload);
                     await onRefresh();
                     closeModal();
                     const authUpdatedToast =
