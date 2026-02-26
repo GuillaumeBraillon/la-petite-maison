@@ -180,16 +180,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(true);
   const { error, clearError, setError } = useError();
-  const { canInstall, isIOS, hasNativePrompt, install } = usePWAInstall();
-  const [showIOSHelp, setShowIOSHelp] = useState(false);
-
-  const handleInstallClick = () => {
-    if (isIOS) {
-      setShowIOSHelp(true);
-    } else if (hasNativePrompt) {
-      void install();
-    }
-  };
+  const { isInstallable, install } = usePWAInstall();
 
   const currentMember = members.find((m) => m.email === session.user.email);
 
@@ -312,9 +303,9 @@ const AppShell = ({ session }: AppShellProps) => {
             appVersion={packageJson.version}
           />
 
-          {canInstall && (
+          {!isInstallable && (
             <button
-              onClick={handleInstallClick}
+              onClick={install}
               className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 w-full transition-colors"
             >
               <Download size={16} />
@@ -338,9 +329,9 @@ const AppShell = ({ session }: AppShellProps) => {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {canInstall && (
+              {isInstallable && (
                 <button
-                  onClick={handleInstallClick}
+                  onClick={install}
                   className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
                   aria-label="Installer l'app"
                 >
@@ -416,40 +407,6 @@ const AppShell = ({ session }: AppShellProps) => {
           ))}
         </div>
       </nav>
-
-      {/* iOS install guide */}
-      {showIOSHelp && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center p-4 bg-black/40"
-          onClick={() => setShowIOSHelp(false)}
-        >
-          <div
-            className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="font-semibold text-gray-900 text-sm">
-              Installer l&apos;application
-            </p>
-            <p className="text-sm text-gray-600">
-              Sur iPhone / iPad, appuie sur l&apos;icône{" "}
-              <span className="font-medium">Partager</span> (
-              <span className="text-primary-600">⎋</span>) en bas de Safari,
-              puis sélectionne{" "}
-              <span className="font-medium">
-                Sur l&apos;écran d&apos;accueil
-              </span>
-              .
-            </p>
-            <button
-              type="button"
-              onClick={() => setShowIOSHelp(false)}
-              className="w-full rounded-lg bg-primary-600 text-white text-sm font-medium py-2 hover:bg-primary-700 transition-colors"
-            >
-              Compris
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Error modal global */}
       {error && <ErrorModal error={error} onClose={clearError} />}
