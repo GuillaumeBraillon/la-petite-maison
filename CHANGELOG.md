@@ -7,6 +7,32 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.7] — 2026-02-26
+
+### Changed
+
+- **User Card / User Menu — ajustements UX** :
+  - La version de l'application est déplacée depuis la sidebar vers la `UserInfoCard`, sur la ligne d'actions (toggle notifications + déconnexion).
+  - Le texte de version est centré horizontalement dans la ligne du haut de la carte.
+  - Le nom secondaire (nom/prénom) dans l'identité utilisateur n'est plus affiché en gras.
+
+- **Détail de location — statut `Terminé`** :
+  - Le statut `Terminé` n'est plus sélectionnable dans `RentalDetail`.
+  - Si la location est déjà terminée, le statut reste affiché en badge non éditable.
+  - Ajout d'un message d'aide sous le statut avec lien vers **"Modifier la location"** pour indiquer où effectuer le passage en `Terminé`.
+
+- **Notifications — comportement des URLs** :
+  - Suppression des `url` dans les notifications métier de location pour éviter les redirections non pertinentes vers la home.
+  - Conséquence UI : le bouton **"Ouvrir"** n'apparaît plus pour ces notifications dans la modal de lecture.
+
+### Key files touched
+
+- `src/App.tsx`
+- `src/components/ui/UserMenu.tsx`
+- `src/components/ui/UserInfoCard.tsx`
+- `src/components/rentals/RentalDetail.tsx`
+- `src/services/rentalNotifications.ts`
+
 ## [0.3.6] — 2026-02-26
 
 ### Added

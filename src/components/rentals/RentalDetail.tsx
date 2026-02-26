@@ -88,6 +88,7 @@ export const RentalDetail = ({
   onStatusChange,
 }: RentalDetailProps) => {
   const [updating, setUpdating] = useState(false);
+  const canEditStatusInDetail = canEdit && rental.status !== "completed";
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
   const actualDurationDays =
     rental.actualStartDate && rental.actualEndDate
@@ -111,7 +112,7 @@ export const RentalDetail = ({
           <span className="text-xs font-medium text-gray-500 shrink-0">
             Statut :
           </span>
-          {canEdit ? (
+          {canEditStatusInDetail ? (
             <Select
               value={rental.status}
               onChange={(e) =>
@@ -123,7 +124,6 @@ export const RentalDetail = ({
               <option value="pending">En attente</option>
               <option value="confirmed">Confirmé</option>
               <option value="rejected">Refusé</option>
-              <option value="completed">Terminé</option>
             </Select>
           ) : (
             <Badge
@@ -144,6 +144,20 @@ export const RentalDetail = ({
             </Badge>
           )}
         </div>
+        {canEditStatusInDetail && (
+          <p className="text-[11px] text-gray-500 sm:text-right">
+            Le passage en <span className="font-medium">Terminé</span> se fait
+            depuis{" "}
+            <button
+              type="button"
+              onClick={() => onEdit(rental)}
+              className="text-primary-600 underline hover:text-primary-700 transition-colors"
+            >
+              Modifier la location
+            </button>
+            .
+          </p>
+        )}
       </div>
 
       {/* Infos principales */}

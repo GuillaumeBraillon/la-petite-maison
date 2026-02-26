@@ -80,7 +80,6 @@ export const notifyNewRental = async (rental: Rental): Promise<void> => {
       type: "rental_created",
       title: "Nouvelle demande de location",
       body: `Nouvelle demande de ${ownerName} du ${sd} au ${ed} (${guests})`,
-      url: "/rentals",
     },
   });
 };
@@ -151,7 +150,6 @@ export const notifyStatusChange = async (
       type: msg.type,
       title: msg.title,
       body: msg.body,
-      url: `/rentals/${rental.id}`,
     },
   });
 };
@@ -200,7 +198,6 @@ export const notifyCompleted = async (rental: Rental): Promise<void> => {
       type: "rental_completed",
       title: "Séjour terminé — Récapitulatif",
       body: buildCompletedBody(rental),
-      url: `/rentals/${rental.id}`,
     },
   });
 };
