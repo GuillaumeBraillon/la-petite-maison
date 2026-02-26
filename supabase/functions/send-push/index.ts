@@ -354,7 +354,13 @@ const getHttpStatusCode = (error: unknown): number | null => {
   return typeof maybeStatusCode === "number" ? maybeStatusCode : null;
 };
 
-const ensureCallerIsAllowed = async (request: Request): Promise<string> => {
+interface CallerContext {
+  userId: string;
+  email: string;
+  isAllowed: boolean;
+}
+
+const getCallerContext = async (request: Request): Promise<CallerContext> => {
   const token = extractBearerToken(request);
   if (!token) {
     throw new Error("Authorization Bearer token requis.");
@@ -376,17 +382,36 @@ const ensureCallerIsAllowed = async (request: Request): Promise<string> => {
 
   const { data, error } = await supabase
     .from("members")
-    .select("id")
-    .eq("email", email)
-    .eq("is_allowed", true)
+    .select("is_allowed")
+    .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  if (error) throw error;
-  if (!data) {
-    throw new Error("Utilisateur non autorisé à envoyer des notifications.");
+  if (error) {
+    throw error;
   }
 
-  return user.id;
+  return {
+    userId: user.id,
+    email,
+    isAllowed: data?.is_allowed === true,
+  };
+};
+
+const isPendingAccessRequest = (
+  request: SendPushRequest,
+  payload: NotificationPayload,
+): boolean => {
+  if (payload.type !== "request_pending") return false;
+  if (request.topic !== "admins_and_owner_editors") return false;
+
+  const hasDirectRecipients =
+    Boolean(request.userId) ||
+    Boolean(request.ownerUserId) ||
+    Boolean(request.editorUserId) ||
+    Boolean(request.userIds && request.userIds.length > 0) ||
+    Boolean(request.memberEmails && request.memberEmails.length > 0);
+
+  return !hasDirectRecipients;
 };
 
 Deno.serve(async (request: Request): Promise<Response> => {
@@ -402,20 +427,42 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
 
   try {
-    const callerUserId = await ensureCallerIsAllowed(request);
     const body = (await request.json()) as SendPushRequest;
-    const payload = buildPayload(body);
+    const requestedPayload = buildPayload(body);
+    const caller = await getCallerContext(request);
+    const canSendPendingAccess = isPendingAccessRequest(body, requestedPayload);
+
+    if (!caller.isAllowed && !canSendPendingAccess) {
+      throw new Error("Utilisateur non autorisé à envoyer des notifications.");
+    }
+
+    const payload: NotificationPayload =
+      caller.isAllowed || !canSendPendingAccess
+        ? requestedPayload
+        : {
+            type: "request_pending",
+            title: "Nouvel utilisateur en attente",
+            body: `${caller.email} a rejoint l'application et attend une autorisation.`,
+          };
+
+    const recipientRequest: SendPushRequest =
+      caller.isAllowed || !canSendPendingAccess
+        ? body
+        : {
+            topic: "admins_and_owner_editors",
+          };
+
     const getUsersByEmail = createAuthUsersByEmailResolver();
     const recipientResolution = await getRecipientUserIds(
-      body,
+      recipientRequest,
       getUsersByEmail,
     );
     const recipientUserIds = recipientResolution.userIds;
 
     logInfo("send-push.received", {
-      callerUserId,
+      callerUserId: caller.userId,
       type: payload.type,
-      topic: body.topic ?? null,
+      topic: recipientRequest.topic ?? null,
       recipientCandidateCount: recipientUserIds.length,
       unresolvedMemberEmails: recipientResolution.unresolvedMemberEmails,
     });

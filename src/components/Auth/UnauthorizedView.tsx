@@ -1,4 +1,4 @@
-import { ShieldX, Mail, LogOut } from "lucide-react";
+import { ShieldX, LogOut } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
 
@@ -32,17 +32,6 @@ export const UnauthorizedView = ({
           <div className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
             <span className="font-medium text-gray-900">Compte connecté :</span>{" "}
             {userEmail ?? "Email non disponible"}
-          </div>
-
-          <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 flex items-start gap-3">
-            <div className="bg-yellow-100 text-yellow-700 rounded-full p-1.5 mt-0.5">
-              <Mail size={16} />
-            </div>
-            <p className="text-sm text-yellow-900 leading-relaxed">
-              En attente d&apos;autorisation. Un administrateur doit valider
-              votre accès. Veuillez réessayer dans quelques instants ou
-              contactez l&apos;administrateur.
-            </p>
           </div>
 
           <Button onClick={onLogout} variant="secondary" className="w-full">
