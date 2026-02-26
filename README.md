@@ -13,7 +13,9 @@ WebApp responsive (desktop) et installable sur mobile (PWA).
 - [Scripts disponibles](#-scripts-disponibles)
 - [Architecture](#-architecture)
 - [Fonctionnalités principales](#-fonctionnalités-principales)
+- [Notifications Push](#-notifications-push)
 - [Authentification & Autorisation](#-authentification--autorisation)
+- [Base de données & RLS](#-base-de-données--rls)
 - [Déploiement](#-déploiement)
 - [Licence](#-licence)
 
@@ -41,7 +43,7 @@ WebApp responsive (desktop) et installable sur mobile (PWA).
 
 ```bash
 # Cloner le repository
-git clone https://github.com/votre-username/la-petite-maison.git
+git clone https://github.com/GuillaumeBraillon/la-petite-maison.git
 cd la-petite-maison
 
 # Installer les dépendances
@@ -62,6 +64,7 @@ Créer un fichier `.env` à la racine du projet :
 ```env
 VITE_SUPABASE_URL=https://<project-id>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key-publique>
+VITE_VAPID_PUBLIC_KEY=<clé-publique-vapid>
 ```
 
 ### Base de données Supabase
@@ -70,6 +73,13 @@ VITE_SUPABASE_ANON_KEY=<anon-key-publique>
 2. Exécuter le script SQL dans `supabase/schema.sql`
 3. Configurer Google OAuth dans les paramètres d'authentification
 4. Récupérer l'URL et la clé anonyme du projet
+5. (Notifications push) Configurer les secrets de la fonction Edge :
+
+```env
+VAPID_PUBLIC_KEY=<clé-publique-vapid>
+VAPID_PRIVATE_KEY=<clé-privée-vapid>
+VAPID_SUBJECT=mailto:notifications@lapetitemaison.guillaumebraillon.fr
+```
 
 ## 📜 Scripts disponibles
 
@@ -103,14 +113,23 @@ src/
 │   ├── api.ts                  # Opérations READ
 │   ├── apiCrud.ts              # Opérations CREATE/UPDATE/DELETE
 │   ├── apiMappers.ts           # Conversions snake_case ↔ camelCase
-│   └── dbTypes.ts              # Types PostgreSQL (snake_case)
+│   ├── dbTypes.ts              # Types PostgreSQL (snake_case)
+│   ├── rentalStatus.ts         # Référentiel statuts locations
+│   ├── messageCatalog.ts       # Textes toasts + notifications
+│   ├── pushNotifications.ts    # Souscription push navigateur
+│   └── rentalNotifications.ts  # Déclencheurs push métier
 │
 ├── contexts/
-│   └── ErrorContext.tsx        # State management global des erreurs
+│   ├── ErrorContext.tsx        # State management global des erreurs
+│   └── ToastContext.tsx        # State management global des toasts
 │
 ├── hooks/
 │   ├── useAuthorization.ts     # Hook d'autorisation
-│   └── useRentalModals.ts      # Hook partagé pour gestion des modals
+│   ├── usePermissions.ts       # Règles de permissions UI
+│   ├── usePWAInstall.ts        # Gestion installation PWA
+│   ├── usePushNotifications.ts # État d'abonnement push
+│   ├── useRentalModals.ts      # Hook partagé pour gestion des modals
+│   └── useUserNotifications.ts # Centre notifications utilisateur
 │
 ├── components/
 │   ├── ui/                     # Composants réutilisables (Atomic Design)
@@ -133,6 +152,8 @@ src/
 - **Conversions** → Uniquement dans `services/apiMappers.ts`
 - **Atomic Design** → Pas de sous-composants dans le corps d'un composant parent
 - **TypeScript strict** → Typage explicite, pas de `any`
+- **Messages UI** → Textes centralisés dans `services/messageCatalog.ts`
+- **Statuts location** → Centralisés dans `services/rentalStatus.ts`
 
 ## ✨ Fonctionnalités principales
 
@@ -142,6 +163,7 @@ src/
 - Sélection de période : par défaut **dimanche midi → dimanche midi suivant**
 - Création rapide de location en cliquant sur un jour
 - Affichage : nom du locataire, avatar, libellé, tarif
+- En mobile, si un membre est renseigné : affichage **Membre (Owner)**
 - Vue détail complète au clic
 
 ### 👤 Gestion des membres
@@ -151,11 +173,15 @@ src/
 - Rôles : `admin`, `owner`, `sub_member`
 - Statut : `family`, `friends`, `other`
 - Avatars depuis Google OAuth
-- Lien vers un propriétaire parent (pour sub_member)
+- Lien vers un propriétaire parent (pour `sub_member`)
 
 ### 📋 Gestion des locations
 
 - Sélection du propriétaire et membre (autocomplete)
+- Création inline rapide d'un membre depuis le formulaire
+- Un `owner` (éditeur ou non) peut créer un membre inline lors d'une demande
+- Un `sub_member` ne peut pas créer de membre inline
+- Dans le mini-formulaire inline, le rôle est forcé à `sub_member`
 - Nombre de personnes et Tarif libre
 - Statut modifiable : `pending`, `confirmed`, `rejected`, `completed`
 - Notes et relevés électriques (début/fin)
@@ -164,8 +190,25 @@ src/
 ### 📊 Tableau de bord
 
 - KPI cards : nombre de locations, revenus, taux d'occupation
+- Bloc global des statuts compact (4 statuts sur une ligne)
+- Détail par propriétaire avec KPI additionnelle **Sous location**
 - Vue synthétique du calendrier
 - Prochain séjour à venir
+
+### 👤 Carte utilisateur
+
+- Affichage du rôle (`Admin`, `Propriétaire`, `Membre`) et badge `Éditeur` si applicable
+- Centre de notifications (liste, lecture, marquer lu, suppression)
+- Comptes Google OAuth : pas d'actions changement email/mot de passe
+- Comptes email/password : changement email + envoi de réinitialisation mot de passe
+
+## 🔔 Notifications Push
+
+- Basées sur **Web Push + VAPID** (sans Firebase)
+- Souscription navigateur persistée dans `push_subscriptions`
+- Edge Function `send-push` pour l'envoi et la purge auto des endpoints invalides
+- Historique utilisateur dans `user_notifications` (centre de notifications in-app)
+- Le Service Worker relaie l'événement `user-notifications-updated` aux onglets ouverts
 
 ## 🔐 Authentification & Autorisation
 
@@ -192,6 +235,13 @@ L'application utilise un système d'autorisation en deux étapes :
 | `owner`      | Propriétaire de la maison      | Voir locations, faire des demandes (validation admin) |
 | `sub_member` | Enfant/petit-enfant d'un owner | Voir dates + libellé + propriétaire uniquement        |
 
+## 🛡 Base de données & RLS
+
+- `members` et `rentals` : données métier principales
+- `push_subscriptions` : endpoints push techniques par utilisateur
+- `user_notifications` : notifications persistées (lecture côté app)
+- Policies RLS utilisateur sur notifications : lecture, mise à jour et suppression de ses propres notifications
+
 ## 🚀 Déploiement
 
 ### Vercel (recommandé)
@@ -205,6 +255,13 @@ L'application utilise un système d'autorisation en deux étapes :
 ```
 VITE_SUPABASE_URL=https://<project-id>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key-publique>
+VITE_VAPID_PUBLIC_KEY=<clé-publique-vapid>
+```
+
+### Déploiement de la fonction Edge push
+
+```bash
+supabase functions deploy send-push
 ```
 
 ### CI/CD
@@ -222,5 +279,7 @@ Ce projet est privé et destiné à un usage familial uniquement.
 
 ---
 
-**Version actuelle** : 0.2.0  
-**Dernière mise à jour** : 24 février 2026
+**Version actuelle** : 0.3.9  
+**Dernière mise à jour** : 26 février 2026
+
+Pour le détail des évolutions, voir `CHANGELOG.md`.
