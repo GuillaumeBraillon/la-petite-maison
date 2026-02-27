@@ -10,7 +10,7 @@ if (!rootElement) throw new Error("Élément #root introuvable dans le DOM.");
 createRoot(rootElement).render(
   <StrictMode>
     <App />
-  </StrictMode>,
+  </StrictMode>
 );
 
 if ("serviceWorker" in navigator) {

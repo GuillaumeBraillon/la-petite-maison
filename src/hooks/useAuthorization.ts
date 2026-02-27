@@ -27,10 +27,7 @@ const getErrorMessage = (err: unknown): string => {
   return "Erreur lors de la vérification";
 };
 
-const notifyPendingMemberAccess = (params: {
-  fullName: string | null;
-  email: string;
-}): void => {
+const notifyPendingMemberAccess = (params: { fullName: string | null; email: string }): void => {
   const { fullName, email } = params;
 
   supabase.functions
@@ -99,14 +96,8 @@ export const useAuthorization = (session: Session | null) => {
         const currentUser = session.user;
 
         const userEmail = currentUser.email;
-        const userName =
-          currentUser.user_metadata?.full_name ??
-          currentUser.user_metadata?.name ??
-          null;
-        const avatarUrl =
-          currentUser.user_metadata?.avatar_url ??
-          currentUser.user_metadata?.picture ??
-          null;
+        const userName = currentUser.user_metadata?.full_name ?? currentUser.user_metadata?.name ?? null;
+        const avatarUrl = currentUser.user_metadata?.avatar_url ?? currentUser.user_metadata?.picture ?? null;
 
         const nameParts = userName?.trim().split(/\s+/) ?? [];
         const firstName = nameParts[0] ?? "";
@@ -172,9 +163,7 @@ export const useAuthorization = (session: Session | null) => {
 
         const authorized = authorizedUser.is_allowed === true;
 
-        const normalizedMemberEmail = authorizedUser.email
-          ?.trim()
-          .toLowerCase();
+        const normalizedMemberEmail = authorizedUser.email?.trim().toLowerCase();
         const syncPayload: {
           auth_user_id?: string;
           email?: string;
@@ -194,21 +183,14 @@ export const useAuthorization = (session: Session | null) => {
         }
 
         if (Object.keys(syncPayload).length > 0) {
-          const linkedNow =
-            syncPayload.auth_user_id !== undefined &&
-            !authorizedUser.auth_user_id &&
-            authorizedUser.is_allowed === false;
+          const linkedNow = syncPayload.auth_user_id !== undefined && !authorizedUser.auth_user_id && authorizedUser.is_allowed === false;
 
-          const { error: syncError } = await supabase
-            .from("members")
-            .update(syncPayload)
-            .eq("id", authorizedUser.id);
+          const { error: syncError } = await supabase.from("members").update(syncPayload).eq("id", authorizedUser.id);
 
           if (syncError) {
             logger.error("Authorization sync error:", syncError);
           } else if (linkedNow) {
-            const existingFullName =
-              [firstName, lastName].filter(Boolean).join(" ") || null;
+            const existingFullName = [firstName, lastName].filter(Boolean).join(" ") || null;
             notifyPendingMemberAccess({
               fullName: existingFullName,
               email: normalizedEmail,

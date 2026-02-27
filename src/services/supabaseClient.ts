@@ -4,9 +4,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Variables d'environnement VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY requises.",
-  );
+  throw new Error("Variables d'environnement VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY requises.");
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

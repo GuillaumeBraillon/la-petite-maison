@@ -11,10 +11,7 @@ import { Button } from "../ui/Button";
 
 const DAYS_OF_WEEK = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-const isSameDay = (a: Date, b: Date): boolean =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate();
+const isSameDay = (a: Date, b: Date): boolean => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 const startOfWeekMonday = (date: Date): Date => {
   const d = new Date(date);
@@ -74,13 +71,7 @@ interface CalendarViewProps {
 // Component
 // ------------------------------------------------------------
 
-export const CalendarView = ({
-  rentals,
-  members,
-  onRentalClick,
-  onCreateClick,
-  onDayClick,
-}: CalendarViewProps) => {
+export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, onDayClick }: CalendarViewProps) => {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -112,9 +103,7 @@ export const CalendarView = ({
     <div className="flex flex-col gap-4">
       {/* Navigation */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold text-gray-900 capitalize">
-          {monthLabel}
-        </h2>
+        <h2 className="text-lg font-semibold text-gray-900 capitalize">{monthLabel}</h2>
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
           {onCreateClick && (
             <Button onClick={onCreateClick} className="w-full sm:w-auto">
@@ -122,12 +111,7 @@ export const CalendarView = ({
             </Button>
           )}
           <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={prevMonth}
-              aria-label="Mois précédent"
-            >
+            <Button variant="secondary" size="sm" onClick={prevMonth} aria-label="Mois précédent">
               <ChevronLeft size={16} />
             </Button>
             <Button
@@ -140,12 +124,7 @@ export const CalendarView = ({
             >
               Aujourd&apos;hui
             </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={nextMonth}
-              aria-label="Mois suivant"
-            >
+            <Button variant="secondary" size="sm" onClick={nextMonth} aria-label="Mois suivant">
               <ChevronRight size={16} />
             </Button>
           </div>
@@ -171,42 +150,26 @@ export const CalendarView = ({
               tabIndex={onDayClick ? 0 : -1}
               className={[
                 "rounded-lg border border-gray-200 bg-white p-3 flex flex-col gap-2",
-                onDayClick
-                  ? "cursor-pointer hover:bg-primary-50 transition-colors"
-                  : "",
+                onDayClick ? "cursor-pointer hover:bg-primary-50 transition-colors" : "",
               ].join(" ")}
             >
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-gray-900">
-                  {formatDayLabel(day)}
-                </p>
+                <p className="text-sm font-semibold text-gray-900">{formatDayLabel(day)}</p>
                 <span className="text-xs text-gray-500">
                   {dayRentals.length} location
                   {dayRentals.length !== 1 ? "s" : ""}
                 </span>
               </div>
               {dayRentals.length > 0 ? (
-                <div
-                  className="flex flex-col gap-1"
-                  onClick={(event) => event.stopPropagation()}
-                >
+                <div className="flex flex-col gap-1" onClick={(event) => event.stopPropagation()}>
                   {dayRentals.map((rental) =>
                     (() => {
                       const owner = memberIndex.get(rental.ownerId);
-                      const member = rental.subMemberId
-                        ? memberIndex.get(rental.subMemberId)
-                        : undefined;
+                      const member = rental.subMemberId ? memberIndex.get(rental.subMemberId) : undefined;
                       const displayMember = member ?? owner;
-                      const ownerLabel = owner
-                        ? `${owner.firstName} ${owner.lastName}`
-                        : "";
-                      const memberLabel = member
-                        ? `${member.firstName} ${member.lastName}`
-                        : undefined;
-                      const labelOverride =
-                        memberLabel && ownerLabel
-                          ? `${memberLabel} (${ownerLabel})`
-                          : undefined;
+                      const ownerLabel = owner ? `${owner.firstName} ${owner.lastName}` : "";
+                      const memberLabel = member ? `${member.firstName} ${member.lastName}` : undefined;
+                      const labelOverride = memberLabel && ownerLabel ? `${memberLabel} (${ownerLabel})` : undefined;
 
                       return (
                         <RentalBadge
@@ -218,7 +181,7 @@ export const CalendarView = ({
                           onClick={onRentalClick}
                         />
                       );
-                    })(),
+                    })()
                   )}
                 </div>
               ) : (
@@ -235,10 +198,7 @@ export const CalendarView = ({
           {/* En-têtes jours */}
           <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
             {DAYS_OF_WEEK.map((d) => (
-              <div
-                key={d}
-                className="py-2 text-center text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide"
-              >
+              <div key={d} className="py-2 text-center text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 {d}
               </div>
             ))}

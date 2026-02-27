@@ -23,8 +23,7 @@ const formatDate = (iso: string | undefined): string => {
   }).format(d);
 };
 
-const pluralize = (count: number, singular: string, plural: string): string =>
-  count <= 1 ? singular : plural;
+const pluralize = (count: number, singular: string, plural: string): string => (count <= 1 ? singular : plural);
 
 const formatEuro = (value: number): string => `${value} €`;
 
@@ -46,19 +45,13 @@ const normalizeEmail = (email: string | null | undefined): string | null => {
 
 /** Appel fire-and-forget vers l'Edge Function send-push. */
 const invokeSendPush = (body: Record<string, unknown>): void => {
-  const maybePayload = body.payload as
-    | { type?: unknown; title?: unknown }
-    | undefined;
-  const payloadType =
-    typeof maybePayload?.type === "string" ? maybePayload.type : undefined;
-  const payloadTitle =
-    typeof maybePayload?.title === "string" ? maybePayload.title : undefined;
+  const maybePayload = body.payload as { type?: unknown; title?: unknown } | undefined;
+  const payloadType = typeof maybePayload?.type === "string" ? maybePayload.type : undefined;
+  const payloadTitle = typeof maybePayload?.title === "string" ? maybePayload.title : undefined;
   const topic = typeof body.topic === "string" ? body.topic : undefined;
 
   const rawMemberEmails = (body as { memberEmails?: unknown }).memberEmails;
-  const memberEmails = Array.isArray(rawMemberEmails)
-    ? rawMemberEmails.filter((item): item is string => typeof item === "string")
-    : [];
+  const memberEmails = Array.isArray(rawMemberEmails) ? rawMemberEmails.filter((item): item is string => typeof item === "string") : [];
 
   logger.debug("rentalNotifications", "Dispatch send-push", {
     topic: topic ?? null,
@@ -85,26 +78,17 @@ const invokeSendPush = (body: Record<string, unknown>): void => {
         data &&
         typeof data === "object" &&
         "unresolvedMemberEmails" in data &&
-        Array.isArray(
-          (data as { unresolvedMemberEmails?: unknown }).unresolvedMemberEmails,
-        )
-          ? (
-              data as { unresolvedMemberEmails: unknown[] }
-            ).unresolvedMemberEmails.filter(
-              (item): item is string => typeof item === "string",
-            )
+        Array.isArray((data as { unresolvedMemberEmails?: unknown }).unresolvedMemberEmails)
+          ? (data as { unresolvedMemberEmails: unknown[] }).unresolvedMemberEmails.filter((item): item is string => typeof item === "string")
           : [];
 
       if (unresolvedMemberEmails.length > 0) {
-        logger.error(
-          "[rentalNotifications] send-push unresolved member emails:",
-          {
-            type: payloadType ?? null,
-            topic: topic ?? null,
-            recipientEmails: memberEmails,
-            unresolvedMemberEmails,
-          },
-        );
+        logger.error("[rentalNotifications] send-push unresolved member emails:", {
+          type: payloadType ?? null,
+          topic: topic ?? null,
+          recipientEmails: memberEmails,
+          unresolvedMemberEmails,
+        });
       }
     })
     .catch((err: unknown) => {
@@ -120,14 +104,9 @@ type RentalActors = {
 };
 
 const getRentalActors = async (rental: Rental): Promise<RentalActors> => {
-  const memberIds = [rental.ownerId, rental.subMemberId].filter(
-    (id): id is string => Boolean(id),
-  );
+  const memberIds = [rental.ownerId, rental.subMemberId].filter((id): id is string => Boolean(id));
 
-  const { data, error } = await supabase
-    .from("members")
-    .select("id, email, first_name, last_name")
-    .in("id", memberIds);
+  const { data, error } = await supabase.from("members").select("id, email, first_name, last_name").in("id", memberIds);
 
   if (error) {
     logger.error("[rentalNotifications] getRentalActors:", error);
@@ -163,20 +142,14 @@ const getRentalActors = async (rental: Rental): Promise<RentalActors> => {
 };
 
 const getEditorEmails = async (): Promise<string[]> => {
-  const { data, error } = await supabase
-    .from("members")
-    .select("email")
-    .eq("is_editor", true)
-    .not("email", "is", null);
+  const { data, error } = await supabase.from("members").select("email").eq("is_editor", true).not("email", "is", null);
 
   if (error) {
     logger.error("[rentalNotifications] getEditorEmails:", error);
     return [];
   }
 
-  return ((data ?? []) as { email: string | null }[])
-    .map((item) => normalizeEmail(item.email))
-    .filter((email): email is string => email !== null);
+  return ((data ?? []) as { email: string | null }[]).map((item) => normalizeEmail(item.email)).filter((email): email is string => email !== null);
 };
 
 // ------------------------------------------------------------
@@ -185,25 +158,16 @@ const getEditorEmails = async (): Promise<string[]> => {
 // ------------------------------------------------------------
 
 export const notifyNewRental = async (rental: Rental): Promise<void> => {
-  const { ownerName, subMemberName, ownerEmail, subMemberEmail } =
-    await getRentalActors(rental);
+  const { ownerName, subMemberName, ownerEmail, subMemberEmail } = await getRentalActors(rental);
   const editorEmails = await getEditorEmails();
 
   const sd = formatDate(rental.startDate);
   const ed = formatDate(rental.endDate);
   const guests = `${rental.guestCount} ${pluralize(rental.guestCount, "personne", "personnes")}`;
 
-  const excludedPersonalRecipients = new Set(
-    [ownerEmail, subMemberEmail].filter(
-      (email): email is string => email !== null,
-    ),
-  );
+  const excludedPersonalRecipients = new Set([ownerEmail, subMemberEmail].filter((email): email is string => email !== null));
 
-  const editorRecipients = Array.from(
-    new Set(
-      editorEmails.filter((email) => !excludedPersonalRecipients.has(email)),
-    ),
-  );
+  const editorRecipients = Array.from(new Set(editorEmails.filter((email) => !excludedPersonalRecipients.has(email))));
 
   if (editorRecipients.length > 0) {
     invokeSendPush({
@@ -262,18 +226,10 @@ export const notifyNewRental = async (rental: Rental): Promise<void> => {
 type StatusMessage = {
   title: string;
   body: string;
-  type:
-    | "rental_confirmed"
-    | "rental_rejected"
-    | "request_pending"
-    | "rental_completed";
+  type: "rental_confirmed" | "rental_rejected" | "request_pending" | "rental_completed";
 };
 
-const buildStatusMessage = (
-  rental: Rental,
-  recipient: "owner" | "sub_member",
-  subMemberName: string | null,
-): StatusMessage | null => {
+const buildStatusMessage = (rental: Rental, recipient: "owner" | "sub_member", subMemberName: string | null): StatusMessage | null => {
   const sd = formatDate(rental.startDate);
   const ed = formatDate(rental.endDate);
   const guests = `${rental.guestCount} ${pluralize(rental.guestCount, "personne", "personnes")}`;
@@ -310,15 +266,11 @@ const buildStatusMessage = (
   }
 };
 
-export const notifyStatusChange = async (
-  rental: Rental,
-  previousStatus?: RentalStatus,
-): Promise<void> => {
+export const notifyStatusChange = async (rental: Rental, previousStatus?: RentalStatus): Promise<void> => {
   // Guard : évite une notification si le statut n'a pas réellement changé
   if (previousStatus !== undefined && rental.status === previousStatus) return;
 
-  const { ownerEmail, subMemberEmail, subMemberName } =
-    await getRentalActors(rental);
+  const { ownerEmail, subMemberEmail, subMemberName } = await getRentalActors(rental);
 
   const sentEmails = new Set<string>();
 
@@ -340,11 +292,7 @@ export const notifyStatusChange = async (
 
   if (subMemberEmail) {
     if (!sentEmails.has(subMemberEmail)) {
-      const subMemberMessage = buildStatusMessage(
-        rental,
-        "sub_member",
-        subMemberName,
-      );
+      const subMemberMessage = buildStatusMessage(rental, "sub_member", subMemberName);
       if (subMemberMessage) {
         invokeSendPush({
           memberEmails: [subMemberEmail],
@@ -364,46 +312,31 @@ export const notifyStatusChange = async (
 // Notifie le owner + le subMember avec le récapitulatif détaillé
 // ------------------------------------------------------------
 
-const buildCompletedBody = (
-  rental: Rental,
-  recipient: "owner" | "sub_member",
-  subMemberName: string | null,
-): string => {
+const buildCompletedBody = (rental: Rental, recipient: "owner" | "sub_member", subMemberName: string | null): string => {
   const sd = formatDate(rental.startDate);
   const ed = formatDate(rental.endDate);
-  const asd = rental.actualStartDate
-    ? formatDate(rental.actualStartDate)
-    : null;
+  const asd = rental.actualStartDate ? formatDate(rental.actualStartDate) : null;
   const aed = rental.actualEndDate ? formatDate(rental.actualEndDate) : null;
 
   const datesChanged = Boolean(asd && aed && (asd !== sd || aed !== ed));
   const effectiveStartDate = rental.actualStartDate ?? rental.startDate;
   const effectiveEndDate = rental.actualEndDate ?? rental.endDate;
   const durationDays = getDurationDays(effectiveStartDate, effectiveEndDate);
-  const electricityPerDay =
-    rental.electricityCost !== undefined && rental.electricityCost !== null
-      ? rental.electricityCost / durationDays
-      : null;
+  const electricityPerDay = rental.electricityCost !== undefined && rental.electricityCost !== null ? rental.electricityCost / durationDays : null;
 
   const lines: string[] = [];
-  lines.push(
-    PUSH_MESSAGES.rental.completedHeader({ recipient, subMemberName }),
-  );
+  lines.push(PUSH_MESSAGES.rental.completedHeader({ recipient, subMemberName }));
   lines.push("");
   lines.push(`Dates prévues : ${sd} → ${ed}`);
   if (datesChanged) {
     lines.push(`Dates réelles : ${asd} → ${aed}`);
   }
   lines.push("");
-  lines.push(
-    `Durée : ${durationDays} ${pluralize(durationDays, "jour", "jours")}`,
-  );
+  lines.push(`Durée : ${durationDays} ${pluralize(durationDays, "jour", "jours")}`);
   lines.push(`Nombre de personnes : ${rental.guestCount}`);
   lines.push(`Location : ${formatEuro(rental.price)}`);
   if (rental.electricityCost !== undefined && rental.electricityCost !== null) {
-    lines.push(
-      `Consommation électrique : ${formatEuro(rental.electricityCost)} (${formatEuroPerDay(electricityPerDay ?? 0)})`,
-    );
+    lines.push(`Consommation électrique : ${formatEuro(rental.electricityCost)} (${formatEuroPerDay(electricityPerDay ?? 0)})`);
   }
   const total = rental.totalPrice ?? rental.price;
   lines.push(`Total : ${formatEuro(total)}`);
@@ -412,8 +345,7 @@ const buildCompletedBody = (
 };
 
 export const notifyCompleted = async (rental: Rental): Promise<void> => {
-  const { ownerEmail, subMemberEmail, subMemberName } =
-    await getRentalActors(rental);
+  const { ownerEmail, subMemberEmail, subMemberName } = await getRentalActors(rental);
 
   if (ownerEmail) {
     invokeSendPush({
@@ -439,8 +371,7 @@ export const notifyCompleted = async (rental: Rental): Promise<void> => {
 };
 
 export const notifyDeletedRental = async (rental: Rental): Promise<void> => {
-  const { ownerEmail, subMemberEmail, subMemberName } =
-    await getRentalActors(rental);
+  const { ownerEmail, subMemberEmail, subMemberName } = await getRentalActors(rental);
 
   const sd = formatDate(rental.startDate);
   const ed = formatDate(rental.endDate);

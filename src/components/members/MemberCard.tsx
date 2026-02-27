@@ -48,10 +48,7 @@ export const MemberCard = ({
   const email = member.email?.trim().toLowerCase();
   const maybeAuth = member as unknown as { authProvider?: string };
   const authProvider = maybeAuth.authProvider;
-  const isGoogleAccount = authProvider
-    ? authProvider === "google"
-    : !!email &&
-      (email.endsWith("@gmail.com") || email.endsWith("@googlemail.com"));
+  const isGoogleAccount = authProvider ? authProvider === "google" : !!email && (email.endsWith("@gmail.com") || email.endsWith("@googlemail.com"));
   return (
     <Card hover className="flex flex-col gap-3">
       {/* Header */}
@@ -78,22 +75,12 @@ export const MemberCard = ({
         </div>
         <div className="flex gap-1 shrink-0">
           {onEdit && canEdit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Modifier"
-              onClick={() => onEdit(member)}
-            >
+            <Button variant="ghost" size="sm" aria-label="Modifier" onClick={() => onEdit(member)}>
               <Pencil size={14} />
             </Button>
           )}
           {onDelete && canDelete && (
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Supprimer"
-              onClick={() => onDelete(member)}
-            >
+            <Button variant="ghost" size="sm" aria-label="Supprimer" onClick={() => onDelete(member)}>
               <Trash2 size={14} className="text-red-500" />
             </Button>
           )}
@@ -102,9 +89,7 @@ export const MemberCard = ({
 
       {/* Badges */}
       <div className="flex flex-wrap gap-1.5">
-        <Badge variant={member.isAllowed ? "success" : "warning"}>
-          {member.isAllowed ? "Accès autorisé" : "Accès non autorisé"}
-        </Badge>
+        <Badge variant={member.isAllowed ? "success" : "warning"}>{member.isAllowed ? "Accès autorisé" : "Accès non autorisé"}</Badge>
         <Badge variant="default">{roleLabelMap[member.role]}</Badge>
 
         {member.isEditor && <Badge variant="primary">Éditeur</Badge>}
@@ -116,22 +101,17 @@ export const MemberCard = ({
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <Mail size={12} className="shrink-0" />
             <span className="truncate flex-1">{member.email}</span>
-            {member.email &&
-              !isGoogleAccount &&
-              canSendPasswordReset &&
-              onSendPasswordReset && (
-                <button
-                  type="button"
-                  onClick={() => onSendPasswordReset(member)}
-                  disabled={sendingPasswordReset}
-                  className="text-[10px] leading-none text-primary-700 hover:text-primary-800 whitespace-nowrap disabled:opacity-50"
-                  aria-label={`Réinitialiser le mot de passe de ${member.firstName} ${member.lastName}`}
-                >
-                  {sendingPasswordReset
-                    ? "Envoi..."
-                    : "Réinitialiser le mot de passe"}
-                </button>
-              )}
+            {member.email && !isGoogleAccount && canSendPasswordReset && onSendPasswordReset && (
+              <button
+                type="button"
+                onClick={() => onSendPasswordReset(member)}
+                disabled={sendingPasswordReset}
+                className="text-[10px] leading-none text-primary-700 hover:text-primary-800 whitespace-nowrap disabled:opacity-50"
+                aria-label={`Réinitialiser le mot de passe de ${member.firstName} ${member.lastName}`}
+              >
+                {sendingPasswordReset ? "Envoi..." : "Réinitialiser le mot de passe"}
+              </button>
+            )}
           </div>
         )}
         {member.address && (
@@ -142,16 +122,12 @@ export const MemberCard = ({
         )}
         {ownerName && (
           <p className="text-xs text-gray-400 mt-0.5">
-            Lié à :{" "}
-            <span className="font-medium text-gray-600">{ownerName}</span>
+            Lié à : <span className="font-medium text-gray-600">{ownerName}</span>
           </p>
         )}
         {member.lastLogin && (
           <p className="text-xs text-gray-400 mt-0.5">
-            Dernière connexion :{" "}
-            <span className="font-medium text-gray-600">
-              {new Date(member.lastLogin).toLocaleString()}
-            </span>
+            Dernière connexion : <span className="font-medium text-gray-600">{new Date(member.lastLogin).toLocaleString()}</span>
           </p>
         )}
       </div>

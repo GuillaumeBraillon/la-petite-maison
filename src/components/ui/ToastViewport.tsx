@@ -14,30 +14,17 @@ export const ToastViewport = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div
-      className="fixed top-4 right-4 z-[100] flex w-[min(92vw,360px)] flex-col gap-2"
-      aria-live="polite"
-      aria-atomic="true"
-    >
+    <div className="fixed top-4 right-4 z-[100] flex w-[min(92vw,360px)] flex-col gap-2" aria-live="polite" aria-atomic="true">
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={[
-            "rounded-xl border p-3 shadow-sm backdrop-blur-sm",
-            variantClasses[toast.variant] ?? variantClasses.info,
-          ].join(" ")}
+          className={["rounded-xl border p-3 shadow-sm backdrop-blur-sm", variantClasses[toast.variant] ?? variantClasses.info].join(" ")}
           role="status"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              {toast.title && (
-                <p className="text-xs font-semibold leading-tight">
-                  {toast.title}
-                </p>
-              )}
-              <p className="text-xs leading-snug break-words">
-                {toast.message}
-              </p>
+              {toast.title && <p className="text-xs font-semibold leading-tight">{toast.title}</p>}
+              <p className="text-xs leading-snug break-words">{toast.message}</p>
             </div>
             <button
               type="button"

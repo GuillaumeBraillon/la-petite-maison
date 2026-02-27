@@ -29,24 +29,16 @@ interface MembersPageProps {
 // Page
 // ------------------------------------------------------------
 
-export const MembersPage = ({
-  members,
-  currentMember,
-  onRefresh,
-}: MembersPageProps) => {
+export const MembersPage = ({ members, currentMember, onRefresh }: MembersPageProps) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
   const [deletingMember, setDeletingMember] = useState(false);
-  const [sendingPasswordResetForId, setSendingPasswordResetForId] = useState<
-    string | null
-  >(null);
+  const [sendingPasswordResetForId, setSendingPasswordResetForId] = useState<string | null>(null);
   const { error, setError, clearError } = useError();
   const { showToast } = useToast();
   const permissions = getPermissions(currentMember ?? null);
-  const canSendPasswordReset =
-    currentMember?.role === "admin" ||
-    (currentMember?.role === "owner" && currentMember.isEditor);
+  const canSendPasswordReset = currentMember?.role === "admin" || (currentMember?.role === "owner" && currentMember.isEditor);
 
   // Filters
   type RoleOption = "all" | "admin" | "owner" | "sub_member";
@@ -92,9 +84,7 @@ export const MembersPage = ({
     setEditing(null);
   };
 
-  const handleSubmit = async (
-    values: Omit<Member, "id" | "createdAt" | "updatedAt">,
-  ) => {
+  const handleSubmit = async (values: Omit<Member, "id" | "createdAt" | "updatedAt">) => {
     try {
       if (editing) {
         await updateMember(editing.id, values);
@@ -117,8 +107,7 @@ export const MembersPage = ({
         ...TOAST_MESSAGES.member.saveError,
       });
       setError({
-        message:
-          err instanceof Error ? err.message : "Une erreur est survenue.",
+        message: err instanceof Error ? err.message : "Une erreur est survenue.",
         context: editing ? "Modification du membre" : "Création du membre",
       });
     }
@@ -140,9 +129,7 @@ export const MembersPage = ({
       await deleteMember(memberToDelete.id);
       await onRefresh();
       setMemberToDelete(null);
-      const deletedToast = TOAST_MESSAGES.member.deleted(
-        `${memberToDelete.firstName} ${memberToDelete.lastName}`,
-      );
+      const deletedToast = TOAST_MESSAGES.member.deleted(`${memberToDelete.firstName} ${memberToDelete.lastName}`);
       showToast({
         variant: "success",
         ...deletedToast,
@@ -153,8 +140,7 @@ export const MembersPage = ({
         ...TOAST_MESSAGES.member.deleteError,
       });
       setError({
-        message:
-          err instanceof Error ? err.message : "Une erreur est survenue.",
+        message: err instanceof Error ? err.message : "Une erreur est survenue.",
         context: "Suppression du membre",
       });
     } finally {
@@ -162,14 +148,8 @@ export const MembersPage = ({
     }
   };
 
-  const handleAuthorizeFromForm = async (
-    email: string,
-    values: Omit<Member, "id" | "createdAt" | "updatedAt">,
-  ) => {
-    const isProfileComplete =
-      values.label.trim().length > 0 &&
-      values.firstName.trim().length > 0 &&
-      values.lastName.trim().length > 0;
+  const handleAuthorizeFromForm = async (email: string, values: Omit<Member, "id" | "createdAt" | "updatedAt">) => {
+    const isProfileComplete = values.label.trim().length > 0 && values.firstName.trim().length > 0 && values.lastName.trim().length > 0;
 
     if (!isProfileComplete) {
       setError({
@@ -195,9 +175,7 @@ export const MembersPage = ({
       await updateMember(m.id, { isAllowed: true });
       await onRefresh();
       closeModal();
-      const authorizedToast = TOAST_MESSAGES.member.authorized(
-        `${values.firstName} ${values.lastName}`,
-      );
+      const authorizedToast = TOAST_MESSAGES.member.authorized(`${values.firstName} ${values.lastName}`);
       showToast({
         variant: "success",
         ...authorizedToast,
@@ -208,8 +186,7 @@ export const MembersPage = ({
         ...TOAST_MESSAGES.member.authorizeError,
       });
       setError({
-        message:
-          err instanceof Error ? err.message : "Une erreur est survenue.",
+        message: err instanceof Error ? err.message : "Une erreur est survenue.",
         context: "Autorisation utilisateur",
       });
     }
@@ -231,12 +208,9 @@ export const MembersPage = ({
     setSendingPasswordResetForId(member.id);
 
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email,
-        {
-          redirectTo: window.location.origin,
-        },
-      );
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      });
 
       if (resetError) {
         throw resetError;
@@ -251,10 +225,7 @@ export const MembersPage = ({
       showToast({
         variant: "error",
         title: TOAST_MESSAGES.member.passwordResetError.title,
-        message:
-          err instanceof Error
-            ? err.message
-            : TOAST_MESSAGES.member.passwordResetError.message,
+        message: err instanceof Error ? err.message : TOAST_MESSAGES.member.passwordResetError.message,
       });
     } finally {
       setSendingPasswordResetForId(null);
@@ -337,11 +308,7 @@ export const MembersPage = ({
         onDelete={handleDelete}
       />
 
-      <Modal
-        isOpen={modalOpen}
-        onClose={closeModal}
-        title={editing ? "Modifier le membre" : "Nouveau membre"}
-      >
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? "Modifier le membre" : "Nouveau membre"}>
         <MemberForm
           initialValues={editing ?? undefined}
           members={members}
@@ -351,30 +318,21 @@ export const MembersPage = ({
           onAuthorize={handleAuthorizeFromForm}
           onToggleAuthorization={
             editing
-              ? async (
-                  isAllowed: boolean,
-                  values: Omit<Member, "id" | "createdAt" | "updatedAt">,
-                ) => {
+              ? async (isAllowed: boolean, values: Omit<Member, "id" | "createdAt" | "updatedAt">) => {
                   try {
                     if (isAllowed) {
-                      const isProfileComplete =
-                        values.label.trim().length > 0 &&
-                        values.firstName.trim().length > 0 &&
-                        values.lastName.trim().length > 0;
+                      const isProfileComplete = values.label.trim().length > 0 && values.firstName.trim().length > 0 && values.lastName.trim().length > 0;
 
                       if (!isProfileComplete) {
                         setError({
-                          message:
-                            "Complétez prénom, nom et libellé avant autorisation.",
+                          message: "Complétez prénom, nom et libellé avant autorisation.",
                           context: "Modification de l'autorisation",
                         });
                         return;
                       }
                     }
 
-                    const authorizationPayload: Partial<
-                      Omit<Member, "id" | "createdAt" | "updatedAt">
-                    > = isAllowed
+                    const authorizationPayload: Partial<Omit<Member, "id" | "createdAt" | "updatedAt">> = isAllowed
                       ? {
                           isAllowed: true,
                           label: values.label.trim(),
@@ -386,8 +344,7 @@ export const MembersPage = ({
                     await updateMember(editing.id, authorizationPayload);
                     await onRefresh();
                     closeModal();
-                    const authUpdatedToast =
-                      TOAST_MESSAGES.member.authUpdated(isAllowed);
+                    const authUpdatedToast = TOAST_MESSAGES.member.authUpdated(isAllowed);
                     showToast({
                       variant: "success",
                       ...authUpdatedToast,
@@ -398,10 +355,7 @@ export const MembersPage = ({
                       ...TOAST_MESSAGES.member.authUpdateError,
                     });
                     setError({
-                      message:
-                        err instanceof Error
-                          ? err.message
-                          : "Une erreur est survenue.",
+                      message: err instanceof Error ? err.message : "Une erreur est survenue.",
                       context: "Modification de l'autorisation",
                     });
                   }
@@ -416,11 +370,7 @@ export const MembersPage = ({
       <ConfirmDialog
         isOpen={memberToDelete !== null}
         title="Confirmer la suppression"
-        message={
-          memberToDelete
-            ? `Supprimer ${memberToDelete.firstName} ${memberToDelete.lastName} ?`
-            : "Supprimer ce membre ?"
-        }
+        message={memberToDelete ? `Supprimer ${memberToDelete.firstName} ${memberToDelete.lastName} ?` : "Supprimer ce membre ?"}
         confirmLabel="Supprimer"
         cancelLabel="Annuler"
         onConfirm={() => {

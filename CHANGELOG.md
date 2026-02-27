@@ -7,6 +7,21 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.15] - 2026-02-27
+
+### Améliorations
+
+- **RentalBadge** : calcul de la durée du séjour et amélioration du tooltip
+  (suppression des labels redondants, ajout d'un indicateur hors période)
+
+### Technique
+
+- Ajout d'un fichier `.prettierrc` et application d'un formatage cohérent
+  sur l'ensemble du code (expressions et JSX condensés, imports nettoyés)
+- Nettoyage de `eslint.config.js` et des chaînes de promesses du service worker
+- Simplifications mineures de l'interface dans Calendar, Auth, Dashboard,
+  ErrorBoundary et App
+
 ## [0.3.14] - 2026-02-27
 
 ### Améliorations

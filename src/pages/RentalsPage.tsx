@@ -7,10 +7,7 @@ import { RentalList } from "../components/rentals/RentalList";
 import { RentalDetail } from "../components/rentals/RentalDetail";
 import { RentalForm } from "../components/rentals/RentalForm";
 import { FilterBar } from "../components/ui/FilterBar";
-import {
-  RENTAL_STATUS_LIST,
-  getRentalStatusLabel,
-} from "../services/rentalStatus";
+import { RENTAL_STATUS_LIST, getRentalStatusLabel } from "../services/rentalStatus";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
@@ -34,12 +31,7 @@ interface RentalsPageProps {
 // Page
 // ------------------------------------------------------------
 
-export const RentalsPage = ({
-  rentals,
-  members,
-  currentMember,
-  onRefresh,
-}: RentalsPageProps) => {
+export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: RentalsPageProps) => {
   const { showToast } = useToast();
   const {
     formOpen,
@@ -72,15 +64,13 @@ export const RentalsPage = ({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>("all");
 
-  const ownerOptions = [
-    { value: "all", label: "Tous les propriétaires" },
-  ].concat(
+  const ownerOptions = [{ value: "all", label: "Tous les propriétaires" }].concat(
     members
       .filter((m) => m.role === "owner")
       .map((m) => ({
         value: m.id,
         label: m.label || `${m.firstName} ${m.lastName}`,
-      })),
+      }))
   );
 
   const filteredRentals = rentals.filter((r) => {
@@ -89,13 +79,7 @@ export const RentalsPage = ({
     return true;
   });
 
-  const handleCreateSubMember = async (data: {
-    firstName: string;
-    lastName: string;
-    label: string;
-    role: "sub_member";
-    ownerId?: string;
-  }) => {
+  const handleCreateSubMember = async (data: { firstName: string; lastName: string; label: string; role: "sub_member"; ownerId?: string }) => {
     try {
       const newMember = await createMember({
         firstName: data.firstName,
@@ -187,12 +171,7 @@ export const RentalsPage = ({
       />
 
       {/* Formulaire */}
-      <Modal
-        isOpen={formOpen}
-        onClose={closeForm}
-        title={editing?.id ? "Modifier la location" : "Nouvelle location"}
-        size="lg"
-      >
+      <Modal isOpen={formOpen} onClose={closeForm} title={editing?.id ? "Modifier la location" : "Nouvelle location"} size="lg">
         <RentalForm
           initialValues={editing ?? undefined}
           members={members}
@@ -200,31 +179,18 @@ export const RentalsPage = ({
           currentMember={currentMember}
           onSubmit={handleSubmit}
           onCancel={closeForm}
-          onCreateSubMember={
-            permissions.createMembers || currentMember?.role === "owner"
-              ? handleCreateSubMember
-              : undefined
-          }
+          onCreateSubMember={permissions.createMembers || currentMember?.role === "owner" ? handleCreateSubMember : undefined}
           submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
         />
       </Modal>
 
       {/* Détail */}
-      <Modal
-        isOpen={detailOpen && selected !== null}
-        onClose={closeDetail}
-        title="Détail de la location"
-        size="lg"
-      >
+      <Modal isOpen={detailOpen && selected !== null} onClose={closeDetail} title="Détail de la location" size="lg">
         {selected && (
           <RentalDetail
             rental={selected}
             owner={memberIndex.get(selected.ownerId)}
-            subMember={
-              selected.subMemberId
-                ? memberIndex.get(selected.subMemberId)
-                : undefined
-            }
+            subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
             canEdit={permissions.createWithAnyStatus}
             canViewPrice={isMemberRental(currentMember ?? null, selected)}
             onEdit={openEdit}

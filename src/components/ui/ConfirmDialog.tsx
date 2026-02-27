@@ -30,20 +30,10 @@ export const ConfirmDialog = ({
       size="sm"
       footer={
         <>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onCancel}
-            disabled={loading}
-          >
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </Button>
-          <Button
-            type="button"
-            variant="danger"
-            onClick={onConfirm}
-            loading={loading}
-          >
+          <Button type="button" variant="danger" onClick={onConfirm} loading={loading}>
             {confirmLabel}
           </Button>
         </>

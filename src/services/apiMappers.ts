@@ -3,24 +3,10 @@
 // C'est LE SEUL endroit autorisé pour ces conversions.
 // ============================================================
 
-import type {
-  Member,
-  Rental,
-  MemberRole,
-  RentalStatus,
-  PushSubscriptionRecord,
-  UserNotification,
-} from "../types";
-import type {
-  DbMember,
-  DbRental,
-  DbPushSubscription,
-  DbUserNotification,
-} from "./dbTypes";
+import type { Member, Rental, MemberRole, RentalStatus, PushSubscriptionRecord, UserNotification } from "../types";
+import type { DbMember, DbRental, DbPushSubscription, DbUserNotification } from "./dbTypes";
 
-const normalizeOptionalTextToNull = (
-  value: string | undefined,
-): string | null => {
+const normalizeOptionalTextToNull = (value: string | undefined): string | null => {
   if (value === undefined) return null;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : null;
@@ -47,9 +33,7 @@ export const mapMemberFromDb = (db: DbMember): Member => ({
   updatedAt: db.updated_at,
 });
 
-export const mapMemberToDb = (
-  member: Partial<Omit<Member, "id" | "createdAt" | "updatedAt">>,
-): Partial<Omit<DbMember, "id" | "created_at" | "updated_at">> => {
+export const mapMemberToDb = (member: Partial<Omit<Member, "id" | "createdAt" | "updatedAt">>): Partial<Omit<DbMember, "id" | "created_at" | "updated_at">> => {
   const mapped: Partial<Omit<DbMember, "id" | "created_at" | "updated_at">> = {
     ...(member.isAllowed !== undefined && { is_allowed: member.isAllowed }),
     ...(member.label !== undefined && { label: member.label }),
@@ -107,7 +91,7 @@ export const mapRentalFromDb = (db: DbRental): Rental => ({
 });
 
 export const mapRentalToDb = (
-  rental: Partial<Omit<Rental, "id" | "createdAt" | "updatedAt">>,
+  rental: Partial<Omit<Rental, "id" | "createdAt" | "updatedAt">>
 ): Partial<Omit<DbRental, "id" | "created_at" | "updated_at">> => ({
   ...(rental.startDate !== undefined && { start_date: rental.startDate }),
   ...(rental.endDate !== undefined && { end_date: rental.endDate }),
@@ -137,9 +121,7 @@ export const mapRentalToDb = (
 // Push subscription mappers
 // ------------------------------------------------------------
 
-export const mapPushSubscriptionFromDb = (
-  db: DbPushSubscription,
-): PushSubscriptionRecord => ({
+export const mapPushSubscriptionFromDb = (db: DbPushSubscription): PushSubscriptionRecord => ({
   id: db.id,
   userId: db.user_id,
   endpoint: db.endpoint,
@@ -148,9 +130,7 @@ export const mapPushSubscriptionFromDb = (
   createdAt: db.created_at,
 });
 
-export const mapUserNotificationFromDb = (
-  db: DbUserNotification,
-): UserNotification => ({
+export const mapUserNotificationFromDb = (db: DbUserNotification): UserNotification => ({
   id: db.id,
   userId: db.user_id,
   type: db.type as UserNotification["type"],

@@ -34,32 +34,20 @@ interface UserInfoCardProps {
 /**
  * Carte affichant les informations de connexion de l'utilisateur Google.
  */
-export const UserInfoCard = ({
-  session,
-  onLogout,
-  appVersion,
-}: UserInfoCardProps) => {
+export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProps) => {
   const [memberLabel, setMemberLabel] = useState<string | null>(null);
   const [memberFullName, setMemberFullName] = useState<string | null>(null);
   const [memberRole, setMemberRole] = useState<MemberRole | null>(null);
   const [memberIsEditor, setMemberIsEditor] = useState<boolean>(false);
-  const [selectedNotification, setSelectedNotification] =
-    useState<UserNotification | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
-  const [accountActionMessage, setAccountActionMessage] = useState<
-    string | null
-  >(null);
-  const [accountActionError, setAccountActionError] = useState<string | null>(
-    null,
-  );
-  const [notificationModalError, setNotificationModalError] = useState<
-    string | null
-  >(null);
+  const [accountActionMessage, setAccountActionMessage] = useState<string | null>(null);
+  const [accountActionError, setAccountActionError] = useState<string | null>(null);
+  const [notificationModalError, setNotificationModalError] = useState<string | null>(null);
   const [emailUpdateLoading, setEmailUpdateLoading] = useState(false);
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
-  const [deleteNotificationLoading, setDeleteNotificationLoading] =
-    useState(false);
+  const [deleteNotificationLoading, setDeleteNotificationLoading] = useState(false);
   const { showToast } = useToast();
   const {
     notifications,
@@ -72,20 +60,13 @@ export const UserInfoCard = ({
   } = useUserNotifications();
 
   const sessionUser = session?.user;
-  const userName =
-    sessionUser?.user_metadata?.full_name || sessionUser?.user_metadata?.name;
+  const userName = sessionUser?.user_metadata?.full_name || sessionUser?.user_metadata?.name;
   const userEmail = sessionUser?.email;
   const primaryDisplayName = memberLabel || userName || null;
-  const secondaryDisplayName =
-    memberFullName && memberFullName !== primaryDisplayName
-      ? memberFullName
-      : null;
+  const secondaryDisplayName = memberFullName && memberFullName !== primaryDisplayName ? memberFullName : null;
   const roleLabel = memberRole ? roleLabelMap[memberRole] : null;
   const isOwnerEditor = memberRole === "owner" && memberIsEditor;
-  const authProvider =
-    typeof sessionUser?.app_metadata?.provider === "string"
-      ? sessionUser.app_metadata.provider
-      : null;
+  const authProvider = typeof sessionUser?.app_metadata?.provider === "string" ? sessionUser.app_metadata.provider : null;
   const isGoogleAccount = authProvider === "google";
 
   useEffect(() => {
@@ -153,8 +134,7 @@ export const UserInfoCard = ({
 
   const user = session.user;
 
-  const avatarUrl =
-    user.user_metadata?.avatar_url || user.user_metadata?.picture;
+  const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
 
   const formatNotificationDate = (value: string): string => {
     const date = new Date(value);
@@ -167,10 +147,7 @@ export const UserInfoCard = ({
     }).format(date);
   };
 
-  const handleNotificationClick = async (
-    notificationId: string,
-    url?: string,
-  ): Promise<void> => {
+  const handleNotificationClick = async (notificationId: string, url?: string): Promise<void> => {
     setNotificationModalError(null);
     await markAsRead(notificationId);
 
@@ -203,10 +180,7 @@ export const UserInfoCard = ({
       });
       setSelectedNotification(null);
     } catch (err: unknown) {
-      const message =
-        err instanceof Error && err.message
-          ? err.message
-          : "Impossible de supprimer la notification.";
+      const message = err instanceof Error && err.message ? err.message : "Impossible de supprimer la notification.";
       setNotificationModalError(message);
       showToast({
         variant: "error",
@@ -247,9 +221,7 @@ export const UserInfoCard = ({
       setAccountActionError(error.message);
     } else {
       setIsEmailModalOpen(false);
-      setAccountActionMessage(
-        "Email de confirmation envoyé. Vérifiez votre boîte de réception.",
-      );
+      setAccountActionMessage("Email de confirmation envoyé. Vérifiez votre boîte de réception.");
     }
 
     setEmailUpdateLoading(false);
@@ -273,9 +245,7 @@ export const UserInfoCard = ({
     if (error) {
       setAccountActionError(error.message);
     } else {
-      setAccountActionMessage(
-        "Email de réinitialisation du mot de passe envoyé.",
-      );
+      setAccountActionMessage("Email de réinitialisation du mot de passe envoyé.");
     }
 
     setPasswordResetLoading(false);
@@ -284,9 +254,7 @@ export const UserInfoCard = ({
   return (
     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
       <div className="relative flex items-center justify-end gap-2">
-        <p className="absolute left-1/2 -translate-x-1/2 text-[10px] text-gray-400">
-          {appVersion ? `Version : ${appVersion}` : ""}
-        </p>
+        <p className="absolute left-1/2 -translate-x-1/2 text-[10px] text-gray-400">{appVersion ? `Version : ${appVersion}` : ""}</p>
         <div className="flex items-center gap-1">
           <NotificationToggle compact className="text-gray-500 p-1.5" />
           <button
@@ -307,20 +275,13 @@ export const UserInfoCard = ({
           <div className="flex items-center justify-between gap-1.5 pb-2 border-b border-gray-100 min-w-0">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               {avatarUrl && (
-                <img
-                  src={avatarUrl}
-                  alt="Avatar"
-                  className="w-7 h-7 rounded-full border border-gray-200 flex-shrink-0"
-                  referrerPolicy="no-referrer"
-                />
+                <img src={avatarUrl} alt="Avatar" className="w-7 h-7 rounded-full border border-gray-200 flex-shrink-0" referrerPolicy="no-referrer" />
               )}
               {primaryDisplayName && (
                 <div className="min-w-0">
                   <div className="text-xs text-gray-900 font-semibold truncate leading-tight">
                     {primaryDisplayName}
-                    {secondaryDisplayName && (
-                      <span className="font-normal text-gray-500">{` · ${secondaryDisplayName}`}</span>
-                    )}
+                    {secondaryDisplayName && <span className="font-normal text-gray-500">{` · ${secondaryDisplayName}`}</span>}
                   </div>
                   {roleLabel && (
                     <div className="text-[11px] text-gray-500 leading-tight mt-0.5">
@@ -339,17 +300,11 @@ export const UserInfoCard = ({
           <Mail size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
           <div>
             <div className="text-xs font-medium text-gray-500">Email</div>
-            <div className="text-sm text-gray-900 font-medium">
-              {user.email || "N/A"}
-            </div>
+            <div className="text-sm text-gray-900 font-medium">{user.email || "N/A"}</div>
             {!isGoogleAccount && (
               <>
                 <div className="mt-1 flex items-center gap-3 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={handleOpenEmailModal}
-                    className="text-primary-600 hover:text-primary-700 underline"
-                  >
+                  <button type="button" onClick={handleOpenEmailModal} className="text-primary-600 hover:text-primary-700 underline">
                     Changer l&apos;email
                   </button>
                   <button
@@ -360,21 +315,11 @@ export const UserInfoCard = ({
                     disabled={passwordResetLoading}
                     className="text-primary-600 hover:text-primary-700 underline disabled:opacity-50"
                   >
-                    {passwordResetLoading
-                      ? "Envoi..."
-                      : "Changer le mot de passe"}
+                    {passwordResetLoading ? "Envoi..." : "Changer le mot de passe"}
                   </button>
                 </div>
-                {accountActionMessage && (
-                  <p className="mt-1 text-[11px] text-blue-700">
-                    {accountActionMessage}
-                  </p>
-                )}
-                {accountActionError && (
-                  <p className="mt-1 text-[11px] text-red-600">
-                    {accountActionError}
-                  </p>
-                )}
+                {accountActionMessage && <p className="mt-1 text-[11px] text-blue-700">{accountActionMessage}</p>}
+                {accountActionError && <p className="mt-1 text-[11px] text-red-600">{accountActionError}</p>}
               </>
             )}
           </div>
@@ -403,59 +348,38 @@ export const UserInfoCard = ({
             )}
           </div>
 
-          {notificationsLoading && (
-            <p className="text-[11px] text-gray-500">Chargement…</p>
+          {notificationsLoading && <p className="text-[11px] text-gray-500">Chargement…</p>}
+
+          {!notificationsLoading && notificationsError && <p className="text-[11px] text-red-600">{notificationsError}</p>}
+
+          {!notificationsLoading && !notificationsError && notifications.length === 0 && (
+            <p className="text-[11px] text-gray-500">Aucune notification récente.</p>
           )}
 
-          {!notificationsLoading && notificationsError && (
-            <p className="text-[11px] text-red-600">{notificationsError}</p>
+          {!notificationsLoading && !notificationsError && notifications.length > 0 && (
+            <ul className="space-y-1.5">
+              {notifications.map((notification) => (
+                <li key={notification.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleNotificationClick(notification.id, notification.url);
+                    }}
+                    className={[
+                      "w-full text-left rounded-md px-2 py-1.5 border transition-colors",
+                      notification.isRead ? "border-gray-100 bg-gray-50" : "border-primary-200 bg-primary-50/40",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs font-medium text-gray-800 line-clamp-1">{notification.title}</p>
+                      <span className="text-[10px] text-gray-500 whitespace-nowrap">{formatNotificationDate(notification.createdAt)}</span>
+                    </div>
+                    <p className="text-[11px] text-gray-600 line-clamp-2 mt-0.5">{notification.body}</p>
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
-
-          {!notificationsLoading &&
-            !notificationsError &&
-            notifications.length === 0 && (
-              <p className="text-[11px] text-gray-500">
-                Aucune notification récente.
-              </p>
-            )}
-
-          {!notificationsLoading &&
-            !notificationsError &&
-            notifications.length > 0 && (
-              <ul className="space-y-1.5">
-                {notifications.map((notification) => (
-                  <li key={notification.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void handleNotificationClick(
-                          notification.id,
-                          notification.url,
-                        );
-                      }}
-                      className={[
-                        "w-full text-left rounded-md px-2 py-1.5 border transition-colors",
-                        notification.isRead
-                          ? "border-gray-100 bg-gray-50"
-                          : "border-primary-200 bg-primary-50/40",
-                      ].join(" ")}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-xs font-medium text-gray-800 line-clamp-1">
-                          {notification.title}
-                        </p>
-                        <span className="text-[10px] text-gray-500 whitespace-nowrap">
-                          {formatNotificationDate(notification.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-600 line-clamp-2 mt-0.5">
-                        {notification.body}
-                      </p>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
         </div>
       </div>
 
@@ -466,11 +390,7 @@ export const UserInfoCard = ({
         size="md"
         footer={
           <>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setIsEmailModalOpen(false)}
-            >
+            <Button type="button" variant="secondary" onClick={() => setIsEmailModalOpen(false)}>
               Annuler
             </Button>
             <Button
@@ -487,17 +407,8 @@ export const UserInfoCard = ({
         }
       >
         <div className="space-y-2">
-          <Input
-            label="Nouvel email"
-            type="email"
-            value={newEmail}
-            onChange={(event) => setNewEmail(event.target.value)}
-            autoComplete="email"
-            required
-          />
-          <p className="text-xs text-gray-500">
-            Un email de confirmation sera envoyé à la nouvelle adresse.
-          </p>
+          <Input label="Nouvel email" type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} autoComplete="email" required />
+          <p className="text-xs text-gray-500">Un email de confirmation sera envoyé à la nouvelle adresse.</p>
         </div>
       </Modal>
 
@@ -523,20 +434,11 @@ export const UserInfoCard = ({
                 Supprimer
               </Button>
             )}
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={deleteNotificationLoading}
-              onClick={() => setSelectedNotification(null)}
-            >
+            <Button type="button" variant="secondary" disabled={deleteNotificationLoading} onClick={() => setSelectedNotification(null)}>
               Fermer
             </Button>
             {selectedNotification?.url && (
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleOpenNotificationUrl}
-              >
+              <Button type="button" variant="primary" onClick={handleOpenNotificationUrl}>
                 Ouvrir
               </Button>
             )}
@@ -545,15 +447,9 @@ export const UserInfoCard = ({
       >
         {selectedNotification && (
           <div className="space-y-3">
-            {notificationModalError && (
-              <p className="text-xs text-red-600">{notificationModalError}</p>
-            )}
-            <p className="text-xs text-gray-500">
-              {formatNotificationDate(selectedNotification.createdAt)}
-            </p>
-            <p className="text-sm text-gray-800 whitespace-pre-wrap">
-              {selectedNotification.body}
-            </p>
+            {notificationModalError && <p className="text-xs text-red-600">{notificationModalError}</p>}
+            <p className="text-xs text-gray-500">{formatNotificationDate(selectedNotification.createdAt)}</p>
+            <p className="text-sm text-gray-800 whitespace-pre-wrap">{selectedNotification.body}</p>
           </div>
         )}
       </Modal>

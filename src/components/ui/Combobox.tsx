@@ -25,27 +25,14 @@ interface ComboboxProps {
 // Component
 // ------------------------------------------------------------
 
-export const Combobox = ({
-  label,
-  value,
-  options,
-  onChange,
-  onCreate,
-  placeholder = "Rechercher…",
-  disabled = false,
-  error,
-}: ComboboxProps) => {
+export const Combobox = ({ label, value, options, onChange, onCreate, placeholder = "Rechercher…", disabled = false, error }: ComboboxProps) => {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((o) => o.id === value);
 
-  const filtered = options.filter(
-    (o) =>
-      o.label.toLowerCase().includes(search.toLowerCase()) ||
-      o.sublabel?.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()) || o.sublabel?.toLowerCase().includes(search.toLowerCase()));
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -73,10 +60,7 @@ export const Combobox = ({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
         setSearch("");
       }
@@ -87,9 +71,7 @@ export const Combobox = ({
 
   return (
     <div className="flex flex-col gap-1" ref={containerRef}>
-      {label && (
-        <label className="text-sm font-medium text-gray-700">{label}</label>
-      )}
+      {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
       <div className="relative">
         <input
           type="text"
@@ -122,26 +104,12 @@ export const Combobox = ({
         )}
         {open && (
           <ul className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-56 overflow-y-auto">
-            {filtered.length === 0 && !search.trim() && (
-              <li className="px-3 py-2 text-sm text-gray-400">
-                Commencez à taper…
-              </li>
-            )}
-            {filtered.length === 0 && search.trim() && !onCreate && (
-              <li className="px-3 py-2 text-sm text-gray-400">
-                Aucun résultat
-              </li>
-            )}
+            {filtered.length === 0 && !search.trim() && <li className="px-3 py-2 text-sm text-gray-400">Commencez à taper…</li>}
+            {filtered.length === 0 && search.trim() && !onCreate && <li className="px-3 py-2 text-sm text-gray-400">Aucun résultat</li>}
             {filtered.map((o) => (
-              <li
-                key={o.id}
-                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 flex items-baseline gap-1"
-                onMouseDown={() => handleSelect(o.id)}
-              >
+              <li key={o.id} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 flex items-baseline gap-1" onMouseDown={() => handleSelect(o.id)}>
                 <span>{o.label}</span>
-                {o.sublabel && (
-                  <span className="text-xs text-gray-400">— {o.sublabel}</span>
-                )}
+                {o.sublabel && <span className="text-xs text-gray-400">— {o.sublabel}</span>}
               </li>
             ))}
             {onCreate && search.trim() && (

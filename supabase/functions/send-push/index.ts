@@ -63,8 +63,7 @@ interface RecipientResolution {
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -72,9 +71,7 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
 const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-const vapidSubject =
-  Deno.env.get("VAPID_SUBJECT") ??
-  "mailto:notifications@lapetitemaison.guillaumebraillon.fr";
+const vapidSubject = Deno.env.get("VAPID_SUBJECT") ?? "mailto:notifications@lapetitemaison.guillaumebraillon.fr";
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
   throw new Error("SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis.");
@@ -116,29 +113,23 @@ const logInfo = (event: string, meta?: Record<string, unknown>): void => {
       level: "info",
       event,
       ...(meta ?? {}),
-    }),
+    })
   );
 };
 
-const logError = (
-  event: string,
-  error: unknown,
-  meta?: Record<string, unknown>,
-): void => {
+const logError = (event: string, error: unknown, meta?: Record<string, unknown>): void => {
   console.error(
     JSON.stringify({
       level: "error",
       event,
       error: toErrorMessage(error),
       ...(meta ?? {}),
-    }),
+    })
   );
 };
 
 const extractBearerToken = (request: Request): string | null => {
-  const authHeader =
-    request.headers.get("authorization") ??
-    request.headers.get("Authorization");
+  const authHeader = request.headers.get("authorization") ?? request.headers.get("Authorization");
   if (!authHeader) return null;
 
   const [scheme, token] = authHeader.split(" ");
@@ -186,10 +177,7 @@ const buildPayload = (request: SendPushRequest): NotificationPayload => {
       return {
         type,
         title: "Rappel séjour",
-        body:
-          request.reminderDays === 7
-            ? "Dans 7 jours : votre séjour à La Petite Maison."
-            : "Rappel : votre séjour commence demain.",
+        body: request.reminderDays === 7 ? "Dans 7 jours : votre séjour à La Petite Maison." : "Rappel : votre séjour commence demain.",
         url: request.url,
       };
     case "rental_completed":
@@ -252,10 +240,7 @@ const createAuthUsersByEmailResolver = (): AuthUsersByEmailResolver => {
   };
 };
 
-const resolveTopicRecipients = async (
-  topic: NonNullable<SendPushRequest["topic"]>,
-  getUsersByEmail: AuthUsersByEmailResolver,
-): Promise<string[]> => {
+const resolveTopicRecipients = async (topic: NonNullable<SendPushRequest["topic"]>, getUsersByEmail: AuthUsersByEmailResolver): Promise<string[]> => {
   if (topic === "owner") {
     return [];
   }
@@ -272,15 +257,10 @@ const resolveTopicRecipients = async (
   const usersByEmail = await getUsersByEmail();
   const recipients = (data as MemberRecipient[] | null) ?? [];
 
-  return recipients
-    .map((recipient) => usersByEmail.get(recipient.email.trim().toLowerCase()))
-    .filter((id): id is string => Boolean(id));
+  return recipients.map((recipient) => usersByEmail.get(recipient.email.trim().toLowerCase())).filter((id): id is string => Boolean(id));
 };
 
-const getRecipientUserIds = async (
-  request: SendPushRequest,
-  getUsersByEmail: AuthUsersByEmailResolver,
-): Promise<RecipientResolution> => {
+const getRecipientUserIds = async (request: SendPushRequest, getUsersByEmail: AuthUsersByEmailResolver): Promise<RecipientResolution> => {
   const recipients = new Set<string>();
   const unresolvedMemberEmails = new Set<string>();
 
@@ -293,10 +273,7 @@ const getRecipientUserIds = async (
   }
 
   if (request.topic) {
-    const topicRecipients = await resolveTopicRecipients(
-      request.topic,
-      getUsersByEmail,
-    );
+    const topicRecipients = await resolveTopicRecipients(request.topic, getUsersByEmail);
     topicRecipients.forEach((id) => recipients.add(id));
   }
 
@@ -317,23 +294,15 @@ const getRecipientUserIds = async (
   };
 };
 
-const removeExpiredSubscriptions = async (
-  subscriptionIds: string[],
-): Promise<void> => {
+const removeExpiredSubscriptions = async (subscriptionIds: string[]): Promise<void> => {
   if (subscriptionIds.length === 0) return;
 
-  const { error } = await supabase
-    .from("push_subscriptions")
-    .delete()
-    .in("id", subscriptionIds);
+  const { error } = await supabase.from("push_subscriptions").delete().in("id", subscriptionIds);
 
   if (error) throw error;
 };
 
-const persistUserNotifications = async (
-  userIds: string[],
-  payload: NotificationPayload,
-): Promise<void> => {
+const persistUserNotifications = async (userIds: string[], payload: NotificationPayload): Promise<void> => {
   if (userIds.length === 0) return;
 
   const rows: DbUserNotificationInsert[] = userIds.map((userId) => ({
@@ -380,11 +349,7 @@ const getCallerContext = async (request: Request): Promise<CallerContext> => {
     throw new Error("Email utilisateur introuvable.");
   }
 
-  const { data, error } = await supabase
-    .from("members")
-    .select("is_allowed")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const { data, error } = await supabase.from("members").select("is_allowed").eq("auth_user_id", user.id).maybeSingle();
 
   if (error) {
     throw error;
@@ -397,10 +362,7 @@ const getCallerContext = async (request: Request): Promise<CallerContext> => {
   };
 };
 
-const isPendingAccessRequest = (
-  request: SendPushRequest,
-  payload: NotificationPayload,
-): boolean => {
+const isPendingAccessRequest = (request: SendPushRequest, payload: NotificationPayload): boolean => {
   if (payload.type !== "request_pending") return false;
   if (request.topic !== "admins_and_owner_editors") return false;
 
@@ -453,10 +415,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
           };
 
     const getUsersByEmail = createAuthUsersByEmailResolver();
-    const recipientResolution = await getRecipientUserIds(
-      recipientRequest,
-      getUsersByEmail,
-    );
+    const recipientResolution = await getRecipientUserIds(recipientRequest, getUsersByEmail);
     const recipientUserIds = recipientResolution.userIds;
 
     logInfo("send-push.received", {
@@ -476,16 +435,13 @@ Deno.serve(async (request: Request): Promise<Response> => {
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
     await persistUserNotifications(recipientUserIds, payload);
 
-    const { data, error } = await supabase
-      .from("push_subscriptions")
-      .select("id,user_id,endpoint,p256dh,auth")
-      .in("user_id", recipientUserIds);
+    const { data, error } = await supabase.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth").in("user_id", recipientUserIds);
 
     if (error) throw error;
 
@@ -500,7 +456,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -519,7 +475,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
               },
             },
             JSON.stringify(payload),
-            { TTL: 60 },
+            { TTL: 60 }
           );
           sentCount += 1;
         } catch (error: unknown) {
@@ -535,7 +491,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
             });
           }
         }
-      }),
+      })
     );
 
     await removeExpiredSubscriptions(expiredIds);
@@ -558,11 +514,10 @@ Deno.serve(async (request: Request): Promise<Response> => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Erreur serveur send-push.";
+    const message = error instanceof Error ? error.message : "Erreur serveur send-push.";
 
     logError("send-push.unhandled", error);
 

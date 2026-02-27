@@ -13,13 +13,7 @@ interface ResetPasswordViewProps {
   success?: string | null;
 }
 
-export const ResetPasswordView = ({
-  onSubmit,
-  onContinue,
-  loading,
-  error,
-  success,
-}: ResetPasswordViewProps) => {
+export const ResetPasswordView = ({ onSubmit, onContinue, loading, error, success }: ResetPasswordViewProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
@@ -51,27 +45,13 @@ export const ResetPasswordView = ({
             <Lock size={28} className="text-primary-600" />
           </div>
           <CardTitle className="text-2xl">Nouveau mot de passe</CardTitle>
-          <p className="mt-1 text-sm text-gray-500">
-            Choisis un mot de passe securise.
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Choisis un mot de passe securise.</p>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
-          {localError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {localError}
-            </div>
-          ) : null}
-          {success ? (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
-              {success}
-            </div>
-          ) : null}
+          {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+          {localError ? <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{localError}</div> : null}
+          {success ? <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">{success}</div> : null}
 
           {!success ? (
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -89,11 +69,7 @@ export const ResetPasswordView = ({
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
-                  aria-label={
-                    showPassword
-                      ? "Masquer le mot de passe"
-                      : "Afficher le mot de passe"
-                  }
+                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -111,35 +87,17 @@ export const ResetPasswordView = ({
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
-                  aria-label={
-                    showConfirmPassword
-                      ? "Masquer le mot de passe"
-                      : "Afficher le mot de passe"
-                  }
+                  aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff size={18} />
-                  ) : (
-                    <Eye size={18} />
-                  )}
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <Button
-                type="submit"
-                loading={loading}
-                size="lg"
-                className="w-full"
-              >
+              <Button type="submit" loading={loading} size="lg" className="w-full">
                 Mettre a jour
               </Button>
             </form>
           ) : (
-            <Button
-              type="button"
-              size="lg"
-              className="w-full"
-              onClick={onContinue}
-            >
+            <Button type="button" size="lg" className="w-full" onClick={onContinue}>
               Continuer
             </Button>
           )}

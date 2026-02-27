@@ -26,12 +26,8 @@ const EmptyState = () => (
     <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
       <Users size={24} className="text-gray-400" />
     </div>
-    <p className="text-sm font-medium text-gray-500">
-      Aucun membre pour le moment
-    </p>
-    <p className="text-xs text-gray-400 mt-1">
-      Ajoutez un premier membre pour commencer.
-    </p>
+    <p className="text-sm font-medium text-gray-500">Aucun membre pour le moment</p>
+    <p className="text-xs text-gray-400 mt-1">Ajoutez un premier membre pour commencer.</p>
   </div>
 );
 
@@ -52,14 +48,10 @@ export const MemberList = ({
   if (members.length === 0) return <EmptyState />;
 
   // Construire un index id → nom pour les owners parents
-  const ownerIndex = new Map(
-    members.map((m) => [m.id, `${m.firstName} ${m.lastName}`]),
-  );
+  const ownerIndex = new Map(members.map((m) => [m.id, `${m.firstName} ${m.lastName}`]));
 
   // Tri par libellé
-  const sortedMembers = [...members].sort((a, b) =>
-    a.label.localeCompare(b.label),
-  );
+  const sortedMembers = [...members].sort((a, b) => a.label.localeCompare(b.label));
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -67,9 +59,7 @@ export const MemberList = ({
         <MemberCard
           key={member.id}
           member={member}
-          ownerName={
-            member.ownerId ? ownerIndex.get(member.ownerId) : undefined
-          }
+          ownerName={member.ownerId ? ownerIndex.get(member.ownerId) : undefined}
           canEdit={canEdit}
           canDelete={canDelete}
           canSendPasswordReset={canSendPasswordReset}

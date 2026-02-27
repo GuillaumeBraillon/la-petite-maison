@@ -70,12 +70,10 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
       setLoading(false);
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (isCancelled) return;
-        setUserId(session?.user.id ?? null);
-      },
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isCancelled) return;
+      setUserId(session?.user.id ?? null);
+    });
 
     return () => {
       isCancelled = true;

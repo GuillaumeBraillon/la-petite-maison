@@ -103,10 +103,7 @@ export const getPermissions = (member: Member | null): Permissions => {
 /**
  * Helper pour vérifier une permission spécifique
  */
-export const hasPermission = (
-  member: Member | null,
-  permission: keyof Permissions,
-): boolean => {
+export const hasPermission = (member: Member | null, permission: keyof Permissions): boolean => {
   const permissions = getPermissions(member);
   return permissions[permission];
 };
@@ -118,17 +115,12 @@ export const hasPermission = (
  * - Owner non-éditeur : ses propres locations uniquement
  * - Sub_member : ses locations + les locations de son propriétaire parent
  */
-export const isMemberRental = (
-  member: Member | null,
-  rental: Rental,
-): boolean => {
+export const isMemberRental = (member: Member | null, rental: Rental): boolean => {
   if (!member) return false;
   if (getPermissions(member).createWithAnyStatus) return true;
   if (member.role === "owner") return rental.ownerId === member.id;
   if (member.role === "sub_member") {
-    return (
-      rental.subMemberId === member.id || rental.ownerId === member.ownerId
-    );
+    return rental.subMemberId === member.id || rental.ownerId === member.ownerId;
   }
   return false;
 };

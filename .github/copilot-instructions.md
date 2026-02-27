@@ -284,38 +284,19 @@ export const fetchRentals = async (): Promise<Rental[]> => {
 // apiCrud.ts — utilise toujours les mappers avant/après appels Supabase
 
 import { supabase } from "./supabaseClient";
-import {
-  mapMemberFromDb,
-  mapMemberToDb,
-  mapRentalFromDb,
-  mapRentalToDb,
-} from "./apiMappers";
+import { mapMemberFromDb, mapMemberToDb, mapRentalFromDb, mapRentalToDb } from "./apiMappers";
 import type { Member, Rental } from "../types";
 
-export const createMember = async (
-  member: Omit<Member, "id" | "createdAt" | "updatedAt">,
-): Promise<Member> => {
+export const createMember = async (member: Omit<Member, "id" | "createdAt" | "updatedAt">): Promise<Member> => {
   const dbPayload = mapMemberToDb(member);
-  const { data, error } = await supabase
-    .from("members")
-    .insert(dbPayload)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("members").insert(dbPayload).select().single();
   if (error) throw error;
   return mapMemberFromDb(data);
 };
 
-export const updateMember = async (
-  id: string,
-  updates: Partial<Member>,
-): Promise<Member> => {
+export const updateMember = async (id: string, updates: Partial<Member>): Promise<Member> => {
   const dbPayload = mapMemberToDb(updates);
-  const { data, error } = await supabase
-    .from("members")
-    .update(dbPayload)
-    .eq("id", id)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("members").update(dbPayload).eq("id", id).select().single();
   if (error) throw error;
   return mapMemberFromDb(data);
 };
@@ -624,15 +605,7 @@ La clé publique VAPID est lue depuis `import.meta.env.VITE_VAPID_PUBLIC_KEY`.
 ### Hook `usePushNotifications`
 
 ```typescript
-const {
-  isSupported,
-  isSubscribed,
-  permission,
-  subscribe,
-  unsubscribe,
-  loading,
-  error,
-} = usePushNotifications();
+const { isSupported, isSubscribed, permission, subscribe, unsubscribe, loading, error } = usePushNotifications();
 ```
 
 Expose l'état complet de la souscription. Utilisé par `NotificationToggle`.
@@ -660,9 +633,7 @@ Gère deux événements :
 // Réception d'un push
 self.addEventListener("push", (event) => {
   const { title, body, url } = event.data.json();
-  event.waitUntil(
-    self.registration.showNotification(title, { body, data: { url } }),
-  );
+  event.waitUntil(self.registration.showNotification(title, { body, data: { url } }));
 });
 
 // Clic sur la notification

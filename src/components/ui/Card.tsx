@@ -33,13 +33,7 @@ const paddingClasses = {
 // Component
 // ------------------------------------------------------------
 
-export const Card = ({
-  children,
-  padding = "md",
-  hover = false,
-  className = "",
-  ...props
-}: CardProps) => {
+export const Card = ({ children, padding = "md", hover = false, className = "", ...props }: CardProps) => {
   const isClickable = typeof props.onClick === "function";
 
   return (
@@ -47,9 +41,7 @@ export const Card = ({
       className={[
         "bg-white rounded-xl border border-gray-200 shadow-sm",
         paddingClasses[padding],
-        hover
-          ? `hover:shadow-md transition-shadow ${isClickable ? "cursor-pointer" : ""}`
-          : "",
+        hover ? `hover:shadow-md transition-shadow ${isClickable ? "cursor-pointer" : ""}` : "",
         className,
       ].join(" ")}
       {...props}
@@ -59,31 +51,19 @@ export const Card = ({
   );
 };
 
-export const CardHeader = ({
-  children,
-  className = "",
-  ...props
-}: CardSectionProps) => (
+export const CardHeader = ({ children, className = "", ...props }: CardSectionProps) => (
   <div className={`px-6 py-4 border-b border-gray-100 ${className}`} {...props}>
     {children}
   </div>
 );
 
-export const CardTitle = ({
-  children,
-  className = "",
-  ...props
-}: CardTitleProps) => (
+export const CardTitle = ({ children, className = "", ...props }: CardTitleProps) => (
   <h3 className={`text-lg font-semibold text-gray-900 ${className}`} {...props}>
     {children}
   </h3>
 );
 
-export const CardContent = ({
-  children,
-  className = "",
-  ...props
-}: CardSectionProps) => (
+export const CardContent = ({ children, className = "", ...props }: CardSectionProps) => (
   <div className={`p-6 ${className}`} {...props}>
     {children}
   </div>

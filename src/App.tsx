@@ -117,9 +117,7 @@ const LoginScreen = ({ error }: { error?: string | null }) => {
     if (error) {
       setLoginError(error.message);
     } else {
-      setLoginInfo(
-        "Compte cree. Verifie ton email pour confirmer l'inscription.",
-      );
+      setLoginInfo("Compte cree. Verifie ton email pour confirmer l'inscription.");
     }
     setSignUpLoading(false);
   };
@@ -180,10 +178,7 @@ const AppShell = ({ session }: AppShellProps) => {
   // Helper pour filtrer les items de nav basés sur le rôle
   const getAvailableNavItems = (): NavItem[] => {
     if (!currentMember) return NAV_ITEMS.filter((item) => !item.requiredRoles);
-    return NAV_ITEMS.filter(
-      (item) =>
-        !item.requiredRoles || item.requiredRoles.includes(currentMember.role),
-    );
+    return NAV_ITEMS.filter((item) => !item.requiredRoles || item.requiredRoles.includes(currentMember.role));
   };
 
   // Vérifier si la vue actuelle est accessible
@@ -194,7 +189,7 @@ const AppShell = ({ session }: AppShellProps) => {
       if (!currentMember) return false;
       return navItem.requiredRoles.includes(currentMember.role);
     },
-    [currentMember],
+    [currentMember]
   );
 
   // Rediriger vers Calendar si la vue n'est pas accessible
@@ -235,16 +230,10 @@ const AppShell = ({ session }: AppShellProps) => {
       }
     };
 
-    navigator.serviceWorker.addEventListener(
-      "message",
-      handleServiceWorkerMessage,
-    );
+    navigator.serviceWorker.addEventListener("message", handleServiceWorkerMessage);
 
     return () => {
-      navigator.serviceWorker.removeEventListener(
-        "message",
-        handleServiceWorkerMessage,
-      );
+      navigator.serviceWorker.removeEventListener("message", handleServiceWorkerMessage);
     };
   }, [refresh]);
 
@@ -276,9 +265,7 @@ const AppShell = ({ session }: AppShellProps) => {
               onClick={() => setView(item.id)}
               className={[
                 "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium w-full text-left transition-colors",
-                view === item.id
-                  ? "bg-primary-50 text-primary-700"
-                  : "text-gray-600 hover:bg-gray-100",
+                view === item.id ? "bg-primary-50 text-primary-700" : "text-gray-600 hover:bg-gray-100",
               ].join(" ")}
             >
               {item.icon}
@@ -289,12 +276,7 @@ const AppShell = ({ session }: AppShellProps) => {
 
         {/* Profil + Sign out */}
         <div className="px-3 py-4 border-t border-gray-100 flex flex-col gap-2">
-          <UserMenu
-            session={session}
-            userEmail={session.user.email ?? undefined}
-            onLogout={handleSignOut}
-            appVersion={packageJson.version}
-          />
+          <UserMenu session={session} userEmail={session.user.email ?? undefined} onLogout={handleSignOut} appVersion={packageJson.version} />
 
           {/* install button removed per UX decision; hint shown below */}
         </div>
@@ -309,19 +291,11 @@ const AppShell = ({ session }: AppShellProps) => {
               <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
                 <Home size={16} className="text-white" />
               </div>
-              <span className="font-semibold text-gray-900 text-sm">
-                La Petite Maison
-              </span>
+              <span className="font-semibold text-gray-900 text-sm">La Petite Maison</span>
             </div>
             <div className="flex items-center gap-2">
               {/* install button removed on mobile; hint shown as fixed banner */}
-              <UserMenu
-                session={session}
-                userEmail={session.user.email ?? undefined}
-                onLogout={handleSignOut}
-                appVersion={packageJson.version}
-                compact
-              />
+              <UserMenu session={session} userEmail={session.user.email ?? undefined} onLogout={handleSignOut} appVersion={packageJson.version} compact />
             </div>
           </div>
           {loading ? (
@@ -330,37 +304,10 @@ const AppShell = ({ session }: AppShellProps) => {
             </div>
           ) : (
             <>
-              {view === "dashboard" && (
-                <DashboardPage
-                  rentals={rentals}
-                  members={members}
-                  currentMember={currentMember ?? undefined}
-                  onRefresh={refresh}
-                />
-              )}
-              {view === "rentals" && (
-                <RentalsPage
-                  rentals={rentals}
-                  members={members}
-                  currentMember={currentMember ?? undefined}
-                  onRefresh={refresh}
-                />
-              )}
-              {view === "calendar" && (
-                <CalendarPage
-                  rentals={rentals}
-                  members={members}
-                  currentMember={currentMember ?? undefined}
-                  onRefresh={refresh}
-                />
-              )}
-              {view === "members" && (
-                <MembersPage
-                  members={members}
-                  currentMember={currentMember ?? undefined}
-                  onRefresh={refresh}
-                />
-              )}
+              {view === "dashboard" && <DashboardPage rentals={rentals} members={members} currentMember={currentMember ?? undefined} onRefresh={refresh} />}
+              {view === "rentals" && <RentalsPage rentals={rentals} members={members} currentMember={currentMember ?? undefined} onRefresh={refresh} />}
+              {view === "calendar" && <CalendarPage rentals={rentals} members={members} currentMember={currentMember ?? undefined} onRefresh={refresh} />}
+              {view === "members" && <MembersPage members={members} currentMember={currentMember ?? undefined} onRefresh={refresh} />}
             </>
           )}
         </div>
@@ -392,8 +339,7 @@ const AppShell = ({ session }: AppShellProps) => {
             onClick={() => void install()}
             className="pointer-events-auto bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[11px] text-gray-600 shadow-sm cursor-pointer"
           >
-            Pour installer : appuyez sur les ••• puis « Ajouter à l’écran
-            d’accueil »
+            Pour installer : appuyez sur les ••• puis « Ajouter à l’écran d’accueil »
           </button>
         </div>
       )}
@@ -417,11 +363,7 @@ const AppRoot = () => {
   const [resetSuccess, setResetSuccess] = useState<string | null>(null);
   const [hashError, setHashError] = useState<string | null>(null);
   const { setError } = useError();
-  const {
-    isAuthorized,
-    loading: authorizationLoading,
-    error: authorizationError,
-  } = useAuthorization(session);
+  const { isAuthorized, loading: authorizationLoading, error: authorizationError } = useAuthorization(session);
 
   useEffect(() => {
     // Vérifier si le hash contient une erreur Supabase (ex: lien expiré)
@@ -431,9 +373,7 @@ const AppRoot = () => {
       const errorCode = params.get("error_code");
       const errorDesc = params.get("error_description");
       if (errorCode === "otp_expired") {
-        setHashError(
-          "Le lien de réinitialisation a expiré. Demande un nouveau lien.",
-        );
+        setHashError("Le lien de réinitialisation a expiré. Demande un nouveau lien.");
       } else if (errorDesc) {
         setHashError(decodeURIComponent(errorDesc));
       } else {
@@ -446,10 +386,7 @@ const AppRoot = () => {
     const updateLastLogin = async (sess: Session | null) => {
       try {
         if (!sess?.user?.email) return;
-        const { error } = await supabase
-          .from("members")
-          .update({ last_login: new Date().toISOString() })
-          .eq("email", sess.user.email);
+        const { error } = await supabase.from("members").update({ last_login: new Date().toISOString() }).eq("email", sess.user.email);
         if (error) {
           setError({
             message: error.message,
@@ -543,12 +480,7 @@ const AppRoot = () => {
   }
 
   if (!isAuthorized) {
-    return (
-      <UnauthorizedView
-        userEmail={session.user.email ?? undefined}
-        onLogout={handleSignOut}
-      />
-    );
+    return <UnauthorizedView userEmail={session.user.email ?? undefined} onLogout={handleSignOut} />;
   }
 
   return <AppShell session={session} />;

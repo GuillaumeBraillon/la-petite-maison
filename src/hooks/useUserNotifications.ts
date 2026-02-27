@@ -46,9 +46,7 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
 
       if (fetchError) throw fetchError;
 
-      const mapped = ((data ?? []) as DbUserNotification[]).map(
-        mapUserNotificationFromDb,
-      );
+      const mapped = ((data ?? []) as DbUserNotification[]).map(mapUserNotificationFromDb);
 
       setNotifications(mapped);
       setError(null);
@@ -73,12 +71,10 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
       setLoading(false);
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (isCancelled) return;
-        setUserId(session?.user.id ?? null);
-      },
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isCancelled) return;
+      setUserId(session?.user.id ?? null);
+    });
 
     return () => {
       isCancelled = true;
@@ -96,16 +92,10 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
       void refresh();
     };
 
-    window.addEventListener(
-      USER_NOTIFICATIONS_UPDATED_EVENT,
-      handleLocalUpdate,
-    );
+    window.addEventListener(USER_NOTIFICATIONS_UPDATED_EVENT, handleLocalUpdate);
 
     return () => {
-      window.removeEventListener(
-        USER_NOTIFICATIONS_UPDATED_EVENT,
-        handleLocalUpdate,
-      );
+      window.removeEventListener(USER_NOTIFICATIONS_UPDATED_EVENT, handleLocalUpdate);
     };
   }, [refresh]);
 
@@ -121,16 +111,10 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
       }
     };
 
-    navigator.serviceWorker.addEventListener(
-      "message",
-      handleServiceWorkerMessage,
-    );
+    navigator.serviceWorker.addEventListener("message", handleServiceWorkerMessage);
 
     return () => {
-      navigator.serviceWorker.removeEventListener(
-        "message",
-        handleServiceWorkerMessage,
-      );
+      navigator.serviceWorker.removeEventListener("message", handleServiceWorkerMessage);
     };
   }, [refresh]);
 
@@ -149,7 +133,7 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
         },
         () => {
           void refresh();
-        },
+        }
       )
       .subscribe();
 
@@ -164,41 +148,28 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
       if (!target || target.isRead) return;
 
       try {
-        const { error: updateError } = await supabase
-          .from("user_notifications")
-          .update({ is_read: true })
-          .eq("id", id);
+        const { error: updateError } = await supabase.from("user_notifications").update({ is_read: true }).eq("id", id);
 
         if (updateError) throw updateError;
 
-        setNotifications((prev) =>
-          prev.map((item) =>
-            item.id === id ? { ...item, isRead: true } : item,
-          ),
-        );
+        setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, isRead: true } : item)));
         broadcastNotificationsUpdated();
       } catch (err: unknown) {
         setError(getErrorMessage(err));
       }
     },
-    [notifications, broadcastNotificationsUpdated],
+    [notifications, broadcastNotificationsUpdated]
   );
 
   const markAllAsRead = useCallback(async (): Promise<void> => {
     if (!userId || notifications.every((item) => item.isRead)) return;
 
     try {
-      const { error: updateError } = await supabase
-        .from("user_notifications")
-        .update({ is_read: true })
-        .eq("user_id", userId)
-        .eq("is_read", false);
+      const { error: updateError } = await supabase.from("user_notifications").update({ is_read: true }).eq("user_id", userId).eq("is_read", false);
 
       if (updateError) throw updateError;
 
-      setNotifications((prev) =>
-        prev.map((item) => ({ ...item, isRead: true })),
-      );
+      setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
       broadcastNotificationsUpdated();
     } catch (err: unknown) {
       setError(getErrorMessage(err));
@@ -224,9 +195,7 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
 
         if (deleteError) throw deleteError;
         if (!data) {
-          throw new Error(
-            "Suppression impossible: notification introuvable ou non autorisée.",
-          );
+          throw new Error("Suppression impossible: notification introuvable ou non autorisée.");
         }
 
         setNotifications((prev) => prev.filter((item) => item.id !== id));
@@ -237,7 +206,7 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
         throw new Error(message);
       }
     },
-    [broadcastNotificationsUpdated, userId],
+    [broadcastNotificationsUpdated, userId]
   );
 
   return {

@@ -43,19 +43,15 @@ const formatDate = (iso: string): string =>
 // Component
 // ------------------------------------------------------------
 
-export const RentalBadge = ({
-  rental,
-  owner,
-  labelOverride,
-  cellDate,
-  onClick,
-}: RentalBadgeProps) => {
-  const ownerLabel = owner
-    ? `${owner.firstName} ${owner.lastName}`
-    : "Location";
+export const RentalBadge = ({ rental, owner, labelOverride, cellDate, onClick }: RentalBadgeProps) => {
+  // Priorité au label personnalisé, puis nom du propriétaire, puis fallback générique
+  const ownerLabel = owner ? `${owner.firstName} ${owner.lastName}` : "Location";
+  // Si le label personnalisé est identique au nom du propriétaire, on l'ignore pour éviter la redondance
   const label = labelOverride ?? ownerLabel;
+  // Calcul de la durée en jours pour l'affichage et le tooltip
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
-  const title = `${label} — ${formatDate(rental.startDate)} → ${formatDate(rental.endDate)} (${durationDays} jour${durationDays > 1 ? "s" : ""})`;
+  // Formatage de la date pour le tooltip
+  const toolTip = `${label} — ${formatDate(rental.startDate)} → ${formatDate(rental.endDate)} (${durationDays} jour${durationDays > 1 ? "s" : ""})`;
 
   // Détecter si le jour de la cellule est hors des dates réelles (location terminée avec dates réelles)
   let outsideActualReason: "arrived-late" | "left-early" | null = null;
@@ -74,17 +70,14 @@ export const RentalBadge = ({
     }
   }
 
-  const outsideTitle =
-    outsideActualReason === "arrived-late"
-      ? " (↗️ Arrivée plus tardive)"
-      : outsideActualReason === "left-early"
-        ? " (↘️ Départ anticipé)"
-        : "";
+  // Ajouter une indication dans le tooltip si la cellule est hors des dates réelles
+  const outsideToolTip =
+    outsideActualReason === "arrived-late" ? " (↗️ Arrivée plus tardive)" : outsideActualReason === "left-early" ? " (↘️ Départ anticipé)" : "";
 
   return (
     <button
       onClick={() => onClick?.(rental)}
-      title={title + outsideTitle}
+      title={toolTip + outsideToolTip}
       className={[
         "w-full text-left text-xs px-1.5 py-0.5 rounded border",
         "flex items-center gap-1",
@@ -94,23 +87,10 @@ export const RentalBadge = ({
       ].join(" ")}
     >
       {owner?.avatarUrl ? (
-        <img
-          src={owner.avatarUrl}
-          alt={label}
-          className="w-4 h-4 rounded-full object-cover border border-white/70 shrink-0"
-          referrerPolicy="no-referrer"
-        />
+        <img src={owner.avatarUrl} alt={label} className="w-4 h-4 rounded-full object-cover border border-white/70 shrink-0" referrerPolicy="no-referrer" />
       ) : null}
-      <span
-        className={["truncate", outsideActualReason ? "line-through" : ""].join(
-          " ",
-        )}
-      >
-        {label}
-      </span>
-      <span className="shrink-0 text-[10px] font-semibold">
-        {durationDays}j
-      </span>
+      <span className={["truncate", outsideActualReason ? "line-through" : ""].join(" ")}>{label}</span>
+      <span className="shrink-0 text-[10px] font-semibold">{durationDays}j</span>
     </button>
   );
 };

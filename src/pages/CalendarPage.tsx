@@ -25,12 +25,7 @@ interface CalendarPageProps {
 // Page
 // ------------------------------------------------------------
 
-export const CalendarPage = ({
-  rentals,
-  members,
-  currentMember,
-  onRefresh,
-}: CalendarPageProps) => {
+export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: CalendarPageProps) => {
   const { showToast } = useToast();
   const permissions = getPermissions(currentMember ?? null);
   const {
@@ -52,13 +47,7 @@ export const CalendarPage = ({
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
 
-  const handleCreateSubMember = async (data: {
-    firstName: string;
-    lastName: string;
-    label: string;
-    role: "sub_member";
-    ownerId?: string;
-  }) => {
+  const handleCreateSubMember = async (data: { firstName: string; lastName: string; label: string; role: "sub_member"; ownerId?: string }) => {
     try {
       const newMember = await createMember({
         firstName: data.firstName,
@@ -112,9 +101,7 @@ export const CalendarPage = ({
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Calendrier</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Vue mensuelle des locations
-        </p>
+        <p className="text-sm text-gray-500 mt-1">Vue mensuelle des locations</p>
       </div>
 
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
@@ -123,32 +110,19 @@ export const CalendarPage = ({
         rentals={rentals}
         members={members}
         onRentalClick={permissions.viewCalendarDetails ? openDetail : undefined}
-        onCreateClick={
-          permissions.createLocations ? () => openCreate() : undefined
-        }
+        onCreateClick={permissions.createLocations ? () => openCreate() : undefined}
         onDayClick={permissions.createLocations ? handleDayClick : undefined}
       />
 
       {/* Détail */}
       {permissions.viewCalendarDetails && (
-        <Modal
-          isOpen={detailOpen && selected !== null}
-          onClose={closeDetail}
-          title="Détail de la location"
-          size="lg"
-        >
+        <Modal isOpen={detailOpen && selected !== null} onClose={closeDetail} title="Détail de la location" size="lg">
           {selected && (
             <RentalDetail
               rental={selected}
               owner={memberIndex.get(selected.ownerId)}
-              subMember={
-                selected.subMemberId
-                  ? memberIndex.get(selected.subMemberId)
-                  : undefined
-              }
-              canEdit={
-                getPermissions(currentMember ?? null).createWithAnyStatus
-              }
+              subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
+              canEdit={getPermissions(currentMember ?? null).createWithAnyStatus}
               canViewPrice={isMemberRental(currentMember ?? null, selected)}
               onEdit={openEdit}
               onDelete={handleDelete}
@@ -159,31 +133,15 @@ export const CalendarPage = ({
       )}
 
       {/* Formulaire création/modification */}
-      <Modal
-        isOpen={formOpen}
-        onClose={closeForm}
-        title={
-          editing?.id ? "Modifier la location" : "Nouvelle demande de location"
-        }
-        size="lg"
-      >
+      <Modal isOpen={formOpen} onClose={closeForm} title={editing?.id ? "Modifier la location" : "Nouvelle demande de location"} size="lg">
         <RentalForm
           initialValues={editing ?? undefined}
           members={members}
-          canEdit={
-            editing?.id
-              ? getPermissions(currentMember ?? null).editLocations
-              : true
-          }
+          canEdit={editing?.id ? getPermissions(currentMember ?? null).editLocations : true}
           currentMember={currentMember}
           onSubmit={handleSubmit}
           onCancel={closeForm}
-          onCreateSubMember={
-            getPermissions(currentMember ?? null).createMembers ||
-            currentMember?.role === "owner"
-              ? handleCreateSubMember
-              : undefined
-          }
+          onCreateSubMember={getPermissions(currentMember ?? null).createMembers || currentMember?.role === "owner" ? handleCreateSubMember : undefined}
           submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
         />
       </Modal>

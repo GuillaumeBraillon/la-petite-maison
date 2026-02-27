@@ -29,9 +29,7 @@ const base64ToUint8Array = (base64: string): Uint8Array => {
 const isIosDevice = (): boolean => {
   const userAgent = window.navigator.userAgent;
   const iOSAgent = /iPad|iPhone|iPod/.test(userAgent);
-  const touchMac =
-    window.navigator.platform === "MacIntel" &&
-    window.navigator.maxTouchPoints > 1;
+  const touchMac = window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1;
   return iOSAgent || touchMac;
 };
 
@@ -40,33 +38,22 @@ const isStandalonePwa = (): boolean => {
     standalone?: boolean;
   };
 
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    navigatorWithStandalone.standalone === true
-  );
+  return window.matchMedia("(display-mode: standalone)").matches || navigatorWithStandalone.standalone === true;
 };
 
 const isPushSupported = (): boolean => {
   if (typeof window === "undefined") return false;
 
-  return (
-    "Notification" in window &&
-    "PushManager" in window &&
-    "serviceWorker" in navigator
-  );
+  return "Notification" in window && "PushManager" in window && "serviceWorker" in navigator;
 };
 
 const assertPushSupported = (): void => {
   if (!isPushSupported()) {
-    throw new Error(
-      "Les notifications push ne sont pas supportées sur ce navigateur.",
-    );
+    throw new Error("Les notifications push ne sont pas supportées sur ce navigateur.");
   }
 
   if (isIosDevice() && !isStandalonePwa()) {
-    throw new Error(
-      "Sur iOS, installez la PWA sur l'écran d'accueil pour activer les notifications.",
-    );
+    throw new Error("Sur iOS, installez la PWA sur l'écran d'accueil pour activer les notifications.");
   }
 };
 
@@ -75,9 +62,7 @@ const getCurrentSubscription = async (): Promise<PushSubscription | null> => {
   return registration.pushManager.getSubscription();
 };
 
-const extractSubscriptionKeys = (
-  subscription: PushSubscription,
-): { p256dh: string; auth: string } => {
+const extractSubscriptionKeys = (subscription: PushSubscription): { p256dh: string; auth: string } => {
   const p256dhKey = subscription.getKey("p256dh");
   const authKey = subscription.getKey("auth");
 
@@ -118,9 +103,7 @@ export const subscribeToPush = async (userId: string): Promise<void> => {
     existingSubscription ??
     (await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: base64ToUint8Array(
-        VAPID_PUBLIC_KEY,
-      ) as BufferSource,
+      applicationServerKey: base64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
     }));
 
   const { p256dh, auth } = extractSubscriptionKeys(subscription);
@@ -132,7 +115,7 @@ export const subscribeToPush = async (userId: string): Promise<void> => {
       p256dh,
       auth,
     },
-    { onConflict: "endpoint" },
+    { onConflict: "endpoint" }
   );
 
   if (error) throw error;
@@ -151,20 +134,13 @@ export const unsubscribeFromPush = async (userId: string): Promise<void> => {
   }
 
   if (endpoint) {
-    const { error } = await supabase
-      .from("push_subscriptions")
-      .delete()
-      .eq("user_id", userId)
-      .eq("endpoint", endpoint);
+    const { error } = await supabase.from("push_subscriptions").delete().eq("user_id", userId).eq("endpoint", endpoint);
 
     if (error) throw error;
     return;
   }
 
-  const { error } = await supabase
-    .from("push_subscriptions")
-    .delete()
-    .eq("user_id", userId);
+  const { error } = await supabase.from("push_subscriptions").delete().eq("user_id", userId);
 
   if (error) throw error;
 };
@@ -190,9 +166,7 @@ export const isSubscribed = async (userId: string): Promise<boolean> => {
   return data !== null;
 };
 
-export const getCurrentPushSubscriptionRecord = async (
-  userId: string,
-): Promise<PushSubscriptionRecord | null> => {
+export const getCurrentPushSubscriptionRecord = async (userId: string): Promise<PushSubscriptionRecord | null> => {
   if (!isPushSupported()) {
     return null;
   }

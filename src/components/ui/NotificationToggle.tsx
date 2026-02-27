@@ -7,19 +7,8 @@ interface NotificationToggleProps {
   compact?: boolean;
 }
 
-export const NotificationToggle = ({
-  className = "",
-  compact = false,
-}: NotificationToggleProps) => {
-  const {
-    isSupported,
-    isSubscribed,
-    permission,
-    subscribe,
-    unsubscribe,
-    loading,
-    error,
-  } = usePushNotifications();
+export const NotificationToggle = ({ className = "", compact = false }: NotificationToggleProps) => {
+  const { isSupported, isSubscribed, permission, subscribe, unsubscribe, loading, error } = usePushNotifications();
 
   const isDisabled = loading || !isSupported;
   const buttonLabel = compact
@@ -32,13 +21,7 @@ export const NotificationToggle = ({
         : "Activer les notifications"
       : "Notifications non supportées";
 
-  const stateLabel = !isSupported
-    ? "Non supporté"
-    : isSubscribed
-      ? "Activé"
-      : permission === "denied"
-        ? "Bloqué"
-        : "Désactivé";
+  const stateLabel = !isSupported ? "Non supporté" : isSubscribed ? "Activé" : permission === "denied" ? "Bloqué" : "Désactivé";
 
   const handleClick = async (): Promise<void> => {
     if (isSubscribed) {
@@ -54,11 +37,7 @@ export const NotificationToggle = ({
         type="button"
         onClick={handleClick}
         disabled={isDisabled}
-        className={[
-          "p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          className,
-        ].join(" ")}
+        className={["p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors", "disabled:opacity-50 disabled:cursor-not-allowed", className].join(" ")}
         aria-label={buttonLabel}
         title={buttonLabel}
       >
@@ -69,14 +48,7 @@ export const NotificationToggle = ({
 
   return (
     <div className={["flex flex-col gap-1", className].join(" ")}>
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={handleClick}
-        disabled={isDisabled}
-        loading={loading}
-        className="justify-start w-full"
-      >
+      <Button type="button" variant="ghost" onClick={handleClick} disabled={isDisabled} loading={loading} className="justify-start w-full">
         {isSubscribed ? <Bell size={16} /> : <BellOff size={16} />}
         {buttonLabel}
       </Button>

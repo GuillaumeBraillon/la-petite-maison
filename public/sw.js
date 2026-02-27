@@ -57,14 +57,12 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     Promise.all([
       self.registration.showNotification(payload.title, options),
-      self.clients
-        .matchAll({ type: "window", includeUncontrolled: true })
-        .then((clientsList) => {
-          for (const client of clientsList) {
-            client.postMessage({ type: "user-notifications-updated" });
-          }
-        }),
-    ]),
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientsList) => {
+        for (const client of clientsList) {
+          client.postMessage({ type: "user-notifications-updated" });
+        }
+      }),
+    ])
   );
 });
 
@@ -78,20 +76,18 @@ self.addEventListener("notificationclick", (event) => {
   const targetUrl = event.notification.data?.url || "/";
 
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientsList) => {
-        for (const client of clientsList) {
-          const url = new URL(client.url);
-          if (url.origin === self.location.origin) {
-            client.focus();
-            if ("navigate" in client) {
-              return client.navigate(targetUrl);
-            }
-            return undefined;
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientsList) => {
+      for (const client of clientsList) {
+        const url = new URL(client.url);
+        if (url.origin === self.location.origin) {
+          client.focus();
+          if ("navigate" in client) {
+            return client.navigate(targetUrl);
           }
+          return undefined;
         }
-        return self.clients.openWindow(targetUrl);
-      }),
+      }
+      return self.clients.openWindow(targetUrl);
+    })
   );
 });

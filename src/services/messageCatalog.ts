@@ -93,10 +93,7 @@ export const TOAST_MESSAGES = {
 export const PUSH_MESSAGES = {
   memberAccess: {
     pendingTitle: "Nouvel utilisateur en attente",
-    pendingBody: (params: {
-      fullName: string | null;
-      email: string;
-    }): string => {
+    pendingBody: (params: { fullName: string | null; email: string }): string => {
       const { fullName, email } = params;
       if (fullName && fullName.trim().length > 0) {
         return `${fullName} (${email}) a rejoint l'application et attend une autorisation.`;
@@ -106,36 +103,21 @@ export const PUSH_MESSAGES = {
   },
   rental: {
     newRequestTitle: "Nouvelle demande de location",
-    newRequestForEditors: (params: {
-      subMemberName: string | null;
-      ownerName: string;
-      startDate: string;
-      endDate: string;
-      guests: string;
-    }): string => {
+    newRequestForEditors: (params: { subMemberName: string | null; ownerName: string; startDate: string; endDate: string; guests: string }): string => {
       const { subMemberName, ownerName, startDate, endDate, guests } = params;
       if (subMemberName) {
         return `Nouvelle demande de ${subMemberName} via ${ownerName}, du ${startDate} au ${endDate} (${guests}). Elle est en attente de validation.`;
       }
       return `Nouvelle demande de ${ownerName}, du ${startDate} au ${endDate} (${guests}). Elle est en attente de validation.`;
     },
-    newRequestForOwner: (params: {
-      subMemberName: string | null;
-      startDate: string;
-      endDate: string;
-      guests: string;
-    }): string => {
+    newRequestForOwner: (params: { subMemberName: string | null; startDate: string; endDate: string; guests: string }): string => {
       const { subMemberName, startDate, endDate, guests } = params;
       if (subMemberName) {
         return `La demande de ${subMemberName}, du ${startDate} au ${endDate} (${guests}), est en attente de validation.`;
       }
       return `Votre demande du ${startDate} au ${endDate} (${guests}) est en attente de validation.`;
     },
-    newRequestForSubMember: (params: {
-      startDate: string;
-      endDate: string;
-      guests: string;
-    }): string => {
+    newRequestForSubMember: (params: { startDate: string; endDate: string; guests: string }): string => {
       const { startDate, endDate, guests } = params;
       return `Votre demande du ${startDate} au ${endDate} (${guests}) est en attente de validation.`;
     },
@@ -161,10 +143,7 @@ export const PUSH_MESSAGES = {
       return { demand, stay };
     },
     completedTitle: "Séjour terminé — Récapitulatif",
-    completedHeader: (params: {
-      recipient: "owner" | "sub_member";
-      subMemberName: string | null;
-    }): string => {
+    completedHeader: (params: { recipient: "owner" | "sub_member"; subMemberName: string | null }): string => {
       const { recipient, subMemberName } = params;
       if (recipient === "owner" && subMemberName) {
         return `Séjour de ${subMemberName}`;
@@ -172,23 +151,14 @@ export const PUSH_MESSAGES = {
       return "Votre séjour";
     },
     deletedTitle: "Location supprimée",
-    deletedForOwner: (params: {
-      subMemberName: string | null;
-      startDate: string;
-      endDate: string;
-      guests: string;
-    }): string => {
+    deletedForOwner: (params: { subMemberName: string | null; startDate: string; endDate: string; guests: string }): string => {
       const { subMemberName, startDate, endDate, guests } = params;
       if (subMemberName) {
         return `La location de ${subMemberName}, du ${startDate} au ${endDate} (${guests}), a été supprimée.`;
       }
       return `Votre location du ${startDate} au ${endDate} (${guests}) a été supprimée.`;
     },
-    deletedForSubMember: (params: {
-      startDate: string;
-      endDate: string;
-      guests: string;
-    }): string => {
+    deletedForSubMember: (params: { startDate: string; endDate: string; guests: string }): string => {
       const { startDate, endDate, guests } = params;
       return `Votre location du ${startDate} au ${endDate} (${guests}) a été supprimée.`;
     },

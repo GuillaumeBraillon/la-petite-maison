@@ -1,20 +1,9 @@
-import {
-  CalendarDays,
-  Users,
-  Euro,
-  Pencil,
-  Trash2,
-  User,
-  Zap,
-} from "lucide-react";
+import { CalendarDays, Users, Euro, Pencil, Trash2, User, Zap } from "lucide-react";
 import type { Rental, Member } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import {
-  RENTAL_STATUS_BADGE_VARIANT_MAP,
-  getRentalStatusLabel,
-} from "../../services/rentalStatus";
+import { RENTAL_STATUS_BADGE_VARIANT_MAP, getRentalStatusLabel } from "../../services/rentalStatus";
 
 // ------------------------------------------------------------
 // Helpers
@@ -67,26 +56,12 @@ export const RentalCard = ({
   onDelete,
 }: RentalCardProps) => {
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
-  const hasActualDates =
-    rental.status === "completed" &&
-    (rental.actualStartDate || rental.actualEndDate);
-  const datesChanged =
-    hasActualDates &&
-    (rental.actualStartDate !== rental.startDate ||
-      rental.actualEndDate !== rental.endDate);
-  const actualDurationDays = hasActualDates
-    ? getRentalDurationDays(
-        rental.actualStartDate ?? rental.startDate,
-        rental.actualEndDate ?? rental.endDate,
-      )
-    : null;
+  const hasActualDates = rental.status === "completed" && (rental.actualStartDate || rental.actualEndDate);
+  const datesChanged = hasActualDates && (rental.actualStartDate !== rental.startDate || rental.actualEndDate !== rental.endDate);
+  const actualDurationDays = hasActualDates ? getRentalDurationDays(rental.actualStartDate ?? rental.startDate, rental.actualEndDate ?? rental.endDate) : null;
 
   return (
-    <Card
-      hover={!!onClick}
-      onClick={() => onClick?.(rental)}
-      className="flex flex-col gap-3"
-    >
+    <Card hover={!!onClick} onClick={() => onClick?.(rental)} className="flex flex-col gap-3">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
@@ -110,13 +85,7 @@ export const RentalCard = ({
             </div>
           )}
           <div className="min-w-0">
-            <p className="font-semibold text-gray-900 text-sm truncate">
-              {subMember
-                ? subMember.label
-                : owner
-                  ? `${owner.firstName} ${owner.lastName}`
-                  : "—"}
-            </p>
+            <p className="font-semibold text-gray-900 text-sm truncate">{subMember ? subMember.label : owner ? `${owner.firstName} ${owner.lastName}` : "—"}</p>
             {subMember && owner && (
               <p className="text-xs text-gray-500 truncate">
                 {owner.firstName} {owner.lastName}
@@ -124,10 +93,7 @@ export const RentalCard = ({
             )}
           </div>
         </div>
-        <Badge
-          variant={RENTAL_STATUS_BADGE_VARIANT_MAP[rental.status]}
-          className="self-start sm:self-auto"
-        >
+        <Badge variant={RENTAL_STATUS_BADGE_VARIANT_MAP[rental.status]} className="self-start sm:self-auto">
           {getRentalStatusLabel(rental.status)}
         </Badge>
       </div>
@@ -143,8 +109,7 @@ export const RentalCard = ({
         <div className="flex flex-wrap items-center gap-2 text-xs text-amber-600 -mt-2">
           <CalendarDays size={13} className="shrink-0" />
           <span>
-            {formatDate(rental.actualStartDate ?? rental.startDate)} →{" "}
-            {formatDate(rental.actualEndDate ?? rental.endDate)}
+            {formatDate(rental.actualStartDate ?? rental.startDate)} → {formatDate(rental.actualEndDate ?? rental.endDate)}
           </span>
           <span className="text-[10px] opacity-70">(réel)</span>
         </div>
@@ -171,41 +136,30 @@ export const RentalCard = ({
         </span>
         {(canViewPrice || canEdit) && (
           <span className="flex items-center gap-1">
-            <Euro size={13} />{" "}
-            <span className="font-medium">Tarif location:</span>&nbsp;
+            <Euro size={13} /> <span className="font-medium">Tarif location:</span>&nbsp;
             {rental.price.toFixed(2)} €
           </span>
         )}
         {(canViewPrice || canEdit) && rental.status === "completed" && (
           <span className="flex items-center gap-1">
-            <Zap size={13} />{" "}
-            <span className="font-medium">Coût électrique:</span>&nbsp;
+            <Zap size={13} /> <span className="font-medium">Coût électrique:</span>&nbsp;
             {rental.electricityCost != null ? (
               <>
                 {rental.electricityCost.toFixed(2)} €
-                <span className="opacity-60">
-                  (
-                  {(
-                    rental.electricityCost /
-                    (actualDurationDays ?? durationDays)
-                  ).toFixed(2)}{" "}
-                  €/j)
-                </span>
+                <span className="opacity-60">({(rental.electricityCost / (actualDurationDays ?? durationDays)).toFixed(2)} €/j)</span>
               </>
             ) : (
               "—"
             )}
           </span>
         )}
-        {(canViewPrice || canEdit) &&
-          rental.status === "completed" &&
-          rental.totalPrice != null && (
-            <span className="flex items-center gap-1 font-semibold text-gray-700">
-              <Euro size={13} /> <span className="font-medium">Total:</span>
-              &nbsp;
-              {rental.totalPrice.toFixed(2)} €
-            </span>
-          )}
+        {(canViewPrice || canEdit) && rental.status === "completed" && rental.totalPrice != null && (
+          <span className="flex items-center gap-1 font-semibold text-gray-700">
+            <Euro size={13} /> <span className="font-medium">Total:</span>
+            &nbsp;
+            {rental.totalPrice.toFixed(2)} €
+          </span>
+        )}
       </div>
 
       {/* Actions */}

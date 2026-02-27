@@ -20,10 +20,7 @@ interface ErrorBoundaryState {
 // ErrorBoundary — capture les erreurs React non gérées
 // ------------------------------------------------------------
 
-export class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -44,17 +41,9 @@ export class ErrorBoundary extends Component<
       return (
         <div className="min-h-screen flex items-center justify-center bg-red-50 p-6">
           <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-2">
-              Une erreur est survenue
-            </h1>
-            <p className="text-gray-600 mb-4">
-              L&apos;application a rencontré un problème inattendu.
-            </p>
-            {this.state.error && (
-              <pre className="text-left text-xs bg-red-50 text-red-700 rounded p-3 overflow-auto mb-4">
-                {this.state.error.message}
-              </pre>
-            )}
+            <h1 className="text-2xl font-bold text-red-600 mb-2">Une erreur est survenue</h1>
+            <p className="text-gray-600 mb-4">L&apos;application a rencontré un problème inattendu.</p>
+            {this.state.error && <pre className="text-left text-xs bg-red-50 text-red-700 rounded p-3 overflow-auto mb-4">{this.state.error.message}</pre>}
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"

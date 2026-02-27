@@ -37,11 +37,7 @@ export const ErrorProvider = ({ children }: ErrorProviderProps) => {
     setErrorState(null);
   }, []);
 
-  return (
-    <ErrorContext.Provider value={{ error, setError, clearError }}>
-      {children}
-    </ErrorContext.Provider>
-  );
+  return <ErrorContext.Provider value={{ error, setError, clearError }}>{children}</ErrorContext.Provider>;
 };
 
 // ------------------------------------------------------------
@@ -52,9 +48,7 @@ export const ErrorProvider = ({ children }: ErrorProviderProps) => {
 export const useError = (): ErrorContextValue => {
   const ctx = useContext(ErrorContext);
   if (!ctx) {
-    throw new Error(
-      "useError doit être utilisé à l'intérieur d'un ErrorProvider.",
-    );
+    throw new Error("useError doit être utilisé à l'intérieur d'un ErrorProvider.");
   }
   return ctx;
 };

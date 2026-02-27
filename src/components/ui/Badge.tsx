@@ -4,13 +4,7 @@ import type { ReactNode } from "react";
 // Types
 // ------------------------------------------------------------
 
-type BadgeVariant =
-  | "default"
-  | "primary"
-  | "success"
-  | "warning"
-  | "danger"
-  | "info";
+type BadgeVariant = "default" | "primary" | "success" | "warning" | "danger" | "info";
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -35,20 +29,8 @@ const variantClasses: Record<BadgeVariant, string> = {
 // Component
 // ------------------------------------------------------------
 
-export const Badge = ({
-  variant = "default",
-  children,
-  className = "",
-}: BadgeProps) => {
+export const Badge = ({ variant = "default", children, className = "" }: BadgeProps) => {
   return (
-    <span
-      className={[
-        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-        variantClasses[variant],
-        className,
-      ].join(" ")}
-    >
-      {children}
-    </span>
+    <span className={["inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", variantClasses[variant], className].join(" ")}>{children}</span>
   );
 };

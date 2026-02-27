@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 export type ToastVariant = "success" | "error" | "info" | "warning";
@@ -34,10 +27,7 @@ interface ToastContextValue {
 const DEFAULT_DURATION_MS = 3500;
 
 const createToastId = (): string => {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
   return `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -72,12 +62,7 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
   }, []);
 
   const showToast = useCallback(
-    ({
-      message,
-      title,
-      variant = "info",
-      durationMs = DEFAULT_DURATION_MS,
-    }: ShowToastOptions): string => {
+    ({ message, title, variant = "info", durationMs = DEFAULT_DURATION_MS }: ShowToastOptions): string => {
       const id = createToastId();
 
       setToasts((prev) => [...prev, { id, message, title, variant }]);
@@ -86,14 +71,14 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
         () => {
           removeToast(id);
         },
-        Math.max(0, durationMs),
+        Math.max(0, durationMs)
       );
 
       timeoutIdsRef.current.set(id, timeoutId);
 
       return id;
     },
-    [removeToast],
+    [removeToast]
   );
 
   useEffect(() => {
@@ -107,22 +92,14 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
     };
   }, []);
 
-  return (
-    <ToastContext.Provider
-      value={{ toasts, showToast, removeToast, clearToasts }}
-    >
-      {children}
-    </ToastContext.Provider>
-  );
+  return <ToastContext.Provider value={{ toasts, showToast, removeToast, clearToasts }}>{children}</ToastContext.Provider>;
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useToast = (): ToastContextValue => {
   const ctx = useContext(ToastContext);
   if (!ctx) {
-    throw new Error(
-      "useToast doit être utilisé à l'intérieur d'un ToastProvider.",
-    );
+    throw new Error("useToast doit être utilisé à l'intérieur d'un ToastProvider.");
   }
   return ctx;
 };

@@ -1,11 +1,6 @@
 import type { RentalStatus } from "../types";
 
-export const RENTAL_STATUS_LIST: RentalStatus[] = [
-  "pending",
-  "confirmed",
-  "completed",
-  "rejected",
-];
+export const RENTAL_STATUS_LIST: RentalStatus[] = ["pending", "confirmed", "completed", "rejected"];
 
 type RentalStatusBadgeVariant = "warning" | "success" | "danger" | "default";
 
@@ -16,10 +11,7 @@ export const RENTAL_STATUS_LABEL_MAP: Record<RentalStatus, string> = {
   rejected: "Refusé",
 };
 
-export const RENTAL_STATUS_BADGE_VARIANT_MAP: Record<
-  RentalStatus,
-  RentalStatusBadgeVariant
-> = {
+export const RENTAL_STATUS_BADGE_VARIANT_MAP: Record<RentalStatus, RentalStatusBadgeVariant> = {
   pending: "warning",
   confirmed: "success",
   completed: "default",
@@ -33,13 +25,12 @@ export const RENTAL_STATUS_TEXT_COLOR_MAP: Record<RentalStatus, string> = {
   rejected: "text-red-700",
 };
 
-export const RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP: Record<RentalStatus, string> =
-  {
-    pending: "text-amber-600",
-    confirmed: "text-green-600",
-    completed: "text-gray-600",
-    rejected: "text-red-600",
-  };
+export const RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP: Record<RentalStatus, string> = {
+  pending: "text-amber-600",
+  confirmed: "text-green-600",
+  completed: "text-gray-600",
+  rejected: "text-red-600",
+};
 
 export const RENTAL_STATUS_BG_COLOR_MAP: Record<RentalStatus, string> = {
   pending: "bg-amber-100",
@@ -48,5 +39,4 @@ export const RENTAL_STATUS_BG_COLOR_MAP: Record<RentalStatus, string> = {
   rejected: "bg-red-100",
 };
 
-export const getRentalStatusLabel = (status: RentalStatus): string =>
-  RENTAL_STATUS_LABEL_MAP[status];
+export const getRentalStatusLabel = (status: RentalStatus): string => RENTAL_STATUS_LABEL_MAP[status];

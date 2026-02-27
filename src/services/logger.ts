@@ -16,8 +16,7 @@ interface Logger {
 }
 
 const isDev: boolean = import.meta.env.DEV;
-const isDebugLogsEnabled: boolean =
-  import.meta.env.VITE_ENABLE_DEBUG_LOGS === "true";
+const isDebugLogsEnabled: boolean = import.meta.env.VITE_ENABLE_DEBUG_LOGS === "true";
 
 const canUseDebugLogs = (): boolean => isDev || isDebugLogsEnabled;
 

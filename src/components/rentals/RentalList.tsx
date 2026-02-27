@@ -27,12 +27,8 @@ const EmptyState = () => (
     <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
       <CalendarX size={24} className="text-gray-400" />
     </div>
-    <p className="text-sm font-medium text-gray-500">
-      Aucune location pour le moment
-    </p>
-    <p className="text-xs text-gray-400 mt-1">
-      Ajoutez une première location pour commencer.
-    </p>
+    <p className="text-sm font-medium text-gray-500">Aucune location pour le moment</p>
+    <p className="text-xs text-gray-400 mt-1">Ajoutez une première location pour commencer.</p>
   </div>
 );
 
@@ -40,16 +36,7 @@ const EmptyState = () => (
 // Component
 // ------------------------------------------------------------
 
-export const RentalList = ({
-  rentals,
-  members,
-  currentMember,
-  canEdit = true,
-  canDelete = true,
-  onClick,
-  onEdit,
-  onDelete,
-}: RentalListProps) => {
+export const RentalList = ({ rentals, members, currentMember, canEdit = true, canDelete = true, onClick, onEdit, onDelete }: RentalListProps) => {
   if (rentals.length === 0) return <EmptyState />;
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
@@ -61,9 +48,7 @@ export const RentalList = ({
           key={rental.id}
           rental={rental}
           owner={memberIndex.get(rental.ownerId)}
-          subMember={
-            rental.subMemberId ? memberIndex.get(rental.subMemberId) : undefined
-          }
+          subMember={rental.subMemberId ? memberIndex.get(rental.subMemberId) : undefined}
           canEdit={canEdit}
           canDelete={canDelete}
           canViewPrice={isMemberRental(currentMember ?? null, rental)}
