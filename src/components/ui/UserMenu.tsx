@@ -107,8 +107,8 @@ export const UserMenu = ({ userEmail, onLogout, session, appVersion, className =
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={[
-          "flex items-center gap-2 rounded-lg transition-colors focus:outline-none",
-          compact ? "p-2 text-gray-500 hover:bg-gray-100" : "w-full px-3 py-2 border border-gray-100 hover:bg-gray-50",
+          "flex items-center gap-1 transition-colors focus:outline-none",
+          compact ? "p-2 text-gray-500 hover:bg-gray-100" : "w-full px-1 py-1 hover:bg-gray-50",
         ].join(" ")}
         aria-label={`Menu utilisateur ${primaryDisplayName}`}
         aria-expanded={isOpen}
@@ -132,7 +132,6 @@ export const UserMenu = ({ userEmail, onLogout, session, appVersion, className =
         {!compact && (
           <>
             <div className="flex flex-col items-start min-w-0 mr-1">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Connecté</span>
               <span className="text-xs font-medium text-gray-700 max-w-[130px] truncate">{primaryDisplayName}</span>
               {secondaryDisplayName && <span className="text-[10px] text-gray-500 max-w-[130px] truncate">{secondaryDisplayName}</span>}
             </div>

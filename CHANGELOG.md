@@ -7,6 +7,17 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.18] - 2026-02-27
+
+### Améliorations
+
+- **Header / Mobile** : ajout du bouton de notifications (cloche) à côté du menu utilisateur
+  dans la barre latérale et la navigation mobile
+- **Header / Mobile** : nouveau style compact arrondi (fond gris) pour le groupe
+  notifications + menu utilisateur
+- **UserMenu** : suppression du label "Connecté", réduction du padding et des espacements
+  pour un rendu plus compact
+
 ## [0.3.17] - 2026-02-27
 
 ### Améliorations

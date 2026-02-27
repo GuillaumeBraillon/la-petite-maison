@@ -20,6 +20,7 @@ import { LoginView } from "./components/Auth/LoginView";
 import { ResetPasswordView } from "./components/Auth/ResetPasswordView";
 import { UnauthorizedView } from "./components/Auth/UnauthorizedView";
 import { UserMenu } from "./components/ui/UserMenu";
+import { NotificationToggle } from "./components/ui/NotificationToggle";
 
 // ------------------------------------------------------------
 // Types
@@ -275,10 +276,9 @@ const AppShell = ({ session }: AppShellProps) => {
         </nav>
 
         {/* Profil + Sign out */}
-        <div className="px-3 py-4 border-t border-gray-100 flex flex-col gap-2">
+        <div className="flex items-center bg-gray-100 rounded-full px-1 mb-4 mx-3">
           <UserMenu session={session} userEmail={session.user.email ?? undefined} onLogout={handleSignOut} appVersion={packageJson.version} />
-
-          {/* install button removed per UX decision; hint shown below */}
+          <NotificationToggle compact className="text-gray-500 p-1.5" />
         </div>
       </aside>
 
@@ -293,9 +293,9 @@ const AppShell = ({ session }: AppShellProps) => {
               </div>
               <span className="font-semibold text-gray-900 text-sm">La Petite Maison</span>
             </div>
-            <div className="flex items-center gap-2">
-              {/* install button removed on mobile; hint shown as fixed banner */}
+            <div className="flex items-center bg-gray-100 rounded-full px-1">
               <UserMenu session={session} userEmail={session.user.email ?? undefined} onLogout={handleSignOut} appVersion={packageJson.version} compact />
+              <NotificationToggle compact className="text-gray-500 p-1.5" />
             </div>
           </div>
           {loading ? (
