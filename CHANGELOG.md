@@ -7,6 +7,24 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.14] - 2026-02-27
+
+### Améliorations
+
+- **Dashboard** : refactorisation majeure des statistiques — séparation en trois fonctions
+  (`computeRentalStats`, `computeStats`, `computeOwnerStats`) pour éviter la duplication
+  de code entre les stats globales et par propriétaire
+- **Dashboard** : amélioration des calculs (revenus, électricité, taux d'occupation, prochain séjour)
+- **Dashboard** : simplification de l'affichage des KPI cards et des styles de statut
+
+### Technique
+
+- **Notifications** : ajout de `VITE_DISABLE_PUSH_IN_DEV` pour désactiver les notifications
+  push en développement local et éviter les envois intempestifs
+- **Statuts** : ajout de `RENTAL_STATUS_BG_COLOR_MAP` et normalisation des couleurs,
+  labels et ordre d'affichage des statuts
+- Suppression des imports inutilisés et petits ajustements d'interface
+
 ## [0.3.13] — 2026-02-26
 
 ### Changed

@@ -1,8 +1,9 @@
-import { CalendarDays, Euro, Home, Clock, Zap } from "lucide-react";
+import { Euro, Clock, Zap } from "lucide-react";
 import type { Rental, Member, RentalStatus } from "../../types";
 import { KpiCard } from "./KpiCard";
 import { Card } from "../ui/Card";
 import {
+  RENTAL_STATUS_BG_COLOR_MAP,
   RENTAL_STATUS_LIST,
   RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP,
   getRentalStatusLabel,
@@ -21,21 +22,48 @@ const getDaysForRental = (rental: Rental): number => {
   return Math.max(0, diff);
 };
 
-const computeStats = (rentals: Rental[]) => {
-  const now = new Date();
-  const currentYear = now.getFullYear();
+const ACTIVE_STATUSES: RentalStatus[] = ["confirmed", "completed"];
 
-  const thisYear = rentals.filter(
-    (r) => new Date(r.startDate).getFullYear() === currentYear,
+// ------------------------------------------------------------
+// Stats communes
+// ------------------------------------------------------------
+
+const computeRentalStats = (rentals: Rental[], now: Date) => {
+  const activeRentals = rentals.filter((r) =>
+    ACTIVE_STATUSES.includes(r.status),
+  );
+  const completedRentals = rentals.filter((r) => r.status === "completed");
+  const completedWithElec = completedRentals.filter(
+    (r) => (r.electricityCost ?? 0) > 0,
   );
 
-  const totalRevenue = thisYear
-    .filter((r) => r.status === "confirmed" || r.status === "completed")
-    .reduce((sum, r) => sum + r.price, 0);
+  const count = activeRentals.length;
+
+  let days = 0;
+  for (const r of activeRentals) days += getDaysForRental(r);
+
+  let totalRevenue = 0;
+  for (const r of activeRentals) totalRevenue += r.price;
+
+  const avgRevenue = count > 0 ? totalRevenue / count : 0;
+  const subRentalCount = activeRentals.filter((r) => !!r.subMemberId).length;
+
+  let totalElectricityCost = 0;
+  for (const r of completedRentals)
+    totalElectricityCost += r.electricityCost ?? 0;
+
+  const electricityCount = completedWithElec.length;
+  const avgElectricityCostPerRental =
+    electricityCount > 0 ? totalElectricityCost / electricityCount : 0;
+
+  let completedDays = 0;
+  for (const r of completedWithElec) completedDays += getDaysForRental(r);
+
+  const avgElectricityCostPerDay =
+    completedDays > 0 ? totalElectricityCost / completedDays : 0;
 
   const pending = rentals.filter((r) => r.status === "pending").length;
 
-  // Prochain séjour confirmé à venir
   const nextRental = rentals
     .filter((r) => r.status === "confirmed" && new Date(r.startDate) > now)
     .sort(
@@ -43,50 +71,20 @@ const computeStats = (rentals: Rental[]) => {
         new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
     )[0];
 
-  const nextLabel = nextRental
+  const nextRentalDate = nextRental
     ? new Date(nextRental.startDate).toLocaleDateString("fr-FR", {
         day: "2-digit",
         month: "short",
         year: "numeric",
       })
-    : "Aucun";
+    : null;
 
-  // Taux d'occupation approximatif (jours occupés / 365)
-  const occupiedDays = thisYear
-    .filter((r) => r.status === "confirmed" || r.status === "completed")
-    .reduce((sum, r) => {
-      const start = r.actualStartDate ?? r.startDate;
-      const end = r.actualEndDate ?? r.endDate;
-      const diff =
-        (new Date(end).getTime() - new Date(start).getTime()) /
-        (1000 * 60 * 60 * 24);
-      return sum + Math.max(0, diff);
-    }, 0);
+  const nextOwnerId = nextRental?.ownerId ?? null;
+  const nextSubMemberId = nextRental?.subMemberId ?? null;
 
-  const occupancy = Math.min(100, Math.round((occupiedDays / 365) * 100));
-
-  const confirmedCompleted = thisYear.filter(
-    (r) => r.status === "confirmed" || r.status === "completed",
-  );
-
-  const totalElectricityCost = confirmedCompleted.reduce(
-    (sum, r) => sum + (r.electricityCost ?? 0),
-    0,
-  );
-
-  const confirmedCompletedCount = confirmedCompleted.length;
-
-  const avgElectricityCostPerNight =
-    occupiedDays > 0 ? totalElectricityCost / occupiedDays : 0;
-  const avgElectricityCostPerRental =
-    confirmedCompletedCount > 0
-      ? totalElectricityCost / confirmedCompletedCount
-      : 0;
-
-  // Stats par statut — dynamique
   const byStatus = RENTAL_STATUS_LIST.reduce(
     (acc, status) => {
-      const filtered = thisYear.filter((r) => r.status === status);
+      const filtered = rentals.filter((r) => r.status === status);
       acc[status] = {
         count: filtered.length,
         days: filtered.reduce((sum, r) => sum + getDaysForRental(r), 0),
@@ -97,16 +95,84 @@ const computeStats = (rentals: Rental[]) => {
   );
 
   return {
-    totalRentals: thisYear.length,
+    count,
+    days,
     totalRevenue,
+    avgRevenue,
+    subRentalCount,
     totalElectricityCost,
-    avgElectricityCostPerNight,
     avgElectricityCostPerRental,
+    avgElectricityCostPerDay,
     pending,
-    nextLabel,
-    occupancy,
+    nextRentalDate,
+    nextOwnerId,
+    nextSubMemberId,
     byStatus,
   };
+};
+
+// ------------------------------------------------------------
+// Stats globales
+// ------------------------------------------------------------
+
+const computeStats = (rentals: Rental[]) => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const daysInYear =
+    (currentYear % 4 === 0 && currentYear % 100 !== 0) ||
+    currentYear % 400 === 0
+      ? 366
+      : 365;
+
+  const rentalsThisYear = rentals.filter(
+    (r) => new Date(r.startDate).getFullYear() === currentYear,
+  );
+
+  const base = computeRentalStats(rentalsThisYear, now);
+  const occupancy = Math.min(100, Math.round((base.days / daysInYear) * 100));
+
+  return {
+    totalRentals: rentalsThisYear.length,
+    occupiedDays: base.days,
+    occupancy,
+    daysInYear,
+    currentYear,
+    now,
+    ...base,
+  };
+};
+
+// ------------------------------------------------------------
+// Stats par owner
+// ------------------------------------------------------------
+
+const computeOwnerStats = (
+  rentals: Rental[],
+  members: Member[],
+  currentYear: number,
+  now: Date,
+  daysInYear: number,
+) => {
+  return members
+    .filter((m) => m.role === "owner")
+    .map((owner) => {
+      const ownerRentals = rentals.filter(
+        (r) =>
+          r.ownerId === owner.id &&
+          new Date(r.startDate).getFullYear() === currentYear,
+      );
+      const base = computeRentalStats(ownerRentals, now);
+      const nextSubMember = base.nextSubMemberId
+        ? members.find((m) => m.id === base.nextSubMemberId)
+        : null;
+      const nextSubMemberLabel = nextSubMember?.label ?? null;
+      const occupancy = Math.min(
+        100,
+        Math.round((base.days / daysInYear) * 100),
+      );
+      return { owner, ...base, nextSubMemberLabel, occupancy };
+    })
+    .sort((a, b) => b.count - a.count);
 };
 
 // ------------------------------------------------------------
@@ -127,232 +193,164 @@ export const DashboardStats = ({
   members: _members,
 }: DashboardStatsProps) => {
   const stats = computeStats(rentals);
-  const currentYear = new Date().getFullYear();
+  const ownerStats = computeOwnerStats(
+    rentals,
+    _members,
+    stats.currentYear,
+    stats.now,
+    stats.daysInYear,
+  );
 
-  // Calculer et trier les stats par propriétaire (nombre de locations décroissant)
-  const ownerStats = _members
-    .filter((m) => m.role === "owner")
-    .map((owner) => {
-      const ownerRentals = rentals.filter(
-        (r) =>
-          r.ownerId === owner.id &&
-          new Date(r.startDate).getFullYear() === currentYear,
-      );
-      const count = ownerRentals.length;
-      const days = ownerRentals.reduce(
-        (sum, r) => sum + getDaysForRental(r),
-        0,
-      );
-      const totalRevenue = ownerRentals.reduce((sum, r) => sum + r.price, 0);
-      const avgRevenue = count > 0 ? totalRevenue / count : 0;
-      const subRentalCount = ownerRentals.filter((r) => !!r.subMemberId).length;
-      const totalElectricity = ownerRentals.reduce(
-        (sum, r) => sum + (r.electricityCost ?? 0),
-        0,
-      );
-      const electricityCount = ownerRentals.filter(
-        (r) =>
-          r.electricityCost !== undefined &&
-          r.electricityCost !== null &&
-          r.electricityCost > 0,
-      ).length;
-      const avgElectricity =
-        electricityCount > 0 ? totalElectricity / electricityCount : 0;
-      const electricityDays = ownerRentals
-        .filter(
-          (r) =>
-            r.electricityCost !== undefined &&
-            r.electricityCost !== null &&
-            r.electricityCost > 0,
-        )
-        .reduce((sum, r) => sum + getDaysForRental(r), 0);
-      const avgElectricityPerDay =
-        electricityDays > 0 ? totalElectricity / electricityDays : 0;
-
-      // Stats par statut pour ce propriétaire
-      const byStatus = RENTAL_STATUS_LIST.reduce(
-        (acc, status) => {
-          const filtered = ownerRentals.filter((r) => r.status === status);
-          acc[status] = {
-            count: filtered.length,
-            days: filtered.reduce((sum, r) => sum + getDaysForRental(r), 0),
-          };
-          return acc;
-        },
-        {} as Record<RentalStatus, { count: number; days: number }>,
-      );
-
-      return {
-        owner,
-        count,
-        days,
-        totalRevenue,
-        avgRevenue,
-        subRentalCount,
-        totalElectricity,
-        avgElectricity,
-        avgElectricityPerDay,
-        byStatus,
-      };
-    })
-    .sort((a, b) => b.count - a.count);
+  const nextSubMember = stats.nextSubMemberId
+    ? _members.find((m) => m.id === stats.nextSubMemberId)
+    : null;
+  const nextOwner = _members.find((m) => m.id === stats.nextOwnerId);
+  const nextMemberName = nextSubMember
+    ? `${nextSubMember.label} (${nextOwner?.firstName ?? ""})`
+    : (nextOwner?.firstName ?? "Aucun");
 
   return (
     <div>
-      {/* Par statut */}
+      {/* Stats globales */}
       <div className="mt-4 mb-4 rounded-xl border border-primary-100 bg-primary-50 p-3">
+        {/* Header avec année + stats globales */}
         <h3 className="text-sm font-semibold text-primary-800">
-          Locations ({currentYear})
+          {stats.currentYear}
         </h3>
+        <p className="text-xs text-gray-500">
+          {stats.totalRentals} location{stats.totalRentals > 1 ? "s" : ""} —{" "}
+          {Math.round(stats.occupiedDays)} jour
+          {Math.round(stats.occupiedDays) > 1 ? "s" : ""} — Taux
+          d&apos;occupation {`${stats.occupancy} %`}
+        </p>
+
+        {/* Detail par statut */}
         <div className="grid grid-cols-4 gap-2 mt-2">
-          {RENTAL_STATUS_LIST.map((status) => {
-            return (
-              <div
-                key={status}
-                className="rounded border border-primary-100 bg-white p-2 text-center"
+          {RENTAL_STATUS_LIST.map((status) => (
+            <div
+              key={status}
+              className={`rounded border border-primary-100 ${RENTAL_STATUS_BG_COLOR_MAP[status]} p-2 text-center`}
+            >
+              <p className="text-[10px] text-gray-600 mb-1">
+                {getRentalStatusLabel(status)}
+              </p>
+              <p
+                className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}
               >
-                <p className="text-[10px] text-gray-600 mb-1">
-                  {getRentalStatusLabel(status)}
-                </p>
-                <p
-                  className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}
-                >
-                  {stats.byStatus[status].count}
-                </p>
-                <p className="text-[10px] text-gray-500">
-                  {Math.round(stats.byStatus[status].days)}j
-                </p>
-              </div>
-            );
-          })}
+                {stats.byStatus[status].count}
+              </p>
+              <p className="text-[10px] text-gray-500">
+                {Math.round(stats.byStatus[status].days)}j
+              </p>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+
+      {/* KPI globaux */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
-          label={`Locations (${currentYear})`}
-          value={stats.totalRentals}
-          icon={<CalendarDays size={18} />}
+          label="Prochain sejour"
+          value={stats.nextRentalDate ?? "Aucun"}
+          icon={<Clock size={18} />}
+          trend={nextMemberName}
+          trendUp={true}
         />
         <KpiCard
-          label={`Revenus (${currentYear})`}
+          label={`Revenus (${stats.currentYear})`}
           value={`${stats.totalRevenue.toFixed(0)} €`}
           icon={<Euro size={18} />}
+          trend="(Confirmées et Terminées)"
+          trendUp={true}
         />
         <KpiCard
-          label={`Coût électrique (${currentYear})`}
-          value={`${stats.totalElectricityCost.toFixed(2)} €`}
+          label={`Cout electrique (${stats.currentYear})`}
+          value={`${stats.totalElectricityCost.toFixed(0)} €`}
           icon={<Zap size={18} />}
+          trend={`${stats.avgElectricityCostPerRental.toFixed(0)} € / location`}
+          trendUp={true}
         />
         <KpiCard
-          label="Conso élec / nuit"
-          value={`${stats.avgElectricityCostPerNight.toFixed(2)} €`}
+          label="Moy. elec. / jour"
+          value={`${stats.avgElectricityCostPerDay.toFixed(2)} €`}
           icon={<Zap size={18} />}
-        />
-        <KpiCard
-          label="Conso élec / location"
-          value={`${stats.avgElectricityCostPerRental.toFixed(2)} €`}
-          icon={<Zap size={18} />}
-        />
-        <KpiCard
-          label="Taux d'occupation"
-          value={`${stats.occupancy} %`}
-          icon={<Home size={18} />}
-          trend={stats.occupancy > 50 ? "Bonne occupation" : undefined}
-          trendUp={stats.occupancy > 50}
-        />
-        <KpiCard
-          label="Prochain séjour"
-          value={stats.nextLabel}
-          icon={<Clock size={18} />}
-          trend={
-            stats.pending > 0
-              ? `${stats.pending} demande${stats.pending > 1 ? "s" : ""} en attente`
-              : undefined
-          }
-          trendUp={false}
         />
       </div>
 
-      {/* Par propriétaire */}
+      {/* Par proprietaire */}
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-gray-700">
-          Par propriétaire ({currentYear})
+          Par proprietaire ({stats.currentYear})
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
-          {ownerStats.map((s) => (
-            <Card key={s.owner.id} className="p-3">
+          {ownerStats.map((ownerStats) => (
+            <Card key={ownerStats.owner.id} className="p-3">
+              {/* Header avec nom + stats globales */}
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {s.owner.firstName} {s.owner.lastName}
+                    {ownerStats.owner.firstName}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {s.count} location{s.count > 1 ? "s" : ""} —{" "}
-                    {Math.round(s.days)} jour{Math.round(s.days) > 1 ? "s" : ""}
+                    {ownerStats.count} location{ownerStats.count > 1 ? "s" : ""}{" "}
+                    — {Math.round(ownerStats.days)} jour
+                    {Math.round(ownerStats.days) > 1 ? "s" : ""} — Taux
+                    d&apos;occupation {`${ownerStats.occupancy} %`}
                   </p>
                 </div>
               </div>
-              {/* Détail par statut */}
-              <div className=" mb-3">
+
+              {/* Detail par statut */}
+              <div className="mb-3">
                 <div className="grid grid-cols-4 gap-2">
-                  {RENTAL_STATUS_LIST.map((status) => {
-                    return (
-                      <div
-                        key={status}
-                        className="bg-gray-50 rounded p-2 text-center"
+                  {RENTAL_STATUS_LIST.map((status) => (
+                    <div
+                      key={status}
+                      className={`${RENTAL_STATUS_BG_COLOR_MAP[status]} rounded p-2 text-center`}
+                    >
+                      <p className="text-[10px] text-gray-600 mb-1">
+                        {getRentalStatusLabel(status)}
+                      </p>
+                      <p
+                        className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}
                       >
-                        <p className="text-[10px] text-gray-600 mb-1">
-                          {getRentalStatusLabel(status)}
-                        </p>
-                        <p
-                          className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}
-                        >
-                          {s.byStatus[status].count}
-                        </p>
-                        <p className="text-[10px] text-gray-500">
-                          {Math.round(s.byStatus[status].days)}j
-                        </p>
-                      </div>
-                    );
-                  })}
+                        {ownerStats.byStatus[status].count}
+                      </p>
+                      <p className="text-[10px] text-gray-500">
+                        {Math.round(ownerStats.byStatus[status].days)}j
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
+
+              {/* KPIs */}
               <div className="grid grid-cols-2 gap-3">
                 <KpiCard
-                  compact
-                  label="Revenus totaux"
-                  value={`${s.totalRevenue.toFixed(0)} €`}
-                  icon={<Euro size={16} />}
+                  label="Prochain sejour"
+                  value={ownerStats.nextRentalDate ?? "Aucun"}
+                  icon={<Clock size={18} />}
+                  trend={ownerStats.nextSubMemberLabel ?? ""}
+                  trendUp={true}
                 />
                 <KpiCard
-                  compact
-                  label="Revenu moyen"
-                  value={`${s.avgRevenue.toFixed(2)} €`}
-                  icon={<Euro size={16} />}
+                  label={`Revenus`}
+                  value={`${ownerStats.totalRevenue.toFixed(0)} €`}
+                  icon={<Euro size={18} />}
+                  trend="(Confirmées et Terminées)"
+                  trendUp={true}
                 />
                 <KpiCard
-                  compact
-                  label="Sous location"
-                  value={s.subRentalCount}
-                  icon={<Home size={16} />}
+                  label={`Cout electrique`}
+                  value={`${ownerStats.totalElectricityCost.toFixed(0)} €`}
+                  icon={<Zap size={18} />}
+                  trend={`${ownerStats.avgElectricityCostPerRental.toFixed(0)} € / location`}
+                  trendUp={true}
                 />
                 <KpiCard
-                  compact
-                  label="Conso totale"
-                  value={`${s.totalElectricity.toFixed(2)} €`}
-                  icon={<Zap size={16} />}
-                />
-                <KpiCard
-                  compact
-                  label="Conso moyenne"
-                  value={`${s.avgElectricity.toFixed(2)} €`}
-                  icon={<Zap size={16} />}
-                />
-                <KpiCard
-                  compact
-                  label="Conso / jour"
-                  value={`${s.avgElectricityPerDay.toFixed(2)} €`}
-                  icon={<Zap size={16} />}
+                  label="Moy. elec. / jour"
+                  value={`${ownerStats.avgElectricityCostPerDay.toFixed(2)} €`}
+                  icon={<Zap size={18} />}
                 />
               </div>
             </Card>

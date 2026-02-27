@@ -19,6 +19,18 @@ import {
   notifyDeletedRental,
 } from "./rentalNotifications";
 
+const isLocalEnv = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  const explicitToggle = import.meta.env.VITE_DISABLE_PUSH_IN_DEV === "true";
+  return (
+    import.meta.env.DEV ||
+    explicitToggle ||
+    host === "localhost" ||
+    host === "127.0.0.1"
+  );
+};
+
 // ------------------------------------------------------------
 // Member CRUD
 // ------------------------------------------------------------
@@ -110,7 +122,7 @@ export const createRental = async (
   if (error) throw error;
 
   const created = mapRentalFromDb(data as DbRental);
-  void notifyNewRental(created);
+  if (!isLocalEnv()) void notifyNewRental(created);
   return created;
 };
 
@@ -133,9 +145,9 @@ export const updateRental = async (
 
   if (updates.status !== undefined) {
     if (updates.status === "completed") {
-      void notifyCompleted(updated);
+      if (!isLocalEnv()) void notifyCompleted(updated);
     } else {
-      void notifyStatusChange(updated, previousStatus);
+      if (!isLocalEnv()) void notifyStatusChange(updated, previousStatus);
     }
   }
 
@@ -156,5 +168,5 @@ export const deleteRental = async (id: string): Promise<void> => {
   if (error) throw error;
 
   const deletedRental = mapRentalFromDb(existingData as DbRental);
-  void notifyDeletedRental(deletedRental);
+  if (!isLocalEnv()) void notifyDeletedRental(deletedRental);
 };
