@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { UserCircle, Mail, LogOut } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
-import { NotificationToggle } from "./NotificationToggle";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
 import { Input } from "./Input";
@@ -253,20 +252,18 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
 
   return (
     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
-      <div className="relative flex items-center justify-end gap-2">
-        <p className="absolute left-1/2 -translate-x-1/2 text-[10px] text-gray-400">{appVersion ? `Version : ${appVersion}` : ""}</p>
-        <div className="flex items-center gap-1">
-          <NotificationToggle compact className="text-gray-500 p-1.5" />
-          <button
-            type="button"
-            onClick={onLogout}
-            className="inline-flex items-center justify-center p-1.5 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="Déconnexion"
-            title="Déconnexion"
-          >
-            <LogOut size={13} />
-          </button>
-        </div>
+      <div className="relative flex items-center justify-end">
+        {appVersion && <p className="absolute left-1/2 -translate-x-1/2 text-[10px] text-gray-400">v{appVersion}</p>}
+        <button
+          type="button"
+          onClick={onLogout}
+          className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 transition-colors"
+          aria-label="Déconnexion"
+          title="Déconnexion"
+        >
+          <LogOut size={13} />
+          Déconnexion
+        </button>
       </div>
 
       <div className="space-y-3">
@@ -325,6 +322,7 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
           </div>
         </div>
 
+        {/* Notifications */}
         <div className="pt-2 border-t border-gray-100 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="text-xs font-medium text-gray-600">

@@ -7,6 +7,16 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.19] - 2026-02-27
+
+### Améliorations
+
+- **Notifications** : amélioration du bouton de la cloche — transition de couleur au survol
+  et animation fluide de l'icône
+- **UserInfoCard** : simplification de l'en-tête, version affichée uniquement si disponible
+  (format `v1.0.0`), bouton de déconnexion avec label et style mis à jour
+- **UserMenu** : ajustement du positionnement du dropdown en mode compact
+
 ## [0.3.18] - 2026-02-27
 
 ### Améliorations

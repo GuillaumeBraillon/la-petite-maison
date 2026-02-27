@@ -37,11 +37,17 @@ export const NotificationToggle = ({ className = "", compact = false }: Notifica
         type="button"
         onClick={handleClick}
         disabled={isDisabled}
-        className={["p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors", "disabled:opacity-50 disabled:cursor-not-allowed", className].join(" ")}
+        className={["p-2 rounded-lg text-gray-500 hover:text-gray-900 transition-colors", "disabled:opacity-50 disabled:cursor-not-allowed", className].join(
+          " "
+        )}
         aria-label={buttonLabel}
         title={buttonLabel}
       >
-        {isSubscribed ? <Bell size={18} /> : <BellOff size={18} />}
+        {isSubscribed ? (
+          <Bell size={18} className="transition-all group-hover:stroke-[2.5]" />
+        ) : (
+          <BellOff size={18} className="transition-all group-hover:stroke-[2.5]" />
+        )}
       </button>
     );
   }

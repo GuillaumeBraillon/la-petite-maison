@@ -87,7 +87,7 @@ export const UserMenu = ({ userEmail, onLogout, session, appVersion, className =
     }
   }, [isOpen]);
 
-  const dropdownPositionClass = compact ? "top-full mt-2 right-0" : "bottom-full mb-2 left-0";
+  const dropdownPositionClass = compact ? "top-full mt-2 right-0 pl-2" : "bottom-full mb-2 left-0";
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
