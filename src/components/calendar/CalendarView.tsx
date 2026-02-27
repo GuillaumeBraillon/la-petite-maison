@@ -100,41 +100,45 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
   });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       {/* Navigation */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold text-gray-900 capitalize">{monthLabel}</h2>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+      <div className="flex items-center justify-between">
+        {/* Navigation mois */}
+        <div className="flex items-center">
+          <Button variant="secondary" size="sm" onClick={prevMonth} aria-label="Mois précédent">
+            <ChevronLeft size={16} />
+          </Button>
+          <h2 className="text-lg font-semibold text-gray-900 capitalize w-36 text-center">{monthLabel}</h2>
+          <Button variant="secondary" size="sm" onClick={nextMonth} aria-label="Mois suivant">
+            <ChevronRight size={16} />
+          </Button>
+        </div>
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setYear(today.getFullYear());
+              setMonth(today.getMonth());
+            }}
+          >
+            Aujourd&apos;hui
+          </Button>
           {onCreateClick && (
-            <Button onClick={onCreateClick} className="w-full sm:w-auto">
+            <Button onClick={onCreateClick} className="hidden sm:flex">
               <PlusCircle size={16} /> Nouvelle location
             </Button>
           )}
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" onClick={prevMonth} aria-label="Mois précédent">
-              <ChevronLeft size={16} />
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                setYear(today.getFullYear());
-                setMonth(today.getMonth());
-              }}
-            >
-              Aujourd&apos;hui
-            </Button>
-            <Button variant="secondary" size="sm" onClick={nextMonth} aria-label="Mois suivant">
-              <ChevronRight size={16} />
-            </Button>
-          </div>
         </div>
       </div>
 
       {/* Liste mobile */}
-      <div className="md:hidden flex flex-col gap-3">
+      <div className="md:hidden flex flex-col gap-1">
         {monthDays.map((day) => {
           const dayRentals = getRentalsForDay(day, rentals);
+          console.log("Is same day?", isSameDay(day, today));
+
           return (
             <div
               key={day.toISOString()}
@@ -149,16 +153,13 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
               role={onDayClick ? "button" : undefined}
               tabIndex={onDayClick ? 0 : -1}
               className={[
-                "rounded-lg border border-gray-200 bg-white p-3 flex flex-col gap-2",
-                onDayClick ? "cursor-pointer hover:bg-primary-50 transition-colors" : "",
+                "rounded-lg border p-2 flex flex-col",
+                isSameDay(day, today) ? "bg-primary-50 border-primary-300" : "bg-white border-gray-200",
+                onDayClick ? "cursor-pointer hover:bg-primary-100 transition-colors" : "",
               ].join(" ")}
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-gray-900">{formatDayLabel(day)}</p>
-                <span className="text-xs text-gray-500">
-                  {dayRentals.length} location
-                  {dayRentals.length !== 1 ? "s" : ""}
-                </span>
               </div>
               {dayRentals.length > 0 ? (
                 <div className="flex flex-col gap-1" onClick={(event) => event.stopPropagation()}>

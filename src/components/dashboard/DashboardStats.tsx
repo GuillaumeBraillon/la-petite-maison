@@ -2,7 +2,13 @@ import { Euro, Clock, Zap } from "lucide-react";
 import type { Rental, Member, RentalStatus } from "../../types";
 import { KpiCard } from "./KpiCard";
 import { Card } from "../ui/Card";
-import { RENTAL_STATUS_BG_COLOR_MAP, RENTAL_STATUS_LIST, RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP, getRentalStatusLabel } from "../../services/rentalStatus";
+import {
+  RENTAL_STATUS_BG_COLOR_MAP,
+  RENTAL_STATUS_LIST,
+  RENTAL_STATUS_TEXT_COLOR_MAP,
+  RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP,
+  getRentalStatusLabel,
+} from "../../services/rentalStatus";
 
 // ------------------------------------------------------------
 // Helpers
@@ -159,9 +165,9 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
   const nextMemberName = nextSubMember ? `${nextSubMember.label} (${nextOwner?.firstName ?? ""})` : (nextOwner?.firstName ?? "Aucun");
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       {/* Stats globales */}
-      <div className="mt-4 mb-4 rounded-xl border border-primary-100 bg-primary-50 p-3">
+      <div className="rounded-xl border border-primary-100 bg-primary-50 p-3">
         {/* Header avec année + stats globales */}
         <h3 className="text-sm font-semibold text-primary-800">{stats.currentYear}</h3>
         <p className="text-xs text-gray-500">
@@ -170,12 +176,14 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
         </p>
 
         {/* Detail par statut */}
-        <div className="grid grid-cols-4 gap-2 mt-2">
+        <div className="grid grid-cols-4 gap-2">
           {RENTAL_STATUS_LIST.map((status) => (
             <div key={status} className={`rounded border border-primary-100 ${RENTAL_STATUS_BG_COLOR_MAP[status]} p-2 text-center`}>
-              <p className="text-[10px] text-gray-600 mb-1">{getRentalStatusLabel(status)}</p>
-              <p className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}>{stats.byStatus[status].count}</p>
-              <p className="text-[10px] text-gray-500">{Math.round(stats.byStatus[status].days)}j</p>
+              <p className={`text-[10px] ${RENTAL_STATUS_TEXT_COLOR_MAP[status]} mb-1`}>{getRentalStatusLabel(status)}</p>
+              <p className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}>
+                {stats.byStatus[status].count} location{stats.byStatus[status].count > 1 ? "s" : ""}
+                <span className="text-[10px] font-normal text-gray-400"> ({Math.round(stats.byStatus[status].days)} jours)</span>
+              </p>
             </div>
           ))}
         </div>
@@ -202,13 +210,13 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
       </div>
 
       {/* Par proprietaire */}
-      <div className="mt-6">
+      <div>
         <h3 className="text-sm font-semibold text-gray-700">Par proprietaire ({stats.currentYear})</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-1">
           {ownerStats.map((ownerStats) => (
-            <Card key={ownerStats.owner.id} className="p-3">
+            <Card key={ownerStats.owner.id} padding="sm" className="flex flex-col gap-2">
               {/* Header avec nom + stats globales */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-900">{ownerStats.owner.firstName}</p>
                   <p className="text-xs text-gray-500">
@@ -219,26 +227,27 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
               </div>
 
               {/* Detail par statut */}
-              <div className="mb-3">
-                <div className="grid grid-cols-4 gap-2">
-                  {RENTAL_STATUS_LIST.map((status) => (
-                    <div key={status} className={`${RENTAL_STATUS_BG_COLOR_MAP[status]} rounded p-2 text-center`}>
-                      <p className="text-[10px] text-gray-600 mb-1">{getRentalStatusLabel(status)}</p>
-                      <p className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}>{ownerStats.byStatus[status].count}</p>
-                      <p className="text-[10px] text-gray-500">{Math.round(ownerStats.byStatus[status].days)}j</p>
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-4 gap-1">
+                {RENTAL_STATUS_LIST.map((status) => (
+                  <div key={status} className={`rounded border border-primary-100 ${RENTAL_STATUS_BG_COLOR_MAP[status]} p-1 text-center`}>
+                    <p className={`text-[10px] ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]} mb-1`}>{getRentalStatusLabel(status)}</p>
+                    <p className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}>
+                      {stats.byStatus[status].count}
+                      <span className="text-[10px] font-normal text-gray-400"> ({Math.round(stats.byStatus[status].days)}j)</span>
+                    </p>
+                  </div>
+                ))}
               </div>
 
               {/* KPIs */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-1">
                 <KpiCard
                   label="Prochain sejour"
                   value={ownerStats.nextRentalDate ?? "Aucun"}
                   icon={<Clock size={18} />}
                   trend={ownerStats.nextSubMemberLabel ?? ""}
                   trendUp={true}
+                  compact
                 />
                 <KpiCard
                   label={`Revenus`}
@@ -246,6 +255,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
                   icon={<Euro size={18} />}
                   trend="(Confirmées et Terminées)"
                   trendUp={true}
+                  compact
                 />
                 <KpiCard
                   label={`Cout electrique`}
@@ -253,8 +263,9 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
                   icon={<Zap size={18} />}
                   trend={`${ownerStats.avgElectricityCostPerRental.toFixed(0)} € / location`}
                   trendUp={true}
+                  compact
                 />
-                <KpiCard label="Moy. elec. / jour" value={`${ownerStats.avgElectricityCostPerDay.toFixed(2)} €`} icon={<Zap size={18} />} />
+                <KpiCard label="Moy. elec. / jour" value={`${ownerStats.avgElectricityCostPerDay.toFixed(2)} €`} icon={<Zap size={18} />} compact />
               </div>
             </Card>
           ))}

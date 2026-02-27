@@ -7,6 +7,26 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.17] - 2026-02-27
+
+### Améliorations
+
+- **Calendrier** : refonte de la navigation (disposition des boutons précédent/suivant/aujourd'hui),
+  mise en évidence du jour courant, masquage du bouton "Nouvelle location" sur mobile
+- **Dashboard** : resserrement des tuiles de statut avec affichage du nombre et des jours,
+  compactage des cartes propriétaire et KPI
+- **MemberCard** : refonte complète de la mise en page (en-tête, badges, email, adresse,
+  propriétaire, dernière connexion), actions déplacées en pied de carte,
+  ajout du bouton de réinitialisation de mot de passe
+- **RentalCard** : refactorisation de la mise en page (avatars, badge de statut, lignes
+  date/durée/infos), réorganisation de l'affichage tarif/électricité/total
+- **Pages** : réduction des espacements verticaux sur Dashboard, Calendar, Members et Rentals
+
+### Technique
+
+- `App.tsx` : ajustement du padding du conteneur principal
+- Améliorations purement présentationnelles — aucun changement de comportement
+
 ## [0.3.16] - 2026-02-27
 
 ### Améliorations

@@ -104,7 +104,8 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Cal
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Calendrier</h1>
         <p className="text-sm text-gray-500 mt-1">Vue mensuelle des locations</p>

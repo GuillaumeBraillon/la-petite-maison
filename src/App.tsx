@@ -284,7 +284,7 @@ const AppShell = ({ session }: AppShellProps) => {
 
       {/* Main */}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 pb-24 md:pb-8">
+        <div className="max-w-6xl px-4 md:px-6 py-6 md:py-8 pb-24">
           {/* Mobile header */}
           <div className="md:hidden flex items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-2">
