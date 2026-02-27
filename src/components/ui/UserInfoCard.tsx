@@ -286,7 +286,7 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
                   {roleLabel && (
                     <div className="text-[11px] text-gray-500 leading-tight mt-0.5">
                       Rôle : {roleLabel}
-                      {isOwnerEditor ? " · Éditeur" : ""}
+                      {isOwnerEditor ? " · Validateur" : ""}
                     </div>
                   )}
                 </div>

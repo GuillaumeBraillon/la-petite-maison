@@ -279,13 +279,13 @@ export const MembersPage = ({ members, currentMember, onRefresh }: MembersPagePr
           },
           {
             id: "isEditor",
-            label: "Éditeur",
+            label: "Validateur",
             type: "select",
             value: isEditorFilter,
             options: [
-              { value: "all", label: "Tous (éditeur)" },
-              { value: "yes", label: "Éditeur" },
-              { value: "no", label: "Non éditeur" },
+              { value: "all", label: "Tous" },
+              { value: "yes", label: "Validateur" },
+              { value: "no", label: "Demandeur" },
             ],
             onChange: (v: string) => setIsEditorFilter(v as BoolFilter),
           },

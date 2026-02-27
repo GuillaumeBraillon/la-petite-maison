@@ -197,7 +197,7 @@ export const MemberForm = ({
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={values.isEditor} onChange={(e) => set("isEditor", e.target.checked)} className="w-4 h-4 cursor-pointer" />
-            <span className="text-sm font-medium text-gray-700">Peut éditer les locations et les membres</span>
+            <span className="text-sm font-medium text-gray-700">Peut valider les locations et les membres</span>
           </label>
           <p className="text-xs text-gray-500 mt-1 ml-7">Si décoché : accès en lecture seule</p>
         </div>

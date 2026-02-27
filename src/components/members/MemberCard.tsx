@@ -92,7 +92,7 @@ export const MemberCard = ({
         <Badge variant={member.isAllowed ? "success" : "warning"}>{member.isAllowed ? "Accès autorisé" : "Accès non autorisé"}</Badge>
         <Badge variant="default">{roleLabelMap[member.role]}</Badge>
 
-        {member.isEditor && <Badge variant="primary">Éditeur</Badge>}
+        {member.isEditor && <Badge variant="primary">Validateur</Badge>}
       </div>
 
       {/* Info */}

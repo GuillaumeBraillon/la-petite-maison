@@ -197,7 +197,7 @@ src/
 
 ### 👤 Carte utilisateur
 
-- Affichage du rôle (`Admin`, `Propriétaire`, `Membre`) et badge `Éditeur` si applicable
+- Affichage du rôle (`Admin`, `Propriétaire`, `Membre`) et badge `Validateur` si applicable
 - Centre de notifications (liste, lecture, marquer lu, suppression)
 - Comptes Google OAuth : pas d'actions changement email/mot de passe
 - Comptes email/password : changement email + envoi de réinitialisation mot de passe

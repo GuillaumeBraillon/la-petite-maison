@@ -3,6 +3,7 @@ import { CalendarView } from "../components/calendar/CalendarView";
 import { RentalDetail } from "../components/rentals/RentalDetail";
 import { RentalForm } from "../components/rentals/RentalForm";
 import { Modal } from "../components/ui/Modal";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
 import { getPermissions, isMemberRental } from "../services/permissions";
@@ -33,6 +34,9 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Cal
     detailOpen,
     editing,
     selected,
+    rentalToDelete,
+    deletingRental,
+    deleteConfirmationOpen,
     error,
     openCreate,
     openEdit,
@@ -42,6 +46,8 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Cal
     clearError,
     handleSubmit,
     handleDelete,
+    cancelDelete,
+    confirmDelete,
     handleStatusChange,
   } = useRentalModals(onRefresh);
 
@@ -145,6 +151,22 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Cal
           submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
         />
       </Modal>
+      <ConfirmDialog
+        isOpen={deleteConfirmationOpen}
+        title="Confirmer la suppression"
+        message={`Supprimer cette location${
+          rentalToDelete
+            ? ` du ${new Date(rentalToDelete.startDate).toLocaleDateString("fr-FR")} au ${new Date(rentalToDelete.endDate).toLocaleDateString("fr-FR")}`
+            : ""
+        } ?`}
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          void confirmDelete();
+        }}
+        onCancel={cancelDelete}
+        loading={deletingRental}
+      />
     </div>
   );
 };

@@ -618,7 +618,7 @@ Bouton Bell/BellOff dans `UserInfoCard`. Affiche l'état d'abonnement et permet 
 
 Règles d'implémentation :
 
-- Afficher le rôle membre (`Admin` / `Propriétaire` / `Membre`) et `Éditeur` si `role=owner && isEditor=true`
+- Afficher le rôle membre (`Admin` / `Propriétaire` / `Membre`) et `Validateur` si `role=owner && isEditor=true`
 - Comptes Google OAuth : **ne pas** afficher les actions "Changer l'email" / "Changer le mot de passe"
 - Comptes email/password : autoriser changement d'email (modale) et reset mot de passe (email de réinitialisation)
 - Modal notification : autoriser la suppression (`deleteNotification`) avec état `loading`

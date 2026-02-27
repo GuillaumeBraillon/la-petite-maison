@@ -7,6 +7,16 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.16] - 2026-02-27
+
+### Améliorations
+
+- **Terminologie** : renommage de "Éditeur" en "Validateur" dans toute l'interface
+  (MemberCard, MemberForm, UserInfoCard, MembersPage, README, CHANGELOG et instructions Copilot)
+- **Membres** : mise à jour des labels du filtre (Tous / Validateur / Demandeur)
+- **Calendrier** : ajout d'une boîte de confirmation à la suppression d'une location
+  avec aperçu des dates formatées et gestion de l'état de chargement
+
 ## [0.3.15] - 2026-02-27
 
 ### Améliorations
@@ -111,7 +121,7 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 ### Added
 
 - **User Card — gestion du compte** :
-  - Affichage du rôle du membre dans `UserInfoCard` (`Admin`, `Propriétaire`, `Membre`) avec indicateur `Éditeur` pour les owners éditeurs.
+  - Affichage du rôle du membre dans `UserInfoCard` (`Admin`, `Propriétaire`, `Membre`) avec indicateur `Validateur` pour les owners éditeurs.
   - Actions compte pour les comptes email/password : changement d’email (modale) + envoi de lien de réinitialisation mot de passe.
   - Suppression d’une notification depuis la modale de détail (`Supprimer`) avec état `loading`.
 
@@ -687,8 +697,8 @@ Notes:
 
 - **Membres — flag `isEditor`**
   - Champ `isEditor: boolean` (non optionnel, `false` par défaut) sur les owners
-  - Badge "Éditeur" dans `MemberCard` si `isEditor = true`
-  - Case à cocher "Éditeur" dans `MemberForm`, visible uniquement pour `role = owner`
+  - Badge "Validateur" dans `MemberCard` si `isEditor = true`
+  - Case à cocher "Validateur" dans `MemberForm`, visible uniquement pour `role = owner`
   - Reset automatique de `isEditor` à `false` si le rôle passe de `owner` à autre chose (formulaire + mapper)
 
 - **Création inline de membre depuis `RentalForm`**

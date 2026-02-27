@@ -36,7 +36,7 @@ export interface Member {
   address?: string;
   /** Lien vers le propriétaire parent (pour sub_member) */
   ownerId?: string;
-  /** Pour role="owner" : true = peut éditer locations&membres, false = lecture seule */
+  /** Pour role="owner" : true = peut valider locations&membres, false = lecture seule */
   isEditor: boolean;
   createdAt: string;
   updatedAt: string;
