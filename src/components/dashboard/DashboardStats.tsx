@@ -232,8 +232,8 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
                   <div key={status} className={`rounded border border-primary-100 ${RENTAL_STATUS_BG_COLOR_MAP[status]} p-1 text-center`}>
                     <p className={`text-[10px] ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]} mb-1`}>{getRentalStatusLabel(status)}</p>
                     <p className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}>
-                      {stats.byStatus[status].count}
-                      <span className="text-[10px] font-normal text-gray-400"> ({Math.round(stats.byStatus[status].days)}j)</span>
+                      {ownerStats.byStatus[status].count}
+                      <span className="text-[10px] font-normal text-gray-400"> ({Math.round(ownerStats.byStatus[status].days)}j)</span>
                     </p>
                   </div>
                 ))}
