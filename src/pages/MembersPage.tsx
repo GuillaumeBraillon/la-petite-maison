@@ -254,24 +254,24 @@ export const MembersPage = ({ members, currentMember, onRefresh }: MembersPagePr
       <FilterBar
         controls={[
           {
-            id: "role",
-            label: "Rôle",
+            id: "profil",
+            label: "Profil",
             type: "select",
             value: roleFilter,
             options: [
-              { value: "all", label: "Tous les rôles" },
+              { value: "all", label: "Tous profils" },
               { value: "owner", label: "Propriétaires" },
-              { value: "sub_member", label: "Membres" },
+              { value: "sub_member", label: "Famille & Amis" },
             ],
             onChange: (v: string) => setRoleFilter(v as RoleOption),
           },
           {
             id: "isAllowed",
-            label: "Autorisé",
+            label: "Connexion",
             type: "select",
             value: isAllowedFilter,
             options: [
-              { value: "all", label: "Tous (autorisation)" },
+              { value: "all", label: "Toutes connexions" },
               { value: "yes", label: "Autorisé" },
               { value: "no", label: "Non autorisé" },
             ],
@@ -279,11 +279,11 @@ export const MembersPage = ({ members, currentMember, onRefresh }: MembersPagePr
           },
           {
             id: "isEditor",
-            label: "Validateur",
+            label: "Rôle",
             type: "select",
             value: isEditorFilter,
             options: [
-              { value: "all", label: "Tous" },
+              { value: "all", label: "Tous rôles" },
               { value: "yes", label: "Validateur" },
               { value: "no", label: "Demandeur" },
             ],

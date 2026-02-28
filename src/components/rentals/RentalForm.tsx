@@ -346,9 +346,9 @@ export const RentalForm = ({
         ))}
       </Select>
 
-      {/* Membre */}
+      {/* Famille & Amis */}
       <Combobox
-        label="Membre"
+        label="Famille & Amis"
         value={values.subMemberId ?? ""}
         options={subMemberOptions}
         onChange={(id) => {

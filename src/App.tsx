@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { LayoutDashboard, Users, CalendarDays, List, Home } from "lucide-react";
+import { LayoutDashboard, Users, CalendarDays, List } from "lucide-react";
 import type { Member, Rental } from "./types";
 import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
@@ -248,14 +248,8 @@ const AppShell = ({ session }: AppShellProps) => {
       <aside className="hidden md:flex md:w-56 bg-white border-r border-gray-200 flex-col shrink-0 overflow-visible relative z-30">
         {/* Logo */}
         <div className="flex items-center gap-2 px-5 py-5 border-b border-gray-100">
-          <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
-            <Home size={16} className="text-white" />
-          </div>
-          <span className="font-bold text-gray-900 text-sm leading-tight">
-            La Petite
-            <br />
-            Maison
-          </span>
+          <img src="/icon-192.png" alt="La Petite Maison" className="w-8 h-8 rounded-lg object-cover" />
+          <span className="font-bold text-gray-900 text-sm leading-tight">La Petite Maison</span>
         </div>
 
         {/* Nav */}
@@ -288,9 +282,7 @@ const AppShell = ({ session }: AppShellProps) => {
           {/* Mobile header */}
           <div className="md:hidden flex items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
-                <Home size={16} className="text-white" />
-              </div>
+              <img src="/icon-192.png" alt="La Petite Maison" className="w-8 h-8 rounded-lg object-cover" />
               <span className="font-semibold text-gray-900 text-sm">La Petite Maison</span>
             </div>
             <div className="flex items-center bg-gray-100 rounded-full px-1">

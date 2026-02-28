@@ -3,16 +3,7 @@ import type { Member } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-
-// ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
-
-const roleLabelMap: Record<Member["role"], string> = {
-  admin: "Admin",
-  owner: "Propriétaire",
-  sub_member: "Membre",
-};
+import { MEMBER_ROLE_BADGE_VARIANT_MAP, MEMBER_ROLE_LABEL_MAP } from "../../services/memberStatus";
 
 // ------------------------------------------------------------
 // Props
@@ -79,7 +70,7 @@ export const MemberCard = ({
         {/* Badges */}
         <div className="flex flex-wrap gap-1.5">
           <Badge variant={member.isAllowed ? "success" : "warning"}>{member.isAllowed ? "Accès autorisé" : "Accès non autorisé"}</Badge>
-          <Badge variant="default">{roleLabelMap[member.role]}</Badge>
+          <Badge variant={MEMBER_ROLE_BADGE_VARIANT_MAP[member.role]}>{MEMBER_ROLE_LABEL_MAP[member.role]}</Badge>
 
           {member.isEditor && <Badge variant="primary">Validateur</Badge>}
         </div>

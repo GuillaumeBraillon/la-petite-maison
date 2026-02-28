@@ -7,6 +7,25 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.20] - 2026-02-28
+
+### Améliorations
+
+- **Logo** : remplacement des icônes SVG par `/icon-192.png` dans le header desktop et mobile
+- **Membres** : centralisation des rôles dans `services/memberStatus.ts` (labels, badges,
+  couleurs) et utilisation dans MemberCard, MemberForm et UserInfoCard
+- **Membres** : rôle par défaut changé en `sub_member` à la création
+- **Dashboard** : tri des cartes propriétaire par date du prochain séjour
+- **Dashboard** : ajustements de mise en page (grille, espacement des KPI et tuiles de statut)
+- **Filtres** : harmonisation des labels membres et locations
+  (Tous profils, Tous rôles, Famille & Amis, Tous statuts, Tous propriétaires)
+
+### Technique
+
+- Ajout de `services/memberStatus.ts` — source de vérité pour les rôles membres
+- Exposition de `nextRentalTimestamp` dans `computeRentalStats` pour le tri par date
+- Suppression des assets SVG inutilisés
+
 ## [0.3.19] - 2026-02-27
 
 ### Améliorations

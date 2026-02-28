@@ -9,12 +9,8 @@ import { useUserNotifications } from "../../hooks/useUserNotifications";
 import { useToast } from "../../contexts/ToastContext";
 import { TOAST_MESSAGES } from "../../services/messageCatalog";
 import type { UserNotification, MemberRole } from "../../types";
-
-const roleLabelMap: Record<MemberRole, string> = {
-  admin: "Admin",
-  owner: "Propriétaire",
-  sub_member: "Membre",
-};
+import { MEMBER_ROLE_BADGE_VARIANT_MAP, MEMBER_ROLE_LABEL_MAP } from "../../services/memberStatus";
+import { Badge } from "./Badge";
 
 interface MemberIdentityRow {
   first_name: string | null;
@@ -63,8 +59,6 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
   const userEmail = sessionUser?.email;
   const primaryDisplayName = memberLabel || userName || null;
   const secondaryDisplayName = memberFullName && memberFullName !== primaryDisplayName ? memberFullName : null;
-  const roleLabel = memberRole ? roleLabelMap[memberRole] : null;
-  const isOwnerEditor = memberRole === "owner" && memberIsEditor;
   const authProvider = typeof sessionUser?.app_metadata?.provider === "string" ? sessionUser.app_metadata.provider : null;
   const isGoogleAccount = authProvider === "google";
 
@@ -280,12 +274,8 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
                     {primaryDisplayName}
                     {secondaryDisplayName && <span className="font-normal text-gray-500">{` · ${secondaryDisplayName}`}</span>}
                   </div>
-                  {roleLabel && (
-                    <div className="text-[11px] text-gray-500 leading-tight mt-0.5">
-                      Rôle : {roleLabel}
-                      {isOwnerEditor ? " · Validateur" : ""}
-                    </div>
-                  )}
+                  {memberRole && <Badge variant={MEMBER_ROLE_BADGE_VARIANT_MAP[memberRole]}>{MEMBER_ROLE_LABEL_MAP[memberRole]}</Badge>}
+                  {memberIsEditor && <Badge variant="primary">Validateur</Badge>}
                 </div>
               )}
             </div>

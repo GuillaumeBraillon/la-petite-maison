@@ -4,6 +4,7 @@ import type { Member, MemberRole } from "../../types";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Button } from "../ui/Button";
+import { MEMBER_ROLE_LABEL_MAP, MEMBER_ROLE_LIST } from "../../services/memberStatus";
 
 // ------------------------------------------------------------
 // Props
@@ -32,7 +33,7 @@ const defaultValues: MemberFormValues = {
   label: "",
   firstName: "",
   lastName: "",
-  role: "owner",
+  role: "sub_member",
   isEditor: false,
   email: "",
   address: "",
@@ -171,9 +172,11 @@ export const MemberForm = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select label="Rôle" value={values.role} onChange={(e) => set("role", e.target.value as MemberRole)} disabled={!canEdit} required>
-          <option value="admin">Admin</option>
-          <option value="owner">Propriétaire</option>
-          <option value="sub_member">Membre</option>
+          {MEMBER_ROLE_LIST.map((role) => (
+            <option key={role} value={role}>
+              {MEMBER_ROLE_LABEL_MAP[role]}
+            </option>
+          ))}
         </Select>
       </div>
 

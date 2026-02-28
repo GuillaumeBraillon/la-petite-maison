@@ -64,7 +64,7 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: Rent
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>("all");
 
-  const ownerOptions = [{ value: "all", label: "Tous les propriétaires" }].concat(
+  const ownerOptions = [{ value: "all", label: "Tous propriétaires" }].concat(
     members
       .filter((m) => m.role === "owner")
       .map((m) => ({
@@ -136,7 +136,7 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: Rent
             type: "select",
             value: statusFilter,
             options: [
-              { value: "all", label: "Tous (statut)" },
+              { value: "all", label: "Tous statuts" },
               ...RENTAL_STATUS_LIST.map((s) => ({
                 value: s,
                 label: getRentalStatusLabel(s),

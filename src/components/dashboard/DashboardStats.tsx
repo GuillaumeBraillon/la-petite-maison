@@ -68,6 +68,8 @@ const computeRentalStats = (rentals: Rental[], now: Date) => {
       })
     : null;
 
+  const nextRentalTimestamp = nextRental ? new Date(nextRental.startDate).getTime() : null;
+
   const nextOwnerId = nextRental?.ownerId ?? null;
   const nextSubMemberId = nextRental?.subMemberId ?? null;
 
@@ -94,6 +96,7 @@ const computeRentalStats = (rentals: Rental[], now: Date) => {
     avgElectricityCostPerDay,
     pending,
     nextRentalDate,
+    nextRentalTimestamp,
     nextOwnerId,
     nextSubMemberId,
     byStatus,
@@ -140,7 +143,12 @@ const computeOwnerStats = (rentals: Rental[], members: Member[], currentYear: nu
       const occupancy = Math.min(100, Math.round((base.days / daysInYear) * 100));
       return { owner, ...base, nextSubMemberLabel, occupancy };
     })
-    .sort((a, b) => b.count - a.count);
+    .sort((a, b) => {
+      if (!a.nextRentalTimestamp && !b.nextRentalTimestamp) return 0;
+      if (!a.nextRentalTimestamp) return 1;
+      if (!b.nextRentalTimestamp) return -1;
+      return a.nextRentalTimestamp - b.nextRentalTimestamp;
+    });
 };
 
 // ------------------------------------------------------------
@@ -176,7 +184,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
         </p>
 
         {/* Detail par statut */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 mt-1">
           {RENTAL_STATUS_LIST.map((status) => (
             <div key={status} className={`rounded border border-primary-100 ${RENTAL_STATUS_BG_COLOR_MAP[status]} p-2 text-center`}>
               <p className={`text-[10px] ${RENTAL_STATUS_TEXT_COLOR_MAP[status]} mb-1`}>{getRentalStatusLabel(status)}</p>
@@ -190,7 +198,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
       </div>
 
       {/* KPI globaux */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard label="Prochain sejour" value={stats.nextRentalDate ?? "Aucun"} icon={<Clock size={18} />} trend={nextMemberName} trendUp={true} />
         <KpiCard
           label={`Revenus (${stats.currentYear})`}
@@ -210,66 +218,62 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
       </div>
 
       {/* Par proprietaire */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700">Par proprietaire ({stats.currentYear})</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-1">
-          {ownerStats.map((ownerStats) => (
-            <Card key={ownerStats.owner.id} padding="sm" className="flex flex-col gap-2">
-              {/* Header avec nom + stats globales */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{ownerStats.owner.firstName}</p>
-                  <p className="text-xs text-gray-500">
-                    {ownerStats.count} location{ownerStats.count > 1 ? "s" : ""} — {Math.round(ownerStats.days)} jour
-                    {Math.round(ownerStats.days) > 1 ? "s" : ""} — Taux d&apos;occupation {`${ownerStats.occupancy} %`}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {ownerStats.map((ownerStats) => (
+          <Card key={ownerStats.owner.id} padding="sm" className="flex flex-col gap-2">
+            {/* Header avec nom + stats globales */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900">{ownerStats.owner.firstName}</p>
+                <p className="text-xs text-gray-500">
+                  {ownerStats.count} loc. - {Math.round(ownerStats.days)} j - Occ. {`${ownerStats.occupancy} %`}
+                </p>
+              </div>
+            </div>
+
+            {/* Detail par statut */}
+            <div className="grid grid-cols-4 gap-1">
+              {RENTAL_STATUS_LIST.map((status) => (
+                <div key={status} className={`rounded border border-primary-100 ${RENTAL_STATUS_BG_COLOR_MAP[status]} p-0.5 text-center`}>
+                  <p className={`text-[10px] ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]} mb-1`}>{getRentalStatusLabel(status)}</p>
+                  <p className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}>
+                    {ownerStats.byStatus[status].count}
+                    <span className="text-[10px] font-normal text-gray-400"> ({Math.round(ownerStats.byStatus[status].days)}j)</span>
                   </p>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              {/* Detail par statut */}
-              <div className="grid grid-cols-4 gap-1">
-                {RENTAL_STATUS_LIST.map((status) => (
-                  <div key={status} className={`rounded border border-primary-100 ${RENTAL_STATUS_BG_COLOR_MAP[status]} p-1 text-center`}>
-                    <p className={`text-[10px] ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]} mb-1`}>{getRentalStatusLabel(status)}</p>
-                    <p className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}>
-                      {ownerStats.byStatus[status].count}
-                      <span className="text-[10px] font-normal text-gray-400"> ({Math.round(ownerStats.byStatus[status].days)}j)</span>
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* KPIs */}
-              <div className="grid grid-cols-2 gap-1">
-                <KpiCard
-                  label="Prochain sejour"
-                  value={ownerStats.nextRentalDate ?? "Aucun"}
-                  icon={<Clock size={18} />}
-                  trend={ownerStats.nextSubMemberLabel ?? ""}
-                  trendUp={true}
-                  compact
-                />
-                <KpiCard
-                  label={`Revenus`}
-                  value={`${ownerStats.totalRevenue.toFixed(0)} €`}
-                  icon={<Euro size={18} />}
-                  trend="(Confirmées et Terminées)"
-                  trendUp={true}
-                  compact
-                />
-                <KpiCard
-                  label={`Cout electrique`}
-                  value={`${ownerStats.totalElectricityCost.toFixed(0)} €`}
-                  icon={<Zap size={18} />}
-                  trend={`${ownerStats.avgElectricityCostPerRental.toFixed(0)} € / location`}
-                  trendUp={true}
-                  compact
-                />
-                <KpiCard label="Moy. elec. / jour" value={`${ownerStats.avgElectricityCostPerDay.toFixed(2)} €`} icon={<Zap size={18} />} compact />
-              </div>
-            </Card>
-          ))}
-        </div>
+            {/* KPIs */}
+            <div className="grid grid-cols-2 gap-1">
+              <KpiCard
+                label="Prochain sejour"
+                value={ownerStats.nextRentalDate ?? "Aucun"}
+                icon={<Clock size={18} />}
+                trend={ownerStats.nextSubMemberLabel ?? ""}
+                trendUp={true}
+                compact
+              />
+              <KpiCard
+                label={`Revenus`}
+                value={`${ownerStats.totalRevenue.toFixed(0)} €`}
+                icon={<Euro size={18} />}
+                trend="(Confirmées et Terminées)"
+                trendUp={true}
+                compact
+              />
+              <KpiCard
+                label={`Cout electrique`}
+                value={`${ownerStats.totalElectricityCost.toFixed(0)} €`}
+                icon={<Zap size={18} />}
+                trend={`${ownerStats.avgElectricityCostPerRental.toFixed(0)} € / location`}
+                trendUp={true}
+                compact
+              />
+              <KpiCard label="Moy. elec. / jour" value={`${ownerStats.avgElectricityCostPerDay.toFixed(2)} €`} icon={<Zap size={18} />} compact />
+            </div>
+          </Card>
+        ))}
       </div>
     </div>
   );
