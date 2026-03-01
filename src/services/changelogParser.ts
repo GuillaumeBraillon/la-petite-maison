@@ -71,3 +71,29 @@ export const parseVersionFromRaw = (raw: string, version: string): ParsedChangel
  * Raccourci : extrait une version depuis CHANGELOG.md (changelog technique).
  */
 export const parseChangelogForVersion = (version: string): ParsedChangelog | null => parseVersionFromRaw(changelog, version);
+
+/**
+ * Extrait toutes les versions d'un fichier brut qui sont plus récentes que `lastSeenVersion`.
+ * Les versions sont retournées du plus récent au plus ancien.
+ * - Si `lastSeenVersion` est null → première visite → retourne uniquement la version la plus récente
+ * - Si `lastSeenVersion` n'est pas trouvé dans le fichier (très ancienne version) → retourne uniquement la plus récente
+ */
+export const parseVersionsAfterFromRaw = (raw: string, lastSeenVersion: string | null): ParsedChangelog[] => {
+  const allVersionMatches = [...raw.matchAll(/^## \[([0-9]+\.[0-9]+\.[0-9]+)\]/gm)];
+  const allVersions = allVersionMatches.map((m) => m[1]);
+
+  if (allVersions.length === 0) return [];
+
+  if (!lastSeenVersion) {
+    const entry = parseVersionFromRaw(raw, allVersions[0]);
+    return entry ? [entry] : [];
+  }
+
+  const lastSeenIndex = allVersions.indexOf(lastSeenVersion);
+  const versionsToShow = lastSeenIndex <= 0 ? [allVersions[0]] : allVersions.slice(0, lastSeenIndex);
+
+  return versionsToShow.flatMap((v) => {
+    const entry = parseVersionFromRaw(raw, v);
+    return entry ? [entry] : [];
+  });
+};

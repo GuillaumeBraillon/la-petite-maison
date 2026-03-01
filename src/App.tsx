@@ -173,7 +173,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const [loading, setLoading] = useState(true);
   const { error, clearError, setError } = useError();
   const { install, isInstallable } = usePWAInstall();
-  const { shouldShow: showWhatsNew, entry: whatsNewEntry, dismiss: dismissWhatsNew } = useWhatsNew();
+  const { shouldShow: showWhatsNew, entries: whatsNewEntries, dismiss: dismissWhatsNew } = useWhatsNew();
 
   const currentMember = members.find((m) => m.email === session.user.email);
 
@@ -341,7 +341,7 @@ const AppShell = ({ session }: AppShellProps) => {
       {error && <ErrorModal error={error} onClose={clearError} />}
 
       {/* Modal Nouveautés — affichée une seule fois par version */}
-      {showWhatsNew && whatsNewEntry && <WhatsNewModal entry={whatsNewEntry} onDismiss={dismissWhatsNew} />}
+      {showWhatsNew && <WhatsNewModal entries={whatsNewEntries} onDismiss={dismissWhatsNew} />}
     </div>
   );
 };

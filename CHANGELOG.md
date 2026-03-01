@@ -7,6 +7,25 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.24] - 2026-03-01
+
+### Améliorations
+
+- **Modal "Nouveautés"** : affiche désormais toutes les versions non vues depuis la dernière ouverture
+  — si l'utilisateur n'a pas ouvert l'app depuis plusieurs mises à jour, toutes les entrées sont empilées dans une seule modal
+- **Modal "Nouveautés"** : en-tête de version (`vX.Y.Z · date`) affiché pour chaque bloc quand plusieurs versions sont présentes
+- **Dashboard** : menu accessible à tous les rôles (suppression de la restriction `requiredRoles`)
+
+### Technique
+
+- `src/services/changelogParser.ts` — ajout de `parseVersionsAfterFromRaw(raw, lastSeenVersion)` :
+  extrait toutes les versions plus récentes que la dernière vue ; première visite → uniquement la plus récente
+- `src/services/whatsNewParser.ts` — ajout de `parseWhatsNewVersionsAfter(lastSeenVersion)`
+- `src/hooks/useWhatsNew.ts` — retourne `entries: ParsedChangelog[]` au lieu de `entry`
+- `src/components/ui/WhatsNewModal.tsx` — acceptance de `entries[]`, rendu conditionnel mono/multi-versions
+
+---
+
 ## [0.3.23] - 2026-03-01
 
 ### Améliorations

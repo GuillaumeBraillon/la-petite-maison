@@ -4,14 +4,14 @@
 
 import { useState } from "react";
 import packageJson from "../../package.json";
-import { parseWhatsNewForVersion } from "../services/whatsNewParser";
+import { parseWhatsNewVersionsAfter } from "../services/whatsNewParser";
 import type { ParsedChangelog } from "../services/changelogParser";
 
 const STORAGE_KEY = "whats_new_last_seen_version";
 
 interface UseWhatsNewReturn {
   shouldShow: boolean;
-  entry: ParsedChangelog | null;
+  entries: ParsedChangelog[];
   dismiss: () => void;
 }
 
@@ -20,7 +20,7 @@ export const useWhatsNew = (): UseWhatsNewReturn => {
   const lastSeenVersion = localStorage.getItem(STORAGE_KEY);
 
   const isNewVersion = lastSeenVersion !== currentVersion;
-  const entry = isNewVersion ? parseWhatsNewForVersion(currentVersion) : null;
+  const entries = isNewVersion ? parseWhatsNewVersionsAfter(lastSeenVersion) : [];
 
   const [dismissed, setDismissed] = useState(false);
 
@@ -30,8 +30,8 @@ export const useWhatsNew = (): UseWhatsNewReturn => {
   };
 
   return {
-    shouldShow: isNewVersion && entry !== null && !dismissed,
-    entry,
+    shouldShow: isNewVersion && entries.length > 0 && !dismissed,
+    entries,
     dismiss,
   };
 };

@@ -5,7 +5,7 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
-## [0.3.23] - 1 mars 2026
+## [0.3.24] - 1 mars 2026
 
 ### Ce qui change pour vous
 
