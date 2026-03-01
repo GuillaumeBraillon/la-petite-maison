@@ -7,6 +7,23 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.23] - 2026-03-01
+
+### Améliorations
+
+- **Dashboard** : section "Par propriétaire" désormais accessible aux `sub_member`
+  — affiche uniquement la carte de leur owner parent
+- **Dashboard** : section "Par propriétaire" filtrée selon le rôle :
+  admin / owner éditeur → toutes les cartes ;
+  owner non-éditeur → sa carte uniquement ;
+  sub_member → carte de son owner parent uniquement
+- **Dashboard** : grille en `grid-cols-1` pour owner non-éditeur et sub_member
+  (une seule carte à afficher)
+- **Locations** : filtre propriétaire pré-sélectionné selon le rôle au chargement :
+  owner → sa propre fiche ; sub_member → owner parent ; admin → tous
+
+---
+
 ## [0.3.22] - 2026-03-01
 
 ### Ajouts

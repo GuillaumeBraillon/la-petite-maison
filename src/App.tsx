@@ -46,14 +46,12 @@ const NAV_ITEMS: NavItem[] = [
     id: "dashboard",
     label: "Tableau de bord",
     icon: <LayoutDashboard size={18} />,
-    requiredRoles: ["admin", "owner"],
   },
   { id: "calendar", label: "Calendrier", icon: <CalendarDays size={18} /> },
   {
     id: "rentals",
     label: "Locations",
     icon: <List size={18} />,
-    requiredRoles: ["admin", "owner"],
   },
   {
     id: "members",

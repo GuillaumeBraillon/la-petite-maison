@@ -2,6 +2,7 @@ import { Euro, Clock, Zap } from "lucide-react";
 import type { Rental, Member, RentalStatus } from "../../types";
 import { KpiCard } from "./KpiCard";
 import { Card } from "../ui/Card";
+import { getPermissions } from "../../services/permissions";
 import {
   RENTAL_STATUS_BG_COLOR_MAP,
   RENTAL_STATUS_LIST,
@@ -158,15 +159,25 @@ const computeOwnerStats = (rentals: Rental[], members: Member[], currentYear: nu
 interface DashboardStatsProps {
   rentals: Rental[];
   members: Member[];
+  currentMember?: Member;
 }
 
 // ------------------------------------------------------------
 // Component
 // ------------------------------------------------------------
 
-export const DashboardStats = ({ rentals, members: _members }: DashboardStatsProps) => {
+export const DashboardStats = ({ rentals, members: _members, currentMember }: DashboardStatsProps) => {
   const stats = computeStats(rentals);
-  const ownerStats = computeOwnerStats(rentals, _members, stats.currentYear, stats.now, stats.daysInYear);
+  const allOwnerStats = computeOwnerStats(rentals, _members, stats.currentYear, stats.now, stats.daysInYear);
+
+  const permissions = getPermissions(currentMember ?? null);
+  const ownerStats = permissions.createWithAnyStatus
+    ? allOwnerStats
+    : currentMember?.role === "owner"
+      ? allOwnerStats.filter((s) => s.owner.id === currentMember.id)
+      : currentMember?.role === "sub_member"
+        ? allOwnerStats.filter((s) => s.owner.id === currentMember.ownerId)
+        : allOwnerStats;
 
   const nextSubMember = stats.nextSubMemberId ? _members.find((m) => m.id === stats.nextSubMemberId) : null;
   const nextOwner = _members.find((m) => m.id === stats.nextOwnerId);
@@ -218,7 +229,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
       </div>
 
       {/* Par proprietaire */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid gap-4 ${permissions.createWithAnyStatus ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1"}`}>
         {ownerStats.map((ownerStats) => (
           <Card key={ownerStats.owner.id} padding="sm" className="flex flex-col gap-2">
             {/* Header avec nom + stats globales */}
@@ -226,7 +237,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
               <div>
                 <p className="text-sm font-medium text-gray-900">{ownerStats.owner.firstName}</p>
                 <p className="text-xs text-gray-500">
-                  {ownerStats.count} loc. - {Math.round(ownerStats.days)} n - Occ. {`${ownerStats.occupancy} %`}
+                  {ownerStats.count} loc. - {Math.round(ownerStats.days)} nuit{Math.round(ownerStats.days) > 1 ? "s" : ""} - Occ. {`${ownerStats.occupancy} %`}
                 </p>
               </div>
             </div>

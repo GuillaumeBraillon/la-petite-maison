@@ -2,7 +2,6 @@ import type { Rental, Member } from "../types";
 import { DashboardStats } from "../components/dashboard/DashboardStats";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
-import { getPermissions } from "../services/permissions";
 
 // ------------------------------------------------------------
 // Props
@@ -20,8 +19,6 @@ interface DashboardPageProps {
 // ------------------------------------------------------------
 
 export const DashboardPage = ({ rentals, members, currentMember, onRefresh }: DashboardPageProps) => {
-  // Permissions calculées pour usage futur (conditionnalité des stats affichées)
-  void getPermissions(currentMember ?? null);
   const { error, clearError } = useRentalModals(onRefresh);
 
   return (
@@ -34,7 +31,7 @@ export const DashboardPage = ({ rentals, members, currentMember, onRefresh }: Da
 
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
 
-      <DashboardStats rentals={rentals} members={members} />
+      <DashboardStats rentals={rentals} members={members} currentMember={currentMember} />
     </div>
   );
 };

@@ -62,7 +62,14 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: Rent
   type StatusFilter = "all" | RentalStatus;
   type OwnerFilter = "all" | string;
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>("all");
+
+  const defaultOwnerFilter = (): OwnerFilter => {
+    if (!currentMember) return "all";
+    if (currentMember.role === "owner") return currentMember.id;
+    if (currentMember.role === "sub_member" && currentMember.ownerId) return currentMember.ownerId;
+    return "all";
+  };
+  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>(defaultOwnerFilter);
 
   const ownerOptions = [{ value: "all", label: "Tous propriétaires" }].concat(
     members
@@ -155,7 +162,7 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: Rent
         ]}
         onReset={() => {
           setStatusFilter("all");
-          setOwnerFilter("all");
+          setOwnerFilter(defaultOwnerFilter());
         }}
       />
 
