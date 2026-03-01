@@ -293,6 +293,8 @@ export const RentalForm = ({
   const actualDurationDays = getRentalDurationDays(values.actualStartDate, values.actualEndDate);
   const actualDatesChanged = values.actualStartDate !== values.startDate || values.actualEndDate !== values.endDate;
   const recalculatedPrice = actualDurationDays * values.guestCount * PRICE_PER_NIGHT_PER_PERSON;
+  const isOwnerEditingOwnRental = !!currentMember && currentMember.role === "owner" && !currentMember.isEditor && currentMember.id === values.ownerId;
+  const isSubMemberEditingOwnRental = !!currentMember && currentMember.role === "sub_member" && currentMember.id === values.subMemberId;
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -304,7 +306,7 @@ export const RentalForm = ({
           value={toDatetimeLocal(values.startDate)}
           onChange={(e) => set("startDate", new Date(e.target.value).toISOString())}
           error={errors.startDate}
-          disabled={!canEdit}
+          disabled={!(canEdit || isOwnerEditingOwnRental || isSubMemberEditingOwnRental)}
           required
         />
         <Input
@@ -313,7 +315,7 @@ export const RentalForm = ({
           value={toDatetimeLocal(values.endDate)}
           onChange={(e) => set("endDate", new Date(e.target.value).toISOString())}
           error={errors.endDate}
-          disabled={!canEdit}
+          disabled={!(canEdit || isOwnerEditingOwnRental || isSubMemberEditingOwnRental)}
           required
         />
       </div>
@@ -420,7 +422,7 @@ export const RentalForm = ({
             }
           }}
           error={errors.guestCount}
-          disabled={!canEdit}
+          disabled={!(canEdit || isOwnerEditingOwnRental || isSubMemberEditingOwnRental)}
           required
         />
         <Input
@@ -631,7 +633,7 @@ export const RentalForm = ({
           value={values.notes ?? ""}
           onChange={(e) => set("notes", e.target.value || undefined)}
           placeholder="Commentaires…"
-          disabled={!canEdit}
+          disabled={!(canEdit || isOwnerEditingOwnRental || isSubMemberEditingOwnRental)}
           className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-colors disabled:bg-gray-100 disabled:text-gray-500"
         />
       </div>
