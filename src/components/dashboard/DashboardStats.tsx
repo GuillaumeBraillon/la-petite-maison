@@ -179,7 +179,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
         {/* Header avec année + stats globales */}
         <h3 className="text-sm font-semibold text-primary-800">{stats.currentYear}</h3>
         <p className="text-xs text-gray-500">
-          {stats.totalRentals} location{stats.totalRentals > 1 ? "s" : ""} — {Math.round(stats.occupiedDays)} jour
+          {stats.totalRentals} location{stats.totalRentals > 1 ? "s" : ""} — {Math.round(stats.occupiedDays)} nuit
           {Math.round(stats.occupiedDays) > 1 ? "s" : ""} — Taux d&apos;occupation {`${stats.occupancy} %`}
         </p>
 
@@ -190,7 +190,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
               <p className={`text-[10px] ${RENTAL_STATUS_TEXT_COLOR_MAP[status]} mb-1`}>{getRentalStatusLabel(status)}</p>
               <p className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}>
                 {stats.byStatus[status].count} location{stats.byStatus[status].count > 1 ? "s" : ""}
-                <span className="text-[10px] font-normal text-gray-400"> ({Math.round(stats.byStatus[status].days)} jours)</span>
+                <span className="text-[10px] font-normal text-gray-400"> ({Math.round(stats.byStatus[status].days)} nuits)</span>
               </p>
             </div>
           ))}
@@ -214,7 +214,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
           trend={`${stats.avgElectricityCostPerRental.toFixed(0)} € / location`}
           trendUp={true}
         />
-        <KpiCard label="Moy. elec. / jour" value={`${stats.avgElectricityCostPerDay.toFixed(2)} €`} icon={<Zap size={18} />} />
+        <KpiCard label="Moy. elec. / nuit" value={`${stats.avgElectricityCostPerDay.toFixed(2)} €`} icon={<Zap size={18} />} />
       </div>
 
       {/* Par proprietaire */}
@@ -226,7 +226,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
               <div>
                 <p className="text-sm font-medium text-gray-900">{ownerStats.owner.firstName}</p>
                 <p className="text-xs text-gray-500">
-                  {ownerStats.count} loc. - {Math.round(ownerStats.days)} j - Occ. {`${ownerStats.occupancy} %`}
+                  {ownerStats.count} loc. - {Math.round(ownerStats.days)} n - Occ. {`${ownerStats.occupancy} %`}
                 </p>
               </div>
             </div>
@@ -238,7 +238,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
                   <p className={`text-[10px] ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]} mb-1`}>{getRentalStatusLabel(status)}</p>
                   <p className={`text-sm font-bold ${RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP[status]}`}>
                     {ownerStats.byStatus[status].count}
-                    <span className="text-[10px] font-normal text-gray-400"> ({Math.round(ownerStats.byStatus[status].days)}j)</span>
+                    <span className="text-[10px] font-normal text-gray-400"> ({Math.round(ownerStats.byStatus[status].days)}n)</span>
                   </p>
                 </div>
               ))}
@@ -270,7 +270,7 @@ export const DashboardStats = ({ rentals, members: _members }: DashboardStatsPro
                 trendUp={true}
                 compact
               />
-              <KpiCard label="Moy. elec. / jour" value={`${ownerStats.avgElectricityCostPerDay.toFixed(2)} €`} icon={<Zap size={18} />} compact />
+              <KpiCard label="Moy. elec. / nuit" value={`${ownerStats.avgElectricityCostPerDay.toFixed(2)} €`} icon={<Zap size={18} />} compact />
             </div>
           </Card>
         ))}

@@ -126,12 +126,12 @@ export const RentalCard = ({
               <CalendarDays size={13} />{" "}
               {datesChanged ? (
                 <>
-                  <span className="line-through opacity-50">{durationDays}j</span>
-                  &nbsp;{actualDurationDays} jour{actualDurationDays !== 1 ? "s" : ""}
+                  <span className="line-through opacity-50">{durationDays}n</span>
+                  &nbsp;{actualDurationDays} nuit{actualDurationDays !== 1 ? "s" : ""}
                 </>
               ) : (
                 <>
-                  {durationDays} jour{durationDays > 1 ? "s" : ""}
+                  {durationDays} nuit{durationDays > 1 ? "s" : ""}
                 </>
               )}
             </div>

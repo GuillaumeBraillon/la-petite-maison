@@ -7,6 +7,20 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.21] - 2026-02-28
+
+### Améliorations
+
+- **Durées** : remplacement de "jour/j/jours" par "nuit/n/nuits" dans toute l'interface
+  (composants, notifications, KPI, tooltips)
+
+### Technique
+
+- **Permissions** : restriction des droits `sub_member` — accès limité aux locations
+  où ils sont explicitement sous-membre (suppression de l'accès implicite propriétaire)
+- **Permissions** : maintien du droit d'édition sur leurs propres locations
+  dans les listes, pages et formulaires
+
 ## [0.3.20] - 2026-02-28
 
 ### Améliorations

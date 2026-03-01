@@ -120,7 +120,9 @@ export const isMemberRental = (member: Member | null, rental: Rental): boolean =
   if (getPermissions(member).createWithAnyStatus) return true;
   if (member.role === "owner") return rental.ownerId === member.id;
   if (member.role === "sub_member") {
-    return rental.subMemberId === member.id || rental.ownerId === member.ownerId;
+    // Un `sub_member` ne doit pouvoir agir que sur SES propres locations (subMemberId).
+    // Ne pas autoriser l'accès aux locations du owner pour éviter modification non souhaitée.
+    return rental.subMemberId === member.id;
   }
   return false;
 };

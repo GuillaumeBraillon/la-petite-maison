@@ -175,7 +175,7 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: Rent
         <RentalForm
           initialValues={editing ?? undefined}
           members={members}
-          canEdit={editing?.id ? permissions.editLocations : true}
+          canEdit={editing?.id ? permissions.editLocations || (editing && isMemberRental(currentMember ?? null, editing)) : true}
           currentMember={currentMember}
           onSubmit={handleSubmit}
           onCancel={closeForm}
@@ -191,7 +191,7 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: Rent
             rental={selected}
             owner={memberIndex.get(selected.ownerId)}
             subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
-            canEdit={permissions.createWithAnyStatus}
+            canEdit={permissions.createWithAnyStatus || isMemberRental(currentMember ?? null, selected)}
             canViewPrice={isMemberRental(currentMember ?? null, selected)}
             onEdit={openEdit}
             onDelete={handleDelete}

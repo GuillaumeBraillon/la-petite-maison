@@ -51,7 +51,7 @@ export const RentalBadge = ({ rental, owner, labelOverride, cellDate, onClick }:
   // Calcul de la durée en jours pour l'affichage et le tooltip
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
   // Formatage de la date pour le tooltip
-  const toolTip = `${label} — ${formatDate(rental.startDate)} → ${formatDate(rental.endDate)} (${durationDays} jour${durationDays > 1 ? "s" : ""})`;
+  const toolTip = `${label} — ${formatDate(rental.startDate)} → ${formatDate(rental.endDate)} (${durationDays} nuit${durationDays > 1 ? "s" : ""})`;
 
   // Détecter si le jour de la cellule est hors des dates réelles (location terminée avec dates réelles)
   let outsideActualReason: "arrived-late" | "left-early" | null = null;
@@ -90,7 +90,7 @@ export const RentalBadge = ({ rental, owner, labelOverride, cellDate, onClick }:
         <img src={owner.avatarUrl} alt={label} className="w-4 h-4 rounded-full object-cover border border-white/70 shrink-0" referrerPolicy="no-referrer" />
       ) : null}
       <span className={["truncate", outsideActualReason ? "line-through" : ""].join(" ")}>{label}</span>
-      <span className="shrink-0 text-[10px] font-semibold">{durationDays}j</span>
+      <span className="shrink-0 text-[10px] font-semibold">{durationDays}n</span>
     </button>
   );
 };

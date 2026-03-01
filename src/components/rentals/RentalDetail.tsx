@@ -163,7 +163,7 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canVie
         )}
         <DetailRow icon={<CalendarDays size={16} />} label="Arrivée" value={formatDate(rental.startDate)} />
         <DetailRow icon={<CalendarDays size={16} />} label="Départ" value={formatDate(rental.endDate)} />
-        <DetailRow icon={<CalendarDays size={16} />} label="Durée" value={`${durationDays} jour${durationDays > 1 ? "s" : ""}`} />
+        <DetailRow icon={<CalendarDays size={16} />} label="Durée" value={`${durationDays} nuit${durationDays > 1 ? "s" : ""}`} />
         <DetailRow icon={<Users size={16} />} label="Nombre de personnes" value={`${rental.guestCount} personne${rental.guestCount > 1 ? "s" : ""}`} />
         {(canViewPrice || canEdit) && <DetailRow icon={<Euro size={16} />} label="Tarif location (€)" value={`${rental.price.toFixed(2)} €`} />}
       </Card>
@@ -192,7 +192,7 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canVie
               <DetailRow
                 icon={<Zap size={16} />}
                 label="Coût électrique"
-                value={`${rental.electricityCost.toFixed(2)} € (${(rental.electricityCost / actualDurationDays).toFixed(2)} €/j)`}
+                value={`${rental.electricityCost.toFixed(2)} € (${(rental.electricityCost / actualDurationDays).toFixed(2)} €/nuit)`}
               />
             )}
             {rental.status === "completed" && rental.totalPrice !== undefined && (

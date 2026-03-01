@@ -332,7 +332,7 @@ const buildCompletedBody = (rental: Rental, recipient: "owner" | "sub_member", s
     lines.push(`Dates réelles : ${asd} → ${aed}`);
   }
   lines.push("");
-  lines.push(`Durée : ${durationDays} ${pluralize(durationDays, "jour", "jours")}`);
+  lines.push(`Durée : ${durationDays} ${pluralize(durationDays, "nuit", "nuits")}`);
   lines.push(`Nombre de personnes : ${rental.guestCount}`);
   lines.push(`Location : ${formatEuro(rental.price)}`);
   if (rental.electricityCost !== undefined && rental.electricityCost !== null) {

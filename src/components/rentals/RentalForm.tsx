@@ -321,7 +321,7 @@ export const RentalForm = ({
         <p className="text-xs text-gray-500 -mt-2">
           Durée :{" "}
           <span className="font-medium text-gray-700">
-            {durationDays} jour{durationDays > 1 ? "s" : ""}
+            {durationDays} nuit{durationDays > 1 ? "s" : ""}
           </span>
         </p>
       )}
@@ -513,7 +513,7 @@ export const RentalForm = ({
               <p className="mt-2 text-xs text-gray-500">
                 Durée réelle :{" "}
                 <span className="font-medium text-gray-700">
-                  {actualDurationDays} jour{actualDurationDays > 1 ? "s" : ""}
+                  {actualDurationDays} nuit{actualDurationDays > 1 ? "s" : ""}
                 </span>
               </p>
             )}

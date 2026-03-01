@@ -49,7 +49,7 @@ export const RentalList = ({ rentals, members, currentMember, canEdit = true, ca
           rental={rental}
           owner={memberIndex.get(rental.ownerId)}
           subMember={rental.subMemberId ? memberIndex.get(rental.subMemberId) : undefined}
-          canEdit={canEdit}
+          canEdit={canEdit || isMemberRental(currentMember ?? null, rental)}
           canDelete={canDelete}
           canViewPrice={isMemberRental(currentMember ?? null, rental)}
           onClick={onClick}
