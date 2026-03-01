@@ -137,7 +137,6 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
       <div className="md:hidden flex flex-col gap-1">
         {monthDays.map((day) => {
           const dayRentals = getRentalsForDay(day, rentals);
-          console.log("Is same day?", isSameDay(day, today));
 
           return (
             <div

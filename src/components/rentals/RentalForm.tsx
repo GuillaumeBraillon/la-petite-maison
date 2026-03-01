@@ -295,6 +295,8 @@ export const RentalForm = ({
   const recalculatedPrice = actualDurationDays * values.guestCount * PRICE_PER_NIGHT_PER_PERSON;
   const isOwnerEditingOwnRental = !!currentMember && currentMember.role === "owner" && !currentMember.isEditor && currentMember.id === values.ownerId;
   const isSubMemberEditingOwnRental = !!currentMember && currentMember.role === "sub_member" && currentMember.id === values.subMemberId;
+  // Le statut n'est modifiable que par un admin ou un owner éditeur
+  const canEditStatus = canEdit && (!currentMember || currentMember.role === "admin" || (currentMember.role === "owner" && !!currentMember.isEditor));
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -478,7 +480,7 @@ export const RentalForm = ({
         </div>
       ) : (
         <div className="flex flex-col gap-1">
-          <Select label="Statut" value={values.status} onChange={(e) => set("status", e.target.value as RentalStatus)} disabled={!canEdit} required>
+          <Select label="Statut" value={values.status} onChange={(e) => set("status", e.target.value as RentalStatus)} disabled={!canEditStatus} required>
             <option value="pending">En attente</option>
             <option value="confirmed">Confirmé</option>
             <option value="rejected">Refusé</option>

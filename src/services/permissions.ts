@@ -24,8 +24,8 @@ export interface Permissions {
  * Récupère les permissions pour un utilisateur donné
  * Admin : tous les droits
  * Owner + isEditor=true : tous les droits sur locations & members
- * Owner + isEditor=false : lecture seule sur tout
- * Sub_member : calendrier seul, pas les détails
+ * Owner + isEditor=false : peut créer des demandes (pending), voir et éditer ses propres locations (champs limités)
+ * Sub_member : voir le calendrier + détails, créer des demandes, éditer ses propres locations (champs limités)
  */
 export const getPermissions = (member: Member | null): Permissions => {
   // Pas de membre = pas de droits
@@ -110,10 +110,11 @@ export const hasPermission = (member: Member | null, permission: keyof Permissio
 
 /**
  * Détermine si une location concerne directement un membre (i.e. ses propres données).
- * Peut être utilisé partout dans l'app pour restreindre la visibilité aux données personnelles.
+ * Peut être utilisé partout dans l'app pour restreindre la visibilité/édition aux données personnelles.
  * - Admin / owner éditeur : toujours vrai (accès global)
- * - Owner non-éditeur : ses propres locations uniquement
- * - Sub_member : ses locations + les locations de son propriétaire parent
+ * - Owner non-éditeur : ses propres locations uniquement (ownerId === member.id)
+ * - Sub_member : uniquement les locations où il est sous-membre (subMemberId === member.id)
+ *   → ne doit PAS pouvoir accéder aux locations de son owner parent
  */
 export const isMemberRental = (member: Member | null, rental: Rental): boolean => {
   if (!member) return false;

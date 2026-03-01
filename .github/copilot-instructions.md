@@ -389,11 +389,55 @@ Checklist PR — Toast vs ErrorContext :
 
 ### Rôles
 
-| Rôle         | Description                    | Permissions                                                   |
-| ------------ | ------------------------------ | ------------------------------------------------------------- |
-| `admin`      | Administrateur                 | Tous les droits                                               |
-| `owner`      | Propriétaire de la maison      | Voir locations, faire des demandes (validation admin requise) |
-| `sub_member` | Enfant/petit-enfant d'un owner | Voir dates + libellé + propriétaire uniquement                |
+| Rôle         | `isEditor` | Description                    | Permissions                                                                                       |
+| ------------ | ---------- | ------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `admin`      | —          | Administrateur                 | Tous les droits (CRUD locations + membres, tous statuts, validation)                              |
+| `owner`      | `true`     | Propriétaire éditeur           | Tous les droits sur locations & membres (statuts libres, suppression, création membres)           |
+| `owner`      | `false`    | Propriétaire non-éditeur       | Créer des demandes (statut forcé `pending`), voir + éditer ses propres locations (champs limités) |
+| `sub_member` | —          | Enfant/petit-enfant d'un owner | Créer des demandes, voir le calendrier + détails, éditer ses propres locations (champs limités)   |
+
+### Règles d'édition par rôle
+
+| Champ du formulaire             | `admin` / `owner` éditeur | `owner` non-éditeur (sa location) | `sub_member` (sa location) |
+| ------------------------------- | :-----------------------: | :-------------------------------: | :------------------------: |
+| Date début / Date fin           |            ✅             |                ✅                 |             ✅             |
+| Nombre de personnes             |            ✅             |                ✅                 |             ✅             |
+| Notes / commentaires            |            ✅             |                ✅                 |             ✅             |
+| Tarif                           |            ✅             |                ❌                 |             ❌             |
+| Statut                          |            ✅             |       ❌ (forcé `pending`)        |    ❌ (forcé `pending`)    |
+| Propriétaire / membre           |            ✅             |             ❌ (figé)             |         ❌ (figé)          |
+| Infos post-location (completed) |            ✅             |                ❌                 |             ❌             |
+
+> **Règle clé** : Un `owner` non-éditeur ne peut éditer que ses propres locations (`ownerId === member.id`).
+> Un `sub_member` ne peut éditer que les locations où il est référencé comme sous-membre (`subMemberId === member.id`).
+> Un `sub_member` **ne peut pas** modifier les locations de son owner parent.
+
+### Implémentation des permissions (`services/permissions.ts`)
+
+- `getPermissions(member)` → objet `Permissions` basé sur le rôle et `isEditor`
+- `isMemberRental(member, rental)` → `true` si la location appartient au membre :
+  - Admin / owner éditeur : toujours `true`
+  - Owner non-éditeur : `rental.ownerId === member.id`
+  - Sub_member : `rental.subMemberId === member.id` uniquement
+
+```typescript
+// Utilisation type dans les pages
+const permissions = getPermissions(currentMember ?? null);
+
+// canEdit dans RentalDetail / RentalForm (édition)
+// → boutons Modifier/Supprimer + champs éditables
+canEdit={permissions.createWithAnyStatus || isMemberRental(currentMember ?? null, rental)}
+
+// canEditStatus dans RentalDetail
+// → Select statut : admin et owner éditeur uniquement
+canEditStatus={permissions.createWithAnyStatus}
+
+// canEdit dans RentalForm (création)
+canEdit={true} // toujours — le formulaire applique isRestricted en interne
+
+// canViewPrice
+canViewPrice={isMemberRental(currentMember ?? null, rental)}
+```
 
 ### Auth Google OAuth
 
@@ -727,6 +771,68 @@ await updateRental(rental.id, updates, rental.status);
 
 // ⚠️ ACCEPTABLE — notifie toujours quand updates.status est défini
 await updateRental(rental.id, updates);
+```
+
+---
+
+## Modal "Nouveautés" (`WhatsNewModal`)
+
+Affichée automatiquement une seule fois par version dès que l'utilisateur est authentifié et autorisé.
+
+### Principe
+
+- La version courante vient de `package.json` (déjà importé dans `App.tsx`)
+- Le contenu vient de `WHATS_NEW.md` (langage simple, destiné aux utilisateurs)
+- La dernière version vue est stockée dans `localStorage` (clé `whats_new_last_seen_version`)
+- Si `package.json version ≠ localStorage` **et** que la version existe dans `WHATS_NEW.md` → modal affichée → `localStorage` mis à jour au dismiss
+
+### Fichiers
+
+| Fichier                               | Rôle                                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------------------- |
+| `WHATS_NEW.md`                        | ✅ **À maintenir à chaque release** — notes user-friendly, langage simple             |
+| `CHANGELOG.md`                        | Notes techniques pour les développeurs — inchangé                                     |
+| `src/services/changelogParser.ts`     | Parser générique `parseVersionFromRaw(raw, version)` réutilisable                     |
+| `src/services/whatsNewParser.ts`      | Importe `WHATS_NEW.md?raw` et délègue au parser générique                             |
+| `src/hooks/useWhatsNew.ts`            | Compare version courante vs `localStorage`, expose `shouldShow` / `entry` / `dismiss` |
+| `src/components/ui/WhatsNewModal.tsx` | Modal basée sur `Modal`, rendu `**gras**` → `<strong>` sans lib externe               |
+
+### Format de `WHATS_NEW.md`
+
+Même format que `CHANGELOG.md` — le parser est partagé :
+
+```markdown
+## [0.3.22] - 1 mars 2026
+
+### Ce qui change pour vous
+
+- **Fonctionnalité** : description simple et orientée utilisateur
+
+### Corrections
+
+- **Problème corrigé** : description de ce qui ne marchait pas avant
+```
+
+### Workflow de release — OBLIGATOIRE
+
+> **Règle Copilot** : Dès qu'une demande implique une modification de `CHANGELOG.md`, ou une release, tu dois **toujours** effectuer les 2 actions suivantes dans la même réponse, sans attendre qu'on te le rappelle :
+
+1. Ajouter l'entrée technique dans `CHANGELOG.md`
+2. **Ajouter l'entrée user-friendly dans `WHATS_NEW.md`** avec le même numéro de version
+
+> ⚠️ **Ne pas modifier `package.json`** : le bump de version est géré automatiquement par le hook git `pre-commit`.
+
+Les deux fichiers `CHANGELOG.md` et `WHATS_NEW.md` sont **toujours mis à jour ensemble**. Ne jamais mettre à jour l'un sans l'autre.
+
+> Si la version n'existe pas dans `WHATS_NEW.md`, la modal ne s'affiche pas.
+
+### Intégration dans `App.tsx`
+
+```typescript
+const { shouldShow: showWhatsNew, entry: whatsNewEntry, dismiss: dismissWhatsNew } = useWhatsNew();
+
+// Dans AppShell — après ErrorModal, uniquement si authentifié :
+{showWhatsNew && whatsNewEntry && <WhatsNewModal entry={whatsNewEntry} onDismiss={dismissWhatsNew} />}
 ```
 
 ---

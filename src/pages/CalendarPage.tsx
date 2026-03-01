@@ -130,6 +130,7 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Cal
               owner={memberIndex.get(selected.ownerId)}
               subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
               canEdit={getPermissions(currentMember ?? null).createWithAnyStatus || isMemberRental(currentMember ?? null, selected)}
+              canEditStatus={getPermissions(currentMember ?? null).createWithAnyStatus}
               canViewPrice={isMemberRental(currentMember ?? null, selected)}
               onEdit={openEdit}
               onDelete={handleDelete}
@@ -144,7 +145,9 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Cal
         <RentalForm
           initialValues={editing ?? undefined}
           members={members}
-          canEdit={editing?.id ? getPermissions(currentMember ?? null).editLocations : true}
+          canEdit={
+            editing?.id ? getPermissions(currentMember ?? null).editLocations || (editing != null && isMemberRental(currentMember ?? null, editing)) : true
+          }
           currentMember={currentMember}
           onSubmit={handleSubmit}
           onCancel={closeForm}

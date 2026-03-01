@@ -55,8 +55,10 @@ interface RentalDetailProps {
   rental: Rental;
   owner?: Member;
   subMember?: Member;
-  /** true = admin ou owner éditeur — accès complet (statut, infos post-location, boutons) */
+  /** true = peut voir les boutons Modifier/Supprimer : admin, owner éditeur, owner non-éditeur sur ses propres locations, sub_member sur ses propres locations */
   canEdit?: boolean;
+  /** true = peut modifier le statut : admin et owner éditeur uniquement */
+  canEditStatus?: boolean;
   /** true = admin, owner éditeur, owner non éditeur et membre — peut voir le tarif (lecture seule) */
   canViewPrice?: boolean;
   onEdit: (rental: Rental) => void;
@@ -68,9 +70,19 @@ interface RentalDetailProps {
 // Component
 // ------------------------------------------------------------
 
-export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canViewPrice = false, onEdit, onDelete, onStatusChange }: RentalDetailProps) => {
+export const RentalDetail = ({
+  rental,
+  owner,
+  subMember,
+  canEdit = false,
+  canEditStatus = false,
+  canViewPrice = false,
+  onEdit,
+  onDelete,
+  onStatusChange,
+}: RentalDetailProps) => {
   const [updating, setUpdating] = useState(false);
-  const canEditStatusInDetail = canEdit && rental.status !== "completed";
+  const canEditStatusInDetail = canEditStatus && rental.status !== "completed";
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
   const actualDurationDays =
     rental.actualStartDate && rental.actualEndDate ? getRentalDurationDays(rental.actualStartDate, rental.actualEndDate) : durationDays;

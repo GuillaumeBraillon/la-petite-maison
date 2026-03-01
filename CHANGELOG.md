@@ -7,6 +7,26 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.22] - 2026-03-01
+
+### Ajouts
+
+- **Modal "Nouveautés"** : affichée automatiquement une seule fois par version après connexion
+  — contenu extrait dynamiquement depuis `CHANGELOG.md` via `changelogParser.ts`
+- **Permissions** : nouveau prop `canEditStatus` sur `RentalDetail` pour séparer
+  la permission d'édition des champs de la permission de modification du statut
+  (statut réservé aux admins et owners éditeurs)
+
+### Technique
+
+- `src/services/changelogParser.ts` — parser `CHANGELOG.md?raw` : extraction d'une version,
+  sous-sections et items ; rendus markdown inline (`**gras**` → `<strong>`) sans dépendance externe
+- `src/hooks/useWhatsNew.ts` — comparaison `package.json version` vs `localStorage`,
+  exposé `shouldShow`, `entry`, `dismiss`
+- `src/components/ui/WhatsNewModal.tsx` — modal utilisant le composant `Modal` existant
+
+---
+
 ## [0.3.21] - 2026-02-28
 
 ### Améliorations

@@ -21,6 +21,8 @@ import { ResetPasswordView } from "./components/Auth/ResetPasswordView";
 import { UnauthorizedView } from "./components/Auth/UnauthorizedView";
 import { UserMenu } from "./components/ui/UserMenu";
 import { NotificationToggle } from "./components/ui/NotificationToggle";
+import { WhatsNewModal } from "./components/ui/WhatsNewModal";
+import { useWhatsNew } from "./hooks/useWhatsNew";
 
 // ------------------------------------------------------------
 // Types
@@ -173,6 +175,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const [loading, setLoading] = useState(true);
   const { error, clearError, setError } = useError();
   const { install, isInstallable } = usePWAInstall();
+  const { shouldShow: showWhatsNew, entry: whatsNewEntry, dismiss: dismissWhatsNew } = useWhatsNew();
 
   const currentMember = members.find((m) => m.email === session.user.email);
 
@@ -338,6 +341,9 @@ const AppShell = ({ session }: AppShellProps) => {
 
       {/* Error modal global */}
       {error && <ErrorModal error={error} onClose={clearError} />}
+
+      {/* Modal Nouveautés — affichée une seule fois par version */}
+      {showWhatsNew && whatsNewEntry && <WhatsNewModal entry={whatsNewEntry} onDismiss={dismissWhatsNew} />}
     </div>
   );
 };
