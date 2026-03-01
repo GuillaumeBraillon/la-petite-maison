@@ -18,16 +18,30 @@ serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    const body = (await req.json()) as { source?: string; testUserId?: string };
+
+    const pushBody = body.testUserId
+      ? {
+          userId: body.testUserId,
+          payload: {
+            type: "app_updated",
+            title: "🏡 Mise à jour disponible (test)",
+            body: "Test notify-deploy — tout fonctionne !",
+            url: "/",
+          },
+        }
+      : {
+          topic: "all",
+          payload: {
+            type: "app_updated",
+            title: "🏡 Mise à jour disponible",
+            body: "Une nouvelle version de l'application est disponible. Rechargez pour en profiter.",
+            url: "/",
+          },
+        };
+
     const { error } = await supabase.functions.invoke("send-push", {
-      body: {
-        topic: "all",
-        payload: {
-          type: "app_updated",
-          title: "🏡 Mise à jour disponible",
-          body: "Une nouvelle version de l'application est disponible. Rechargez pour en profiter.",
-          url: "/",
-        },
-      },
+      body: pushBody,
     });
 
     if (error) {

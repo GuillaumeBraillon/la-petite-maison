@@ -25,7 +25,7 @@ interface SendPushRequest {
   memberEmails?: string[];
   ownerUserId?: string;
   editorUserId?: string;
-  topic?: "admins_and_owner_editors" | "owner";
+  topic?: "admins_and_owner_editors" | "owner" | "all";
   type?: NotificationType;
   firstName?: string;
   startDate?: string;
@@ -60,6 +60,8 @@ interface RecipientResolution {
   userIds: string[];
   unresolvedMemberEmails: string[];
 }
+
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -241,10 +243,17 @@ const createAuthUsersByEmailResolver = (): AuthUsersByEmailResolver => {
 };
 
 const resolveTopicRecipients = async (topic: NonNullable<SendPushRequest["topic"]>, getUsersByEmail: AuthUsersByEmailResolver): Promise<string[]> => {
-  if (topic === "owner") {
-    return [];
+  if (topic === "owner") return [];
+
+  // Notifie tous les abonnés sans distinction de rôle
+  if (topic === "all") {
+    const { data, error } = await supabase.from("push_subscriptions").select("user_id");
+    if (error) throw error;
+    const rows = (data ?? []) as { user_id: string }[];
+    return [...new Set(rows.map((row) => row.user_id))];
   }
 
+  // admins_and_owner_editors — comportement existant
   const { data, error } = await supabase
     .from("members")
     .select("email")
@@ -331,8 +340,11 @@ interface CallerContext {
 
 const getCallerContext = async (request: Request): Promise<CallerContext> => {
   const token = extractBearerToken(request);
-  if (!token) {
-    throw new Error("Authorization Bearer token requis.");
+  if (!token) throw new Error("Authorization Bearer token requis.");
+
+  // Appel interne avec service role key → autorisé directement
+  if (token === SUPABASE_SERVICE_ROLE_KEY) {
+    return { userId: "service-role", email: "internal", isAllowed: true };
   }
 
   const {
@@ -519,7 +531,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur serveur send-push.";
 
-    logError("send-push.unhandled", error);
+    logError("send-push.unhandled", error instanceof Error ? error : JSON.stringify(error));
 
     return new Response(JSON.stringify({ error: message }), {
       status:
