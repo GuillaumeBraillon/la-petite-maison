@@ -7,6 +7,20 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.26] - 2026-03-10
+
+### Améliorations
+
+- **Dashboard** : cartes par propriétaire visibles par tous les rôles (plus de restriction)
+- **Locations** : tarifs, coût électrique, total et section "Infos post-location" visibles par tous les rôles
+- **Carte location** : les notes sont maintenant affichées directement dans la carte
+
+### Corrections
+
+- **Notifications push** : `previousStatus` transmis à `updateRental` pour éviter les fausses notifications de changement de statut
+
+---
+
 ## [0.3.25] - 2026-03-10
 
 ### Améliorations

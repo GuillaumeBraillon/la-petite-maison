@@ -131,7 +131,6 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Cal
               subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
               canEdit={getPermissions(currentMember ?? null).createWithAnyStatus || isMemberRental(currentMember ?? null, selected)}
               canEditStatus={getPermissions(currentMember ?? null).createWithAnyStatus}
-              canViewPrice={isMemberRental(currentMember ?? null, selected)}
               onEdit={openEdit}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}

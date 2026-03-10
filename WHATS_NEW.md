@@ -5,6 +5,18 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.26] - 10 mars 2026
+
+### Ce qui change pour vous
+
+- **Tableau de bord** : toutes les cartes propriétaires sont désormais visibles par tout le monde
+- **Montants** : tarif, coût électrique, total et infos post-location visibles par tous
+- **Carte location** : les notes s'affichent maintenant directement dans la liste
+
+### Corrections
+
+- **Notifications** : correction d'un envoi de notification parasite lors d'une modification sans changement de statut
+
 ## [0.3.25] - 10 mars 2026
 
 ### Ce qui change pour vous

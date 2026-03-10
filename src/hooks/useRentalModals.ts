@@ -67,7 +67,7 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
     async (values: Omit<Rental, "id" | "createdAt" | "updatedAt">) => {
       try {
         if (editing && editing.id) {
-          await updateRental(editing.id, values);
+          await updateRental(editing.id, values, editing.status);
           showToast({
             variant: "success",
             ...TOAST_MESSAGES.rental.updated,

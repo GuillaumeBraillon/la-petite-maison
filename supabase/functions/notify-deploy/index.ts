@@ -34,7 +34,7 @@ serve(async (req) => {
           payload: {
             type: "app_updated",
             title: "🏡 Mise à jour disponible",
-            body: "Une nouvelle version de l'application est disponible. Rechargez pour en profiter.",
+            body: "Une nouvelle version de l'application est disponible.",
           },
         };
 

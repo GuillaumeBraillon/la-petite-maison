@@ -59,8 +59,7 @@ interface RentalDetailProps {
   canEdit?: boolean;
   /** true = peut modifier le statut : admin et owner éditeur uniquement */
   canEditStatus?: boolean;
-  /** true = admin, owner éditeur, owner non éditeur et membre — peut voir le tarif (lecture seule) */
-  canViewPrice?: boolean;
+
   onEdit: (rental: Rental) => void;
   onDelete: (rental: Rental) => void;
   onStatusChange: (rentalId: string, newStatus: RentalStatus) => Promise<void>;
@@ -70,17 +69,7 @@ interface RentalDetailProps {
 // Component
 // ------------------------------------------------------------
 
-export const RentalDetail = ({
-  rental,
-  owner,
-  subMember,
-  canEdit = false,
-  canEditStatus = false,
-  canViewPrice = false,
-  onEdit,
-  onDelete,
-  onStatusChange,
-}: RentalDetailProps) => {
+export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEditStatus = false, onEdit, onDelete, onStatusChange }: RentalDetailProps) => {
   const [updating, setUpdating] = useState(false);
   const canEditStatusInDetail = canEditStatus && rental.status !== "completed";
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
@@ -177,42 +166,41 @@ export const RentalDetail = ({
         <DetailRow icon={<CalendarDays size={16} />} label="Départ" value={formatDate(rental.endDate)} />
         <DetailRow icon={<CalendarDays size={16} />} label="Durée" value={`${durationDays} nuit${durationDays > 1 ? "s" : ""}`} />
         <DetailRow icon={<Users size={16} />} label="Nombre de personnes" value={`${rental.guestCount} personne${rental.guestCount > 1 ? "s" : ""}`} />
-        {(canViewPrice || canEdit) && <DetailRow icon={<Euro size={16} />} label="Tarif location (€)" value={`${rental.price.toFixed(2)} €`} />}
+        <DetailRow icon={<Euro size={16} />} label="Tarif location (€)" value={`${rental.price.toFixed(2)} €`} />
       </Card>
 
       {/* Post-location */}
-      {canEdit &&
-        ((rental.status === "completed" &&
-          (rental.electricityCost !== undefined || rental.totalPrice !== undefined || rental.actualStartDate || rental.actualEndDate)) ||
-          rental.notes) && (
-          <Card padding="md" className="flex flex-col gap-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Infos post-location</p>
+      {((rental.status === "completed" &&
+        (rental.electricityCost !== undefined || rental.totalPrice !== undefined || rental.actualStartDate || rental.actualEndDate)) ||
+        rental.notes) && (
+        <Card padding="md" className="flex flex-col gap-4">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Infos post-location</p>
 
-            {rental.status === "completed" && rental.actualStartDate && (
-              <DetailRow icon={<CalendarDays size={16} />} label="Début réel" value={formatDate(rental.actualStartDate)} />
+          {rental.status === "completed" && rental.actualStartDate && (
+            <DetailRow icon={<CalendarDays size={16} />} label="Début réel" value={formatDate(rental.actualStartDate)} />
+          )}
+          {rental.status === "completed" && rental.actualEndDate && (
+            <DetailRow icon={<CalendarDays size={16} />} label="Fin réelle" value={formatDate(rental.actualEndDate)} />
+          )}
+          {rental.status === "completed" &&
+            rental.actualStartDate &&
+            rental.actualEndDate &&
+            (rental.actualStartDate !== rental.startDate || rental.actualEndDate !== rental.endDate) && (
+              <p className="text-xs text-amber-600">⚠️ Les dates réelles diffèrent des dates prévues.</p>
             )}
-            {rental.status === "completed" && rental.actualEndDate && (
-              <DetailRow icon={<CalendarDays size={16} />} label="Fin réelle" value={formatDate(rental.actualEndDate)} />
-            )}
-            {rental.status === "completed" &&
-              rental.actualStartDate &&
-              rental.actualEndDate &&
-              (rental.actualStartDate !== rental.startDate || rental.actualEndDate !== rental.endDate) && (
-                <p className="text-xs text-amber-600">⚠️ Les dates réelles diffèrent des dates prévues.</p>
-              )}
-            {rental.status === "completed" && rental.electricityCost !== undefined && (
-              <DetailRow
-                icon={<Zap size={16} />}
-                label="Coût électrique"
-                value={`${rental.electricityCost.toFixed(2)} € (${(rental.electricityCost / actualDurationDays).toFixed(2)} €/nuit)`}
-              />
-            )}
-            {rental.status === "completed" && rental.totalPrice !== undefined && (
-              <DetailRow icon={<Euro size={16} />} label="Total final" value={`${rental.totalPrice.toFixed(2)} €`} />
-            )}
-            {rental.notes && <DetailRow icon={<FileText size={16} />} label="Notes" value={rental.notes} />}
-          </Card>
-        )}
+          {rental.status === "completed" && rental.electricityCost !== undefined && (
+            <DetailRow
+              icon={<Zap size={16} />}
+              label="Coût électrique"
+              value={`${rental.electricityCost.toFixed(2)} € (${(rental.electricityCost / actualDurationDays).toFixed(2)} €/nuit)`}
+            />
+          )}
+          {rental.status === "completed" && rental.totalPrice !== undefined && (
+            <DetailRow icon={<Euro size={16} />} label="Total final" value={`${rental.totalPrice.toFixed(2)} €`} />
+          )}
+          {rental.notes && <DetailRow icon={<FileText size={16} />} label="Notes" value={rental.notes} />}
+        </Card>
+      )}
       {canEdit && (
         <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
           <Button variant="danger" size="sm" onClick={() => onDelete(rental)} className="w-full sm:w-auto">

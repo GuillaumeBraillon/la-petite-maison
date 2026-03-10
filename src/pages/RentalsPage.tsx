@@ -200,7 +200,6 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: Rent
             subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
             canEdit={permissions.createWithAnyStatus || isMemberRental(currentMember ?? null, selected)}
             canEditStatus={permissions.createWithAnyStatus}
-            canViewPrice={isMemberRental(currentMember ?? null, selected)}
             onEdit={openEdit}
             onDelete={handleDelete}
             onStatusChange={handleStatusChange}

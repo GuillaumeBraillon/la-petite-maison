@@ -2,7 +2,6 @@ import { Euro, Clock, Zap } from "lucide-react";
 import type { Rental, Member, RentalStatus } from "../../types";
 import { KpiCard } from "./KpiCard";
 import { Card } from "../ui/Card";
-import { getPermissions } from "../../services/permissions";
 import {
   RENTAL_STATUS_BG_COLOR_MAP,
   RENTAL_STATUS_LIST,
@@ -166,18 +165,11 @@ interface DashboardStatsProps {
 // Component
 // ------------------------------------------------------------
 
-export const DashboardStats = ({ rentals, members: _members, currentMember }: DashboardStatsProps) => {
+export const DashboardStats = ({ rentals, members: _members, currentMember: _currentMember }: DashboardStatsProps) => {
   const stats = computeStats(rentals);
   const allOwnerStats = computeOwnerStats(rentals, _members, stats.currentYear, stats.now, stats.daysInYear);
 
-  const permissions = getPermissions(currentMember ?? null);
-  const ownerStats = permissions.createWithAnyStatus
-    ? allOwnerStats
-    : currentMember?.role === "owner"
-      ? allOwnerStats.filter((s) => s.owner.id === currentMember.id)
-      : currentMember?.role === "sub_member"
-        ? allOwnerStats.filter((s) => s.owner.id === currentMember.ownerId)
-        : allOwnerStats;
+  const ownerStats = allOwnerStats;
 
   const nextSubMember = stats.nextSubMemberId ? _members.find((m) => m.id === stats.nextSubMemberId) : null;
   const nextOwner = _members.find((m) => m.id === stats.nextOwnerId);
@@ -229,7 +221,7 @@ export const DashboardStats = ({ rentals, members: _members, currentMember }: Da
       </div>
 
       {/* Par proprietaire */}
-      <div className={`grid gap-4 ${permissions.createWithAnyStatus ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1"}`}>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {ownerStats.map((ownerStats) => (
           <Card key={ownerStats.owner.id} padding="sm" className="flex flex-col gap-2">
             {/* Header avec nom + stats globales */}

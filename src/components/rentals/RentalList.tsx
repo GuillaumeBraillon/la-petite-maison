@@ -51,7 +51,6 @@ export const RentalList = ({ rentals, members, currentMember, canEdit = true, ca
           subMember={rental.subMemberId ? memberIndex.get(rental.subMemberId) : undefined}
           canEdit={canEdit || isMemberRental(currentMember ?? null, rental)}
           canDelete={canDelete}
-          canViewPrice={isMemberRental(currentMember ?? null, rental)}
           onClick={onClick}
           onEdit={onEdit}
           onDelete={onDelete}

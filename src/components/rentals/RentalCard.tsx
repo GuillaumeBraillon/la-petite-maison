@@ -1,4 +1,4 @@
-import { CalendarDays, Users, Euro, Pencil, Trash2, User, Zap } from "lucide-react";
+import { CalendarDays, Users, Euro, Pencil, Trash2, User, Zap, FileText } from "lucide-react";
 import type { Rental, Member } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
@@ -34,7 +34,6 @@ interface RentalCardProps {
   subMember?: Member;
   canEdit?: boolean;
   canDelete?: boolean;
-  canViewPrice?: boolean;
   onClick?: (rental: Rental) => void;
   onEdit?: (rental: Rental) => void;
   onDelete?: (rental: Rental) => void;
@@ -44,17 +43,7 @@ interface RentalCardProps {
 // Component
 // ------------------------------------------------------------
 
-export const RentalCard = ({
-  rental,
-  owner,
-  subMember,
-  canEdit = true,
-  canDelete = true,
-  canViewPrice = false,
-  onClick,
-  onEdit,
-  onDelete,
-}: RentalCardProps) => {
+export const RentalCard = ({ rental, owner, subMember, canEdit = true, canDelete = true, onClick, onEdit, onDelete }: RentalCardProps) => {
   const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
   const hasActualDates = rental.status === "completed" && (rental.actualStartDate || rental.actualEndDate);
   const datesChanged = hasActualDates && (rental.actualStartDate !== rental.startDate || rental.actualEndDate !== rental.endDate);
@@ -140,14 +129,12 @@ export const RentalCard = ({
             </div>
           </div>
           {/* Tarif location */}
-          {(canViewPrice || canEdit) && (
-            <div className="flex items-center gap-1">
-              <Euro size={13} /> <span className="font-medium">Tarif location:</span>&nbsp;
-              {rental.price.toFixed(2)} €
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <Euro size={13} /> <span className="font-medium">Tarif location:</span>&nbsp;
+            {rental.price.toFixed(2)} €
+          </div>
           {/* Coût électricité */}
-          {(canViewPrice || canEdit) && rental.status === "completed" && (
+          {rental.status === "completed" && (
             <div className="flex items-center gap-1">
               <Zap size={13} /> <span className="font-medium">Coût électricité:</span>&nbsp;
               {rental.electricityCost != null ? (
@@ -161,9 +148,15 @@ export const RentalCard = ({
             </div>
           )}
           {/* Prix total */}
-          {(canViewPrice || canEdit) && rental.status === "completed" && rental.totalPrice != null && (
+          {rental.status === "completed" && rental.totalPrice != null && (
             <div className="flex items-center gap-1 font-bold text-gray-700">
               <Euro size={13} /> <span>Total:</span> {rental.totalPrice.toFixed(2)} €
+            </div>
+          )}
+          {/* Notes */}
+          {rental.notes && (
+            <div className="flex items-start gap-1">
+              <FileText size={13} className="shrink-0 mt-0.5" /> <span className="italic">{rental.notes}</span>
             </div>
           )}
         </div>
