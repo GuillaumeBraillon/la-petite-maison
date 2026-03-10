@@ -1,14 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import webPush from "npm:web-push@3.6.7";
 
-type NotificationType =
-  | "rental_created"
-  | "rental_confirmed"
-  | "rental_rejected"
-  | "rental_reminder"
-  | "rental_completed"
-  | "rental_deleted"
-  | "request_pending";
+type NotificationType = "rental_created" | "rental_confirmed" | "rental_rejected" | "rental_completed" | "rental_deleted" | "request_pending";
 
 interface NotificationPayload {
   type: NotificationType;
@@ -30,7 +23,6 @@ interface SendPushRequest {
   firstName?: string;
   startDate?: string;
   endDate?: string;
-  reminderDays?: 1 | 7;
   url?: string;
 }
 
@@ -173,13 +165,6 @@ const buildPayload = (request: SendPushRequest): NotificationPayload => {
         type,
         title: "Demande refusée",
         body: "Votre demande de séjour a été refusée.",
-        url: request.url,
-      };
-    case "rental_reminder":
-      return {
-        type,
-        title: "Rappel séjour",
-        body: request.reminderDays === 7 ? "Dans 7 jours : votre séjour à La Petite Maison." : "Rappel : votre séjour commence demain.",
         url: request.url,
       };
     case "rental_completed":

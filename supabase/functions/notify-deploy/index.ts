@@ -27,7 +27,6 @@ serve(async (req) => {
             type: "app_updated",
             title: "🏡 Mise à jour disponible (test)",
             body: "Test notify-deploy — tout fonctionne !",
-            url: "/",
           },
         }
       : {
@@ -36,7 +35,6 @@ serve(async (req) => {
             type: "app_updated",
             title: "🏡 Mise à jour disponible",
             body: "Une nouvelle version de l'application est disponible. Rechargez pour en profiter.",
-            url: "/",
           },
         };
 

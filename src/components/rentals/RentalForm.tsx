@@ -78,6 +78,25 @@ const getRentalDurationDays = (startIso?: string, endIso?: string): number => {
   return Math.max(1, Math.round(diffInMs / dayInMs));
 };
 
+const getAutoRentalPrice = (startIso: string, endIso: string, guestCount: number): number => {
+  const nights = getRentalDurationDays(startIso, endIso);
+  return nights * guestCount * PRICE_PER_NIGHT_PER_PERSON;
+};
+
+const getEffectiveRentalDates = (values?: Partial<RentalFormValues>): { start: string | undefined; end: string | undefined } => {
+  const v = values ?? {};
+  if (v.status === "completed") {
+    return {
+      start: v.actualStartDate ?? v.startDate,
+      end: v.actualEndDate ?? v.endDate,
+    };
+  }
+  return {
+    start: v.startDate,
+    end: v.endDate,
+  };
+};
+
 const buildDefaultValues = (): RentalFormValues => {
   const now = new Date();
   const start = nextSunday(now);
@@ -128,6 +147,14 @@ export const RentalForm = ({
   // Identifiant du membre imposé (soi-même si membre)
   const restrictedSubMemberId: string | undefined = currentMember?.role === "sub_member" ? currentMember.id : undefined;
 
+  const initialEffectiveDates = getEffectiveRentalDates(initialValues);
+  const initialEffectiveStart = initialEffectiveDates.start;
+  const initialEffectiveEnd = initialEffectiveDates.end;
+  const initialGuests = initialValues?.guestCount;
+  const hasComparableInitialAutoPrice =
+    typeof initialValues?.price === "number" && !!initialEffectiveStart && !!initialEffectiveEnd && typeof initialGuests === "number";
+  const initialAutoPrice = hasComparableInitialAutoPrice ? getAutoRentalPrice(initialEffectiveStart, initialEffectiveEnd, initialGuests) : undefined;
+
   const [values, setValues] = useState<RentalFormValues>(() => {
     const base: RentalFormValues = {
       ...buildDefaultValues(),
@@ -150,7 +177,12 @@ export const RentalForm = ({
     return base;
   });
   // true = l'utilisateur a saisi un tarif manuellement (pas de recalcul automatique)
-  const [isPriceLocked, setIsPriceLocked] = useState(() => !!initialValues?.price);
+  const [isPriceLocked, setIsPriceLocked] = useState(() => {
+    if (!hasComparableInitialAutoPrice || initialAutoPrice === undefined || initialValues?.price === undefined) {
+      return false;
+    }
+    return Math.abs(initialValues.price - initialAutoPrice) > 0.001;
+  });
   // true = l'utilisateur a saisi un total manuellement
   const [isTotalLocked, setIsTotalLocked] = useState(() => !!initialValues?.totalPrice);
   const [loading, setLoading] = useState(false);
@@ -179,8 +211,9 @@ export const RentalForm = ({
       // Recalcul automatique du tarif si non verrouillé
       // Utilise les dates réelles si disponibles (statut = completed), sinon les dates prévues
       if (!isPriceLocked && (key === "startDate" || key === "endDate" || key === "actualStartDate" || key === "actualEndDate" || key === "guestCount")) {
-        const effectiveStart = next.actualStartDate ?? next.startDate;
-        const effectiveEnd = next.actualEndDate ?? next.endDate;
+        const effectiveDates = getEffectiveRentalDates(next);
+        const effectiveStart = effectiveDates.start;
+        const effectiveEnd = effectiveDates.end;
         const nights = getRentalDurationDays(effectiveStart, effectiveEnd);
         const guests = typeof next.guestCount === "number" ? next.guestCount : 1;
         next.price = nights * guests * PRICE_PER_NIGHT_PER_PERSON;
@@ -462,8 +495,9 @@ export const RentalForm = ({
             className="text-xs text-primary-600 underline hover:text-primary-800 transition-colors"
             onClick={() => {
               setIsPriceLocked(false);
-              const effectiveStart = values.actualStartDate ?? values.startDate;
-              const effectiveEnd = values.actualEndDate ?? values.endDate;
+              const effectiveDates = getEffectiveRentalDates(values);
+              const effectiveStart = effectiveDates.start;
+              const effectiveEnd = effectiveDates.end;
               const nights = getRentalDurationDays(effectiveStart, effectiveEnd);
               set("price", nights * values.guestCount * PRICE_PER_NIGHT_PER_PERSON);
             }}

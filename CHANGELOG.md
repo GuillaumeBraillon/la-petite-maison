@@ -7,6 +7,31 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.25] - 2026-03-10
+
+### Améliorations
+
+- **Locations** : correction du recalcul automatique du tarif dans le formulaire
+  lors des changements de dates (et dates réelles en clôture)
+- **Notifications** : diffusion étendue à tous les propriétaires observateurs,
+  avec messages différenciés pour propriétaire principal, sous-membre,
+  propriétaires observateurs et validateurs
+
+### Technique
+
+- **Refactor notifications** : séparation des responsabilités de
+  `src/services/rentalNotifications.ts` vers :
+  `src/services/rentalMessageBuilder.ts`,
+  `src/services/rentalActorsService.ts`,
+  `src/services/pushService.ts`,
+  `src/utils/notificationUtils.ts`,
+  `src/utils/rentalUtils.ts`
+- **Typage** : suppression des éléments non utilisés liés à `rental_reminder`
+  (`src/types.ts`, `supabase/functions/send-push/index.ts`)
+- **Documentation** : ajout de JSDoc sur les services et utilitaires de notifications
+
+---
+
 ## [0.3.24] - 2026-03-01
 
 ### Améliorations

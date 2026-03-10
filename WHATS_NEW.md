@@ -5,6 +5,18 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.25] - 10 mars 2026
+
+### Ce qui change pour vous
+
+- **Tarif location** : le prix se met maintenant bien à jour quand vous changez les dates dans le formulaire
+- **Notifications** : tous les propriétaires reçoivent désormais les notifications de location
+- **Notifications plus claires** : le texte est adapté selon le destinataire (propriétaire, membre, validateur)
+
+### Corrections
+
+- **Fiabilité des notifications** : nettoyage des anciens types de notification non utilisés
+
 ## [0.3.24] - 1 mars 2026
 
 ### Ce qui change pour vous

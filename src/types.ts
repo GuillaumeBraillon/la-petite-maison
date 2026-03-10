@@ -4,14 +4,7 @@
 
 export type MemberRole = "admin" | "owner" | "sub_member";
 export type RentalStatus = "pending" | "confirmed" | "rejected" | "completed";
-export type NotificationType =
-  | "rental_created"
-  | "rental_confirmed"
-  | "rental_rejected"
-  | "rental_reminder"
-  | "rental_completed"
-  | "rental_deleted"
-  | "request_pending";
+export type NotificationType = "rental_created" | "rental_confirmed" | "rental_rejected" | "rental_completed" | "rental_deleted" | "request_pending";
 
 // ------------------------------------------------------------
 // Member
