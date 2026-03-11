@@ -1,6 +1,6 @@
 import { PlusCircle } from "lucide-react";
 import { useState } from "react";
-import type { Rental, Member, RentalStatus } from "../types";
+import type { RentalStatus, RentalsMembersPageSharedProps } from "../types";
 import { getPermissions, isMemberRental } from "../services/permissions";
 import { createMember } from "../services/apiCrud";
 import { RentalList } from "../components/rentals/RentalList";
@@ -17,21 +17,10 @@ import { useToast } from "../contexts/ToastContext";
 import { TOAST_MESSAGES } from "../services/messageCatalog";
 
 // ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface RentalsPageProps {
-  rentals: Rental[];
-  members: Member[];
-  currentMember?: Member;
-  onRefresh: () => Promise<void>;
-}
-
-// ------------------------------------------------------------
 // Page
 // ------------------------------------------------------------
 
-export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: RentalsPageProps) => {
+export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: RentalsMembersPageSharedProps) => {
   const { showToast } = useToast();
   const {
     formOpen,

@@ -1,28 +1,10 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import type { Member, MemberRole } from "../../types";
+import type { MemberRole, MemberFormValues, MemberFormProps } from "../../types";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Button } from "../ui/Button";
 import { MEMBER_ROLE_LABEL_MAP, MEMBER_ROLE_LIST } from "../../services/memberStatus";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-type MemberFormValues = Omit<Member, "id" | "createdAt" | "updatedAt">;
-
-interface MemberFormProps {
-  initialValues?: Partial<MemberFormValues>;
-  members?: Member[]; // pour la liste des owners (sub_member)
-  canEdit?: boolean;
-  canToggleAuth?: boolean;
-  onSubmit: (values: MemberFormValues) => Promise<void>;
-  onAuthorize?: (email: string, values: MemberFormValues) => Promise<void>;
-  onToggleAuthorization?: (isAllowed: boolean, values: MemberFormValues) => Promise<void>;
-  onCancel: () => void;
-  submitLabel?: string;
-}
 
 // ------------------------------------------------------------
 // Helpers

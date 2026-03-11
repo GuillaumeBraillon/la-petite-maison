@@ -1,41 +1,15 @@
 import { CalendarDays, Users, Euro, Zap, FileText, User, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { Rental, Member, RentalStatus } from "../../types";
+import type { RentalStatus, RentalDetailProps, DetailRowProps } from "../../types";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Select } from "../ui/Select";
-// ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
-
-const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-const getRentalDurationDays = (startIso: string, endIso: string): number => {
-  const start = new Date(startIso).getTime();
-  const end = new Date(endIso).getTime();
-  const diffInMs = end - start;
-  const dayInMs = 1000 * 60 * 60 * 24;
-  return Math.max(1, Math.round(diffInMs / dayInMs));
-};
+import { getDurationDays, formatDateLong } from "../../utils/rentalUtils";
 
 // ------------------------------------------------------------
 // Sub-components (définis hors du composant parent — règle Atomic Design)
 // ------------------------------------------------------------
-
-interface DetailRowProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}
 
 const DetailRow = ({ icon, label, value }: DetailRowProps) => (
   <div className="flex items-start gap-3">
@@ -48,33 +22,14 @@ const DetailRow = ({ icon, label, value }: DetailRowProps) => (
 );
 
 // ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface RentalDetailProps {
-  rental: Rental;
-  owner?: Member;
-  subMember?: Member;
-  /** true = peut voir les boutons Modifier/Supprimer : admin, owner éditeur, owner non-éditeur sur ses propres locations, sub_member sur ses propres locations */
-  canEdit?: boolean;
-  /** true = peut modifier le statut : admin et owner éditeur uniquement */
-  canEditStatus?: boolean;
-
-  onEdit: (rental: Rental) => void;
-  onDelete: (rental: Rental) => void;
-  onStatusChange: (rentalId: string, newStatus: RentalStatus) => Promise<void>;
-}
-
-// ------------------------------------------------------------
 // Component
 // ------------------------------------------------------------
 
 export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEditStatus = false, onEdit, onDelete, onStatusChange }: RentalDetailProps) => {
   const [updating, setUpdating] = useState(false);
   const canEditStatusInDetail = canEditStatus && rental.status !== "completed";
-  const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
-  const actualDurationDays =
-    rental.actualStartDate && rental.actualEndDate ? getRentalDurationDays(rental.actualStartDate, rental.actualEndDate) : durationDays;
+  const durationDays = getDurationDays(rental.startDate, rental.endDate);
+  const actualDurationDays = rental.actualStartDate && rental.actualEndDate ? getDurationDays(rental.actualStartDate, rental.actualEndDate) : durationDays;
 
   const handleStatusChange = async (newStatus: RentalStatus) => {
     setUpdating(true);
@@ -162,8 +117,8 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEdi
             value={`${subMember.firstName} ${subMember.lastName} — ${subMember.label}`}
           />
         )}
-        <DetailRow icon={<CalendarDays size={16} />} label="Arrivée" value={formatDate(rental.startDate)} />
-        <DetailRow icon={<CalendarDays size={16} />} label="Départ" value={formatDate(rental.endDate)} />
+        <DetailRow icon={<CalendarDays size={16} />} label="Arrivée" value={formatDateLong(rental.startDate)} />
+        <DetailRow icon={<CalendarDays size={16} />} label="Départ" value={formatDateLong(rental.endDate)} />
         <DetailRow icon={<CalendarDays size={16} />} label="Durée" value={`${durationDays} nuit${durationDays > 1 ? "s" : ""}`} />
         <DetailRow icon={<Users size={16} />} label="Nombre de personnes" value={`${rental.guestCount} personne${rental.guestCount > 1 ? "s" : ""}`} />
         <DetailRow icon={<Euro size={16} />} label="Tarif location (€)" value={`${rental.price.toFixed(2)} €`} />
@@ -177,10 +132,10 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEdi
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Infos post-location</p>
 
           {rental.status === "completed" && rental.actualStartDate && (
-            <DetailRow icon={<CalendarDays size={16} />} label="Début réel" value={formatDate(rental.actualStartDate)} />
+            <DetailRow icon={<CalendarDays size={16} />} label="Début réel" value={formatDateLong(rental.actualStartDate)} />
           )}
           {rental.status === "completed" && rental.actualEndDate && (
-            <DetailRow icon={<CalendarDays size={16} />} label="Fin réelle" value={formatDate(rental.actualEndDate)} />
+            <DetailRow icon={<CalendarDays size={16} />} label="Fin réelle" value={formatDateLong(rental.actualEndDate)} />
           )}
           {rental.status === "completed" &&
             rental.actualStartDate &&

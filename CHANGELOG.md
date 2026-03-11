@@ -7,6 +7,18 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.27] - 2026-03-11
+
+### Améliorations
+
+- **Calendrier** : ajout des numéros de semaine (vue desktop et mobile)
+
+### Technique
+
+- Préparation de release et harmonisation des types partagés (`Props`) dans l'application
+
+---
+
 ## [0.3.26] - 2026-03-10
 
 ### Améliorations

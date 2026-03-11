@@ -1,24 +1,13 @@
-import type { Rental, Member } from "../types";
+import type { RentalsMembersPageSharedProps } from "../types";
 import { DashboardStats } from "../components/dashboard/DashboardStats";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
 
 // ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface DashboardPageProps {
-  rentals: Rental[];
-  members: Member[];
-  currentMember?: Member;
-  onRefresh: () => Promise<void>;
-}
-
-// ------------------------------------------------------------
 // Page
 // ------------------------------------------------------------
 
-export const DashboardPage = ({ rentals, members, currentMember, onRefresh }: DashboardPageProps) => {
+export const DashboardPage = ({ rentals, members, currentMember, onRefresh }: RentalsMembersPageSharedProps) => {
   const { error, clearError } = useRentalModals(onRefresh);
 
   return (

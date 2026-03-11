@@ -1,4 +1,4 @@
-import type { Rental, Member } from "../types";
+import type { RentalsMembersPageSharedProps } from "../types";
 import { CalendarView } from "../components/calendar/CalendarView";
 import { RentalDetail } from "../components/rentals/RentalDetail";
 import { RentalForm } from "../components/rentals/RentalForm";
@@ -12,21 +12,10 @@ import { useToast } from "../contexts/ToastContext";
 import { TOAST_MESSAGES } from "../services/messageCatalog";
 
 // ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface CalendarPageProps {
-  rentals: Rental[];
-  members: Member[];
-  currentMember?: Member;
-  onRefresh: () => Promise<void>;
-}
-
-// ------------------------------------------------------------
 // Page
 // ------------------------------------------------------------
 
-export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: CalendarPageProps) => {
+export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: RentalsMembersPageSharedProps) => {
   const { showToast } = useToast();
   const permissions = getPermissions(currentMember ?? null);
   const {

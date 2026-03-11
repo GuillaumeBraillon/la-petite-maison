@@ -1,22 +1,8 @@
 import { Button } from "./Button";
 import type { FC } from "react";
+import type { SelectControl, FilterBarProps } from "../../types";
 
-type Option = { value: string; label: string };
-
-export type SelectControl = {
-  id: string;
-  label: string;
-  type: "select";
-  value: string;
-  options: Option[];
-  onChange: (value: string) => void;
-};
-
-interface FilterBarProps {
-  controls: SelectControl[];
-  onReset?: () => void;
-  label?: string;
-}
+export type { SelectControl };
 
 export const FilterBar: FC<FilterBarProps> = ({ controls, onReset, label = "Filtrer :" }) => {
   return (

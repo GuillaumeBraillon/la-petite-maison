@@ -1,43 +1,6 @@
-import type { Rental, Member } from "../../types";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface RentalBadgeProps {
-  rental: Rental;
-  owner?: Member;
-  labelOverride?: string;
-  /** Date de la cellule calendrier — permet de détecter arrivée tardive / départ anticipé */
-  cellDate?: Date;
-  onClick?: (rental: Rental) => void;
-}
-
-// ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
-
-const statusColorMap: Record<Rental["status"], string> = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  confirmed: "bg-red-100 text-red-800 border-red-200",
-  rejected: "bg-gray-100 text-gray-700 border-gray-200",
-  completed: "bg-green-100 text-green-800 border-green-200",
-};
-
-const getRentalDurationDays = (startIso: string, endIso: string): number => {
-  const start = new Date(startIso).getTime();
-  const end = new Date(endIso).getTime();
-  const diffInMs = end - start;
-  const dayInMs = 1000 * 60 * 60 * 24;
-  return Math.max(1, Math.round(diffInMs / dayInMs));
-};
-
-const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+import type { RentalBadgeProps } from "../../types";
+import { RENTAL_STATUS_BADGE_COLOR_MAP } from "../../services/rentalStatus";
+import { getDurationDays, formatDateShort } from "../../utils/rentalUtils";
 
 // ------------------------------------------------------------
 // Component
@@ -49,9 +12,9 @@ export const RentalBadge = ({ rental, owner, labelOverride, cellDate, onClick }:
   // Si le label personnalisé est identique au nom du propriétaire, on l'ignore pour éviter la redondance
   const label = labelOverride ?? ownerLabel;
   // Calcul de la durée en jours pour l'affichage et le tooltip
-  const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
+  const durationDays = getDurationDays(rental.startDate, rental.endDate);
   // Formatage de la date pour le tooltip
-  const toolTip = `${label} — ${formatDate(rental.startDate)} → ${formatDate(rental.endDate)} (${durationDays} nuit${durationDays > 1 ? "s" : ""})`;
+  const toolTip = `${label} — ${formatDateShort(rental.startDate)} → ${formatDateShort(rental.endDate)} (${durationDays} nuit${durationDays > 1 ? "s" : ""})`;
 
   // Détecter si le jour de la cellule est hors des dates réelles (location terminée avec dates réelles)
   let outsideActualReason: "arrived-late" | "left-early" | null = null;
@@ -83,7 +46,7 @@ export const RentalBadge = ({ rental, owner, labelOverride, cellDate, onClick }:
         "flex items-center gap-1",
         "hover:opacity-80 transition-opacity",
         outsideActualReason ? "opacity-40 border-dashed" : "",
-        statusColorMap[rental.status],
+        RENTAL_STATUS_BADGE_COLOR_MAP[rental.status],
       ].join(" ")}
     >
       {owner?.avatarUrl ? (

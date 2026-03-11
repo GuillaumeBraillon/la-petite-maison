@@ -1,25 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import type { ComboboxOption, ComboboxProps } from "../../types";
 
-// ------------------------------------------------------------
-// Types
-// ------------------------------------------------------------
-
-export interface ComboboxOption {
-  id: string;
-  label: string;
-  sublabel?: string;
-}
-
-interface ComboboxProps {
-  label?: string;
-  value: string; // id de l'option sélectionnée
-  options: ComboboxOption[];
-  onChange: (id: string) => void;
-  onCreate?: (searchText: string) => void;
-  placeholder?: string;
-  disabled?: boolean;
-  error?: string;
-}
+export type { ComboboxOption };
 
 // ------------------------------------------------------------
 // Component

@@ -1,3 +1,7 @@
+import type { ReactNode } from "react";
+import type { Session } from "@supabase/supabase-js";
+import type { ParsedChangelog } from "./services/changelogParser";
+
 // ============================================================
 // types.ts — Source de vérité unique pour toutes les interfaces
 // ============================================================
@@ -107,4 +111,311 @@ export interface AppError {
   message: string;
   code?: string;
   context?: string;
+}
+
+// ------------------------------------------------------------
+// Page props partagées
+// ------------------------------------------------------------
+
+export interface BasePageProps {
+  currentMember?: Member;
+  onRefresh: () => Promise<void>;
+}
+
+export interface MembersPageSharedProps extends BasePageProps {
+  members: Member[];
+}
+
+export interface RentalsMembersPageSharedProps extends BasePageProps {
+  rentals: Rental[];
+  members: Member[];
+}
+
+// ------------------------------------------------------------
+// Form values partagées
+// ------------------------------------------------------------
+
+export type MemberFormValues = Omit<Member, "id" | "createdAt" | "updatedAt">;
+export type RentalFormValues = Omit<Rental, "id" | "createdAt" | "updatedAt">;
+
+export interface CreateSubMemberInput {
+  firstName: string;
+  lastName: string;
+  label: string;
+  role: "sub_member";
+  ownerId?: string;
+}
+
+// ------------------------------------------------------------
+// Component props partagées
+// ------------------------------------------------------------
+
+export interface CalendarViewProps {
+  rentals: Rental[];
+  members: Member[];
+  onRentalClick?: (rental: Rental) => void;
+  onCreateClick?: () => void;
+  onDayClick?: (date: Date) => void;
+}
+
+export interface CalendarCellProps {
+  date: Date;
+  rentals: Rental[];
+  members: Member[];
+  isToday: boolean;
+  isCurrentMonth: boolean;
+  onRentalClick?: (rental: Rental) => void;
+  onDayClick?: (date: Date) => void;
+}
+
+export interface RentalBadgeProps {
+  rental: Rental;
+  owner?: Member;
+  labelOverride?: string;
+  cellDate?: Date;
+  onClick?: (rental: Rental) => void;
+}
+
+export interface DashboardStatsProps {
+  rentals: Rental[];
+  members: Member[];
+  currentMember?: Member;
+}
+
+export interface MemberFormProps {
+  initialValues?: Partial<MemberFormValues>;
+  members?: Member[];
+  canEdit?: boolean;
+  canToggleAuth?: boolean;
+  onSubmit: (values: MemberFormValues) => Promise<void>;
+  onAuthorize?: (email: string, values: MemberFormValues) => Promise<void>;
+  onToggleAuthorization?: (isAllowed: boolean, values: MemberFormValues) => Promise<void>;
+  onCancel: () => void;
+  submitLabel?: string;
+}
+
+export interface MemberCardProps {
+  member: Member;
+  ownerName?: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  canSendPasswordReset?: boolean;
+  onSendPasswordReset?: (member: Member) => void;
+  sendingPasswordReset?: boolean;
+  onEdit: (member: Member) => void;
+  onDelete: (member: Member) => void;
+}
+
+export interface MemberListProps {
+  members: Member[];
+  canEdit?: boolean;
+  canDelete?: boolean;
+  canSendPasswordReset?: boolean;
+  onSendPasswordReset?: (member: Member) => void;
+  sendingPasswordResetForId?: string | null;
+  onEdit: (member: Member) => void;
+  onDelete: (member: Member) => void;
+}
+
+export interface RentalFormProps {
+  initialValues?: Partial<RentalFormValues>;
+  members: Member[];
+  canEdit?: boolean;
+  currentMember?: Member;
+  onSubmit: (values: RentalFormValues) => Promise<void>;
+  onCancel: () => void;
+  submitLabel?: string;
+  onCreateSubMember?: (data: CreateSubMemberInput) => Promise<Member>;
+}
+
+export interface RentalCardProps {
+  rental: Rental;
+  owner?: Member;
+  subMember?: Member;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  onClick?: (rental: Rental) => void;
+  onEdit?: (rental: Rental) => void;
+  onDelete?: (rental: Rental) => void;
+}
+
+export interface RentalListProps {
+  rentals: Rental[];
+  members: Member[];
+  currentMember?: Member | null;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  onClick?: (rental: Rental) => void;
+  onEdit?: (rental: Rental) => void;
+  onDelete?: (rental: Rental) => void;
+}
+
+export interface RentalDetailProps {
+  rental: Rental;
+  owner?: Member;
+  subMember?: Member;
+  canEdit?: boolean;
+  canEditStatus?: boolean;
+  onEdit: (rental: Rental) => void;
+  onDelete: (rental: Rental) => void;
+  onStatusChange: (rentalId: string, newStatus: RentalStatus) => Promise<void>;
+}
+
+export interface DetailRowProps {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}
+
+export interface KpiCardProps {
+  label: string;
+  value: string | number;
+  icon: ReactNode;
+  trend?: string;
+  trendUp?: boolean;
+  className?: string;
+  compact?: boolean;
+}
+
+export interface LoginViewProps {
+  onLoginGoogle: () => void;
+  onLoginEmail: (email: string, password: string) => void;
+  onSignUp: (email: string, password: string) => void;
+  onResetPassword: (email: string) => void;
+  loadingGoogle: boolean;
+  loadingEmail: boolean;
+  loadingSignUp: boolean;
+  loadingReset: boolean;
+  error?: string | null;
+  info?: string | null;
+}
+
+export interface ResetPasswordViewProps {
+  onSubmit: (password: string) => void;
+  onContinue: () => void;
+  loading: boolean;
+  error?: string | null;
+  success?: string | null;
+}
+
+export interface UnauthorizedViewProps {
+  userEmail?: string;
+  onLogout: () => void;
+}
+
+export interface ErrorDisplayProps {
+  error: AppError;
+  onDismiss?: () => void;
+  className?: string;
+}
+
+export type FilterOption = { value: string; label: string };
+
+export interface SelectControl {
+  id: string;
+  label: string;
+  type: "select";
+  value: string;
+  options: FilterOption[];
+  onChange: (value: string) => void;
+}
+
+export interface FilterBarProps {
+  controls: SelectControl[];
+  onReset?: () => void;
+  label?: string;
+}
+
+export type BadgeVariant = "default" | "primary" | "success" | "warning" | "danger" | "info";
+
+export interface BadgeProps {
+  variant?: BadgeVariant;
+  children: ReactNode;
+  className?: string;
+}
+
+export interface NotificationToggleProps {
+  className?: string;
+  compact?: boolean;
+}
+
+export type ModalSize = "sm" | "md" | "lg";
+
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+  footer?: ReactNode;
+  size?: ModalSize;
+}
+
+export interface ComboboxOption {
+  id: string;
+  label: string;
+  sublabel?: string;
+}
+
+export interface ComboboxProps {
+  label?: string;
+  value: string;
+  options: ComboboxOption[];
+  onChange: (id: string) => void;
+  onCreate?: (searchText: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  error?: string;
+}
+
+export interface ConfirmDialogProps {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  loading?: boolean;
+}
+
+export interface UserMenuProps {
+  userEmail?: string;
+  onLogout: () => void;
+  session: Session | null;
+  appVersion?: string;
+  className?: string;
+  compact?: boolean;
+}
+
+export interface ErrorModalProps {
+  error: AppError;
+  onClose: () => void;
+}
+
+export interface WhatsNewModalProps {
+  entries: ParsedChangelog[];
+  onDismiss: () => void;
+}
+
+export interface UserInfoCardProps {
+  session: Session | null;
+  onLogout: () => void;
+  appVersion?: string;
+}
+
+export interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+export interface ErrorProviderProps {
+  children: ReactNode;
+}
+
+export interface ToastProviderProps {
+  children: ReactNode;
+}
+
+export interface AppShellProps {
+  session: Session;
 }

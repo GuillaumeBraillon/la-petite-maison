@@ -1,28 +1,11 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import type { Rental, RentalStatus, Member } from "../../types";
+import type { RentalStatus, RentalFormValues, RentalFormProps } from "../../types";
+import { getDurationDays, formatDateLabelLong, toDatetimeLocal, nextSunday, getAutoRentalPrice, getEffectiveRentalDates } from "../../utils/rentalUtils";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Button } from "../ui/Button";
 import { Combobox } from "../ui/Combobox";
-
-// ------------------------------------------------------------
-// Types
-// ------------------------------------------------------------
-
-type RentalFormValues = Omit<Rental, "id" | "createdAt" | "updatedAt">;
-
-interface RentalFormProps {
-  initialValues?: Partial<RentalFormValues>;
-  members: Member[];
-  canEdit?: boolean;
-  /** Membre connecté — permet de dériver le mode restreint (propriétaire non éditeur / membre) */
-  currentMember?: Member;
-  onSubmit: (values: RentalFormValues) => Promise<void>;
-  onCancel: () => void;
-  submitLabel?: string;
-  onCreateSubMember?: (data: { firstName: string; lastName: string; label: string; role: "sub_member"; ownerId?: string }) => Promise<Member>;
-}
 
 // ------------------------------------------------------------
 // Constants
@@ -30,73 +13,7 @@ interface RentalFormProps {
 
 const PRICE_PER_NIGHT_PER_PERSON = 5; // € par nuit et par personne
 
-// ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
-
-const nextSunday = (fromDate: Date): Date => {
-  const d = new Date(fromDate);
-  const day = d.getDay();
-  const daysUntilSunday = day === 0 ? 7 : 7 - day;
-  d.setDate(d.getDate() + daysUntilSunday);
-  d.setHours(12, 0, 0, 0);
-  return d;
-};
-
-const toDatetimeLocal = (iso: string): string => {
-  const date = new Date(iso);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-const formatDateLabel = (iso: string): string => {
-  try {
-    const date = new Date(iso);
-    const formatted = date.toLocaleDateString("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
-  } catch {
-    return "";
-  }
-};
-
-const getRentalDurationDays = (startIso?: string, endIso?: string): number => {
-  if (!startIso || !endIso) return 0;
-  const start = new Date(startIso).getTime();
-  const end = new Date(endIso).getTime();
-  if (Number.isNaN(start) || Number.isNaN(end)) return 0;
-  const diffInMs = end - start;
-  const dayInMs = 1000 * 60 * 60 * 24;
-  return Math.max(1, Math.round(diffInMs / dayInMs));
-};
-
-const getAutoRentalPrice = (startIso: string, endIso: string, guestCount: number): number => {
-  const nights = getRentalDurationDays(startIso, endIso);
-  return nights * guestCount * PRICE_PER_NIGHT_PER_PERSON;
-};
-
-const getEffectiveRentalDates = (values?: Partial<RentalFormValues>): { start: string | undefined; end: string | undefined } => {
-  const v = values ?? {};
-  if (v.status === "completed") {
-    return {
-      start: v.actualStartDate ?? v.startDate,
-      end: v.actualEndDate ?? v.endDate,
-    };
-  }
-  return {
-    start: v.startDate,
-    end: v.endDate,
-  };
-};
-
+// Helpers locales au formulaire
 const buildDefaultValues = (): RentalFormValues => {
   const now = new Date();
   const start = nextSunday(now);
@@ -171,7 +88,7 @@ export const RentalForm = ({
     if (!base.actualEndDate) base.actualEndDate = base.endDate;
     // Tarif auto-calculé à la création uniquement
     if (!initialValues?.price) {
-      const nights = getRentalDurationDays(base.startDate, base.endDate);
+      const nights = getDurationDays(base.startDate, base.endDate);
       base.price = nights * base.guestCount * PRICE_PER_NIGHT_PER_PERSON;
     }
     return base;
@@ -214,7 +131,7 @@ export const RentalForm = ({
         const effectiveDates = getEffectiveRentalDates(next);
         const effectiveStart = effectiveDates.start;
         const effectiveEnd = effectiveDates.end;
-        const nights = getRentalDurationDays(effectiveStart, effectiveEnd);
+        const nights = effectiveStart && effectiveEnd ? getDurationDays(effectiveStart, effectiveEnd) : 0;
         const guests = typeof next.guestCount === "number" ? next.guestCount : 1;
         next.price = nights * guests * PRICE_PER_NIGHT_PER_PERSON;
       }
@@ -320,10 +237,10 @@ export const RentalForm = ({
     }
   };
 
-  const startDateLabel = values.startDate ? formatDateLabel(values.startDate) : "Début";
-  const endDateLabel = values.endDate ? formatDateLabel(values.endDate) : "Fin";
-  const durationDays = getRentalDurationDays(values.startDate, values.endDate);
-  const actualDurationDays = getRentalDurationDays(values.actualStartDate, values.actualEndDate);
+  const startDateLabel = values.startDate ? formatDateLabelLong(values.startDate) : "Début";
+  const endDateLabel = values.endDate ? formatDateLabelLong(values.endDate) : "Fin";
+  const durationDays = getDurationDays(values.startDate, values.endDate);
+  const actualDurationDays = values.actualStartDate && values.actualEndDate ? getDurationDays(values.actualStartDate, values.actualEndDate) : 0;
   const actualDatesChanged = values.actualStartDate !== values.startDate || values.actualEndDate !== values.endDate;
   const recalculatedPrice = actualDurationDays * values.guestCount * PRICE_PER_NIGHT_PER_PERSON;
   const isOwnerEditingOwnRental = !!currentMember && currentMember.role === "owner" && !currentMember.isEditor && currentMember.id === values.ownerId;
@@ -498,7 +415,7 @@ export const RentalForm = ({
               const effectiveDates = getEffectiveRentalDates(values);
               const effectiveStart = effectiveDates.start;
               const effectiveEnd = effectiveDates.end;
-              const nights = getRentalDurationDays(effectiveStart, effectiveEnd);
+              const nights = effectiveStart && effectiveEnd ? getDurationDays(effectiveStart, effectiveEnd) : 0;
               set("price", nights * values.guestCount * PRICE_PER_NIGHT_PER_PERSON);
             }}
           >
@@ -533,14 +450,14 @@ export const RentalForm = ({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
-                label={values.actualStartDate ? formatDateLabel(values.actualStartDate) : "Début réel"}
+                label={values.actualStartDate ? formatDateLabelLong(values.actualStartDate) : "Début réel"}
                 type="datetime-local"
                 value={values.actualStartDate ? toDatetimeLocal(values.actualStartDate) : ""}
                 onChange={(e) => set("actualStartDate", e.target.value ? new Date(e.target.value).toISOString() : undefined)}
                 disabled={!canEdit}
               />
               <Input
-                label={values.actualEndDate ? formatDateLabel(values.actualEndDate) : "Fin réelle"}
+                label={values.actualEndDate ? formatDateLabelLong(values.actualEndDate) : "Fin réelle"}
                 type="datetime-local"
                 value={values.actualEndDate ? toDatetimeLocal(values.actualEndDate) : ""}
                 onChange={(e) => set("actualEndDate", e.target.value ? new Date(e.target.value).toISOString() : undefined)}
@@ -631,7 +548,7 @@ export const RentalForm = ({
                 {" = "}
                 <span className="font-medium text-gray-700">{(values.price + (values.electricityCost ?? 0)).toFixed(2)} €</span>
               </p>
-              {isTotalLocked && canEdit && !isRestricted && (
+              {canEdit && !isRestricted && values.totalPrice !== values.price + (values.electricityCost ?? 0) && (
                 <button
                   type="button"
                   className="text-xs text-primary-600 underline hover:text-primary-800 transition-colors"

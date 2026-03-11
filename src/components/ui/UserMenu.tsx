@@ -1,18 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { User, ChevronDown } from "lucide-react";
-import type { Session } from "@supabase/supabase-js";
+import type { UserMenuProps } from "../../types";
 import { UserInfoCard } from "./UserInfoCard";
 import { supabase } from "../../services/supabaseClient";
 import { useUserNotifications } from "../../hooks/useUserNotifications";
-
-interface UserMenuProps {
-  userEmail?: string;
-  onLogout: () => void;
-  session: Session | null;
-  appVersion?: string;
-  className?: string;
-  compact?: boolean;
-}
 
 /**
  * Menu utilisateur affichant l'email connecté et le bouton de déconnexion.

@@ -1,15 +1,5 @@
 import { X, AlertCircle } from "lucide-react";
-import type { AppError } from "../../types";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface ErrorDisplayProps {
-  error: AppError;
-  onDismiss?: () => void;
-  className?: string;
-}
+import type { ErrorDisplayProps } from "../../types";
 
 // ------------------------------------------------------------
 // ErrorDisplay — composant réutilisable d'affichage d'erreur inline

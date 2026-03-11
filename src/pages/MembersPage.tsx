@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
-import type { Member } from "../types";
+import type { Member, MembersPageSharedProps } from "../types";
 import { getPermissions } from "../services/permissions";
 import { MemberList } from "../components/members/MemberList";
 import { FilterBar } from "../components/ui/FilterBar";
@@ -15,21 +15,11 @@ import { createMember, updateMember, deleteMember } from "../services/apiCrud";
 import { TOAST_MESSAGES } from "../services/messageCatalog";
 import { supabase } from "../services/supabaseClient";
 
-// ----------------------------------------------- -------
-// Props
-// ---------- ------------------------------------------------
-
-interface MembersPageProps {
-  members: Member[];
-  currentMember?: Member;
-  onRefresh: () => Promise<void>;
-}
-
 // ------------------------------------------------------------
 // Page
 // ------------------------------------------------------------
 
-export const MembersPage = ({ members, currentMember, onRefresh }: MembersPageProps) => {
+export const MembersPage = ({ members, currentMember, onRefresh }: MembersPageSharedProps) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);

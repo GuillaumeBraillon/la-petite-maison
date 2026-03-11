@@ -2,6 +2,8 @@ import type { RentalStatus } from "../types";
 
 export const RENTAL_STATUS_LIST: RentalStatus[] = ["pending", "confirmed", "completed", "rejected"];
 
+export const ACTIVE_STATUSES: RentalStatus[] = ["confirmed", "completed"];
+
 type RentalStatusBadgeVariant = "warning" | "success" | "danger" | "default";
 
 export const RENTAL_STATUS_LABEL_MAP: Record<RentalStatus, string> = {
@@ -40,3 +42,10 @@ export const RENTAL_STATUS_BG_COLOR_MAP: Record<RentalStatus, string> = {
 };
 
 export const getRentalStatusLabel = (status: RentalStatus): string => RENTAL_STATUS_LABEL_MAP[status];
+
+export const RENTAL_STATUS_BADGE_COLOR_MAP: Record<RentalStatus, string> = {
+  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  confirmed: "bg-red-100 text-red-800 border-red-200",
+  rejected: "bg-gray-100 text-gray-700 border-gray-200",
+  completed: "bg-green-100 text-green-800 border-green-200",
+};

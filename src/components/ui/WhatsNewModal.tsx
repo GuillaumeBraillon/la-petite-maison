@@ -5,16 +5,7 @@
 import type { ReactNode } from "react";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
-import type { ParsedChangelog } from "../../services/changelogParser";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface WhatsNewModalProps {
-  entries: ParsedChangelog[];
-  onDismiss: () => void;
-}
+import type { WhatsNewModalProps } from "../../types";
 
 // ------------------------------------------------------------
 // Helpers

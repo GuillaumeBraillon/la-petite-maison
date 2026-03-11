@@ -1,25 +1,9 @@
 import { User, Mail, MapPin, Pencil, Trash2 } from "lucide-react";
-import type { Member } from "../../types";
+import type { MemberCardProps } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { MEMBER_ROLE_BADGE_VARIANT_MAP, MEMBER_ROLE_LABEL_MAP } from "../../services/memberStatus";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface MemberCardProps {
-  member: Member;
-  ownerName?: string; // nom du propriétaire parent si sub_member
-  canEdit?: boolean;
-  canDelete?: boolean;
-  canSendPasswordReset?: boolean;
-  onSendPasswordReset?: (member: Member) => void;
-  sendingPasswordReset?: boolean;
-  onEdit: (member: Member) => void;
-  onDelete: (member: Member) => void;
-}
 
 // ------------------------------------------------------------
 // Component

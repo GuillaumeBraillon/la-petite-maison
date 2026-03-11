@@ -1,22 +1,7 @@
 import { CalendarX } from "lucide-react";
-import type { Rental, Member } from "../../types";
+import type { RentalListProps } from "../../types";
 import { isMemberRental } from "../../services/permissions";
 import { RentalCard } from "./RentalCard";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface RentalListProps {
-  rentals: Rental[];
-  members: Member[];
-  currentMember?: Member | null;
-  canEdit?: boolean;
-  canDelete?: boolean;
-  onClick?: (rental: Rental) => void;
-  onEdit?: (rental: Rental) => void;
-  onDelete?: (rental: Rental) => void;
-}
 
 // ------------------------------------------------------------
 // Empty state

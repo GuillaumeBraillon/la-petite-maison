@@ -1,17 +1,10 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Lock, Eye, EyeOff } from "lucide-react";
+import type { ResetPasswordViewProps } from "../../types";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
-
-interface ResetPasswordViewProps {
-  onSubmit: (password: string) => void;
-  onContinue: () => void;
-  loading: boolean;
-  error?: string | null;
-  success?: string | null;
-}
 
 export const ResetPasswordView = ({ onSubmit, onContinue, loading, error, success }: ResetPasswordViewProps) => {
   const [password, setPassword] = useState("");

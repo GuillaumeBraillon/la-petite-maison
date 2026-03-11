@@ -1,21 +1,6 @@
 import { Users } from "lucide-react";
-import type { Member } from "../../types";
+import type { MemberListProps } from "../../types";
 import { MemberCard } from "./MemberCard";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface MemberListProps {
-  members: Member[];
-  canEdit?: boolean;
-  canDelete?: boolean;
-  canSendPasswordReset?: boolean;
-  onSendPasswordReset?: (member: Member) => void;
-  sendingPasswordResetForId?: string | null;
-  onEdit: (member: Member) => void;
-  onDelete: (member: Member) => void;
-}
 
 // ------------------------------------------------------------
 // Empty state

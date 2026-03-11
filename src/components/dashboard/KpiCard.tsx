@@ -1,19 +1,5 @@
-import type { ReactNode } from "react";
+import type { KpiCardProps } from "../../types";
 import { Card } from "../ui/Card";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface KpiCardProps {
-  label: string;
-  value: string | number;
-  icon: ReactNode;
-  trend?: string;
-  trendUp?: boolean;
-  className?: string;
-  compact?: boolean;
-}
 
 // ------------------------------------------------------------
 // Component

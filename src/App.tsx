@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { LayoutDashboard, Users, CalendarDays, List } from "lucide-react";
-import type { Member, Rental } from "./types";
+import type { Member, Rental, AppShellProps } from "./types";
 import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
 import { fetchMembers, fetchRentals } from "./services/api";
@@ -161,10 +161,6 @@ const LoginScreen = ({ error }: { error?: string | null }) => {
 // ------------------------------------------------------------
 // Main app (authentifié)
 // ------------------------------------------------------------
-
-interface AppShellProps {
-  session: Session;
-}
 
 const AppShell = ({ session }: AppShellProps) => {
   const [view, setView] = useState<View>("dashboard");

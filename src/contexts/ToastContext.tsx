@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ToastProviderProps } from "../types";
 
 export type ToastVariant = "success" | "error" | "info" | "warning";
 
@@ -34,10 +34,6 @@ const createToastId = (): string => {
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
-
-interface ToastProviderProps {
-  children: ReactNode;
-}
 
 export const ToastProvider = ({ children }: ToastProviderProps) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);

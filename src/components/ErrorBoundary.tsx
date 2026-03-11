@@ -1,15 +1,11 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
+import type { ErrorBoundaryProps } from "../types";
 import { logger } from "../services/logger";
 
 // ------------------------------------------------------------
 // Props & State
 // ------------------------------------------------------------
-
-interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: ReactNode;
-}
 
 interface ErrorBoundaryState {
   hasError: boolean;

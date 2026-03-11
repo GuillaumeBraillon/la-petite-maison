@@ -1,5 +1,5 @@
 import { Euro, Clock, Zap } from "lucide-react";
-import type { Rental, Member, RentalStatus } from "../../types";
+import type { Rental, Member, RentalStatus, DashboardStatsProps } from "../../types";
 import { KpiCard } from "./KpiCard";
 import { Card } from "../ui/Card";
 import {
@@ -7,21 +7,10 @@ import {
   RENTAL_STATUS_LIST,
   RENTAL_STATUS_TEXT_COLOR_MAP,
   RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP,
+  ACTIVE_STATUSES,
   getRentalStatusLabel,
 } from "../../services/rentalStatus";
-
-// ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
-
-const getDaysForRental = (rental: Rental): number => {
-  const start = rental.actualStartDate ?? rental.startDate;
-  const end = rental.actualEndDate ?? rental.endDate;
-  const diff = (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24);
-  return Math.max(0, diff);
-};
-
-const ACTIVE_STATUSES: RentalStatus[] = ["confirmed", "completed"];
+import { getDaysForRental } from "../../utils/rentalUtils";
 
 // ------------------------------------------------------------
 // Stats communes
@@ -150,16 +139,6 @@ const computeOwnerStats = (rentals: Rental[], members: Member[], currentYear: nu
       return a.nextRentalTimestamp - b.nextRentalTimestamp;
     });
 };
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface DashboardStatsProps {
-  rentals: Rental[];
-  members: Member[];
-  currentMember?: Member;
-}
 
 // ------------------------------------------------------------
 // Component

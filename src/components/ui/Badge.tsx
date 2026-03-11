@@ -1,16 +1,4 @@
-import type { ReactNode } from "react";
-
-// ------------------------------------------------------------
-// Types
-// ------------------------------------------------------------
-
-type BadgeVariant = "default" | "primary" | "success" | "warning" | "danger" | "info";
-
-interface BadgeProps {
-  variant?: BadgeVariant;
-  children: ReactNode;
-  className?: string;
-}
+import type { BadgeVariant, BadgeProps } from "../../types";
 
 // ------------------------------------------------------------
 // Styles

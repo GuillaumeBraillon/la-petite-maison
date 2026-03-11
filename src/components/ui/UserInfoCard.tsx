@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { UserCircle, Mail, LogOut } from "lucide-react";
-import type { Session } from "@supabase/supabase-js";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
 import { Input } from "./Input";
@@ -8,7 +7,7 @@ import { supabase } from "../../services/supabaseClient";
 import { useUserNotifications } from "../../hooks/useUserNotifications";
 import { useToast } from "../../contexts/ToastContext";
 import { TOAST_MESSAGES } from "../../services/messageCatalog";
-import type { UserNotification, MemberRole } from "../../types";
+import type { UserNotification, MemberRole, UserInfoCardProps } from "../../types";
 import { MEMBER_ROLE_BADGE_VARIANT_MAP, MEMBER_ROLE_LABEL_MAP } from "../../services/memberStatus";
 import { Badge } from "./Badge";
 
@@ -18,12 +17,6 @@ interface MemberIdentityRow {
   label: string | null;
   role: MemberRole;
   is_editor: boolean;
-}
-
-interface UserInfoCardProps {
-  session: Session | null;
-  onLogout: () => void;
-  appVersion?: string;
 }
 
 /**

@@ -1,19 +1,5 @@
-import type { Rental, Member } from "../../types";
+import type { CalendarCellProps } from "../../types";
 import { RentalBadge } from "./RentalBadge";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface CalendarCellProps {
-  date: Date;
-  rentals: Rental[];
-  members: Member[];
-  isToday: boolean;
-  isCurrentMonth: boolean;
-  onRentalClick?: (rental: Rental) => void;
-  onDayClick?: (date: Date) => void;
-}
 
 // ------------------------------------------------------------
 // Component

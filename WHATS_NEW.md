@@ -5,6 +5,13 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.27] - 11 mars 2026
+
+### Ce qui change pour vous
+
+- **Calendrier** : les numéros de semaine sont maintenant affichés
+- **Lecture simplifiée** : repérage plus rapide des périodes sur mobile et desktop
+
 ## [0.3.26] - 10 mars 2026
 
 ### Ce qui change pour vous

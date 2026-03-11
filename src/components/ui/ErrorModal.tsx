@@ -1,14 +1,5 @@
 import { AlertTriangle } from "lucide-react";
-import type { AppError } from "../../types";
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface ErrorModalProps {
-  error: AppError;
-  onClose: () => void;
-}
+import type { ErrorModalProps } from "../../types";
 
 // ------------------------------------------------------------
 // ErrorModal — modal pour erreurs critiques (handlers, mutations)

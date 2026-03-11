@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useCallback } from "react";
-import type { ReactNode } from "react";
-import type { AppError } from "../types";
+import type { AppError, ErrorProviderProps } from "../types";
 
 // ------------------------------------------------------------
 // Types
@@ -21,10 +20,6 @@ const ErrorContext = createContext<ErrorContextValue | null>(null);
 // ------------------------------------------------------------
 // Provider
 // ------------------------------------------------------------
-
-interface ErrorProviderProps {
-  children: ReactNode;
-}
 
 export const ErrorProvider = ({ children }: ErrorProviderProps) => {
   const [error, setErrorState] = useState<AppError | null>(null);

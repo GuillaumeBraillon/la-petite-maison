@@ -1,22 +1,10 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Home, Eye, EyeOff } from "lucide-react";
+import type { LoginViewProps } from "../../types";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
-
-interface LoginViewProps {
-  onLoginGoogle: () => void;
-  onLoginEmail: (email: string, password: string) => void;
-  onSignUp: (email: string, password: string) => void;
-  onResetPassword: (email: string) => void;
-  loadingGoogle: boolean;
-  loadingEmail: boolean;
-  loadingSignUp: boolean;
-  loadingReset: boolean;
-  error?: string | null;
-  info?: string | null;
-}
 
 export const LoginView = ({
   onLoginGoogle,

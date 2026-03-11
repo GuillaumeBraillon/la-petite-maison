@@ -1,53 +1,20 @@
 import { CalendarDays, Users, Euro, Pencil, Trash2, User, Zap, FileText } from "lucide-react";
-import type { Rental, Member } from "../../types";
+import type { RentalCardProps } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { RENTAL_STATUS_BADGE_VARIANT_MAP, getRentalStatusLabel } from "../../services/rentalStatus";
-
-// ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
-
-const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-
-const getRentalDurationDays = (startIso: string, endIso: string): number => {
-  const start = new Date(startIso).getTime();
-  const end = new Date(endIso).getTime();
-  const diffInMs = end - start;
-  const dayInMs = 1000 * 60 * 60 * 24;
-  return Math.max(1, Math.round(diffInMs / dayInMs));
-};
-
-// ------------------------------------------------------------
-// Props
-// ------------------------------------------------------------
-
-interface RentalCardProps {
-  rental: Rental;
-  owner?: Member;
-  subMember?: Member;
-  canEdit?: boolean;
-  canDelete?: boolean;
-  onClick?: (rental: Rental) => void;
-  onEdit?: (rental: Rental) => void;
-  onDelete?: (rental: Rental) => void;
-}
+import { getDurationDays, formatDateShort } from "../../utils/rentalUtils";
 
 // ------------------------------------------------------------
 // Component
 // ------------------------------------------------------------
 
 export const RentalCard = ({ rental, owner, subMember, canEdit = true, canDelete = true, onClick, onEdit, onDelete }: RentalCardProps) => {
-  const durationDays = getRentalDurationDays(rental.startDate, rental.endDate);
+  const durationDays = getDurationDays(rental.startDate, rental.endDate);
   const hasActualDates = rental.status === "completed" && (rental.actualStartDate || rental.actualEndDate);
   const datesChanged = hasActualDates && (rental.actualStartDate !== rental.startDate || rental.actualEndDate !== rental.endDate);
-  const actualDurationDays = hasActualDates ? getRentalDurationDays(rental.actualStartDate ?? rental.startDate, rental.actualEndDate ?? rental.endDate) : null;
+  const actualDurationDays = hasActualDates ? getDurationDays(rental.actualStartDate ?? rental.startDate, rental.actualEndDate ?? rental.endDate) : null;
 
   return (
     <Card hover={!!onClick} onClick={() => onClick?.(rental)} padding="sm" className="flex flex-col gap-2 h-full">
@@ -94,14 +61,14 @@ export const RentalCard = ({ rental, owner, subMember, canEdit = true, canDelete
         <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
           <CalendarDays size={13} className="shrink-0" />
           <span className={datesChanged ? "line-through opacity-50" : ""}>
-            {formatDate(rental.startDate)} → {formatDate(rental.endDate)}
+            {formatDateShort(rental.startDate)} → {formatDateShort(rental.endDate)}
           </span>
         </div>
         {datesChanged && (
           <div className="flex flex-wrap items-center gap-2 text-xs text-amber-600">
             <CalendarDays size={13} className="shrink-0" />
             <span>
-              {formatDate(rental.actualStartDate ?? rental.startDate)} → {formatDate(rental.actualEndDate ?? rental.endDate)}
+              {formatDateShort(rental.actualStartDate ?? rental.startDate)} → {formatDateShort(rental.actualEndDate ?? rental.endDate)}
             </span>
             <span className="text-[10px] opacity-70">(réel)</span>
           </div>

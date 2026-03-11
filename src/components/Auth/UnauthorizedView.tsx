@@ -1,11 +1,7 @@
 import { ShieldX, LogOut } from "lucide-react";
+import type { UnauthorizedViewProps } from "../../types";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
-
-interface UnauthorizedViewProps {
-  userEmail?: string;
-  onLogout: () => void;
-}
 
 /**
  * Vue affichée lorsqu'un utilisateur non autorisé tente d'accéder à l'application.

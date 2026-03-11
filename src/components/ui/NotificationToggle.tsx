@@ -1,11 +1,7 @@
 import { Bell, BellOff } from "lucide-react";
+import type { NotificationToggleProps } from "../../types";
 import { Button } from "./Button";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
-
-interface NotificationToggleProps {
-  className?: string;
-  compact?: boolean;
-}
 
 export const NotificationToggle = ({ className = "", compact = false }: NotificationToggleProps) => {
   const { isSupported, isSubscribed, permission, subscribe, unsubscribe, loading, error } = usePushNotifications();
