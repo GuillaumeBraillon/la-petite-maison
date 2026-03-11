@@ -12,10 +12,15 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 ### Améliorations
 
 - **Calendrier** : ajout des numéros de semaine (vue desktop et mobile)
+- **Notifications** : affichage conditionnel du bouton d'activation
+  (sidebar tant que non activé, puis UserInfoCard à côté de Déconnexion une fois activé)
+- **UserInfoCard** : équilibrage horizontal de l'en-tête (version centrée, actions alignées)
+- **Version app** : `vX.Y.Z` devient un bouton ouvrant la modal des nouveautés avec historique
 
 ### Technique
 
 - Préparation de release et harmonisation des types partagés (`Props`) dans l'application
+- **Nouveautés** : ajout d'un parseur complet des versions (`parseAllVersionsFromRaw`, `parseWhatsNewAllVersions`)
 
 ---
 

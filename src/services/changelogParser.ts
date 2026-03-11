@@ -97,3 +97,16 @@ export const parseVersionsAfterFromRaw = (raw: string, lastSeenVersion: string |
     return entry ? [entry] : [];
   });
 };
+
+/**
+ * Extrait toutes les versions d'un fichier brut, du plus récent au plus ancien.
+ */
+export const parseAllVersionsFromRaw = (raw: string): ParsedChangelog[] => {
+  const allVersionMatches = [...raw.matchAll(/^## \[([0-9]+\.[0-9]+\.[0-9]+)\]/gm)];
+  const allVersions = allVersionMatches.map((m) => m[1]);
+
+  return allVersions.flatMap((v) => {
+    const entry = parseVersionFromRaw(raw, v);
+    return entry ? [entry] : [];
+  });
+};

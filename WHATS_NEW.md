@@ -11,6 +11,10 @@ Rédigé en langage simple, sans jargon technique.
 
 - **Calendrier** : les numéros de semaine sont maintenant affichés
 - **Lecture simplifiée** : repérage plus rapide des périodes sur mobile et desktop
+- **Notifications** : le bouton d'activation apparaît dans la sidebar tant qu'il n'est pas activé
+- **Compte utilisateur** : une fois activé, le bouton notifications est déplacé à côté de Déconnexion dans la carte profil
+- **Interface** : l'en-tête de la carte profil est mieux aligné horizontalement
+- **Version de l'app** : en cliquant sur `vX.X.X` dans la carte profil, vous ouvrez l'historique complet des mises à jour
 
 ## [0.3.26] - 10 mars 2026
 

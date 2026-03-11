@@ -3,7 +3,7 @@
 // ============================================================
 
 import whatsNew from "../../WHATS_NEW.md?raw";
-import { parseVersionFromRaw, parseVersionsAfterFromRaw } from "./changelogParser";
+import { parseAllVersionsFromRaw, parseVersionFromRaw, parseVersionsAfterFromRaw } from "./changelogParser";
 import type { ParsedChangelog } from "./changelogParser";
 
 /**
@@ -18,3 +18,9 @@ export const parseWhatsNewForVersion = (version: string): ParsedChangelog | null
  * Retournées du plus récent au plus ancien.
  */
 export const parseWhatsNewVersionsAfter = (lastSeenVersion: string | null): ParsedChangelog[] => parseVersionsAfterFromRaw(whatsNew, lastSeenVersion);
+
+/**
+ * Extrait l'historique complet des versions de WHATS_NEW.md.
+ * Retourné du plus récent au plus ancien.
+ */
+export const parseWhatsNewAllVersions = (): ParsedChangelog[] => parseAllVersionsFromRaw(whatsNew);

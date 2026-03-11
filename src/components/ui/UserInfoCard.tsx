@@ -10,6 +10,11 @@ import { TOAST_MESSAGES } from "../../services/messageCatalog";
 import type { UserNotification, MemberRole, UserInfoCardProps } from "../../types";
 import { MEMBER_ROLE_BADGE_VARIANT_MAP, MEMBER_ROLE_LABEL_MAP } from "../../services/memberStatus";
 import { Badge } from "./Badge";
+import { NotificationToggle } from "./NotificationToggle";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
+import { WhatsNewModal } from "./WhatsNewModal";
+import { parseWhatsNewAllVersions } from "../../services/whatsNewParser";
+import type { ParsedChangelog } from "../../services/changelogParser";
 
 interface MemberIdentityRow {
   first_name: string | null;
@@ -36,6 +41,8 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
   const [emailUpdateLoading, setEmailUpdateLoading] = useState(false);
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
   const [deleteNotificationLoading, setDeleteNotificationLoading] = useState(false);
+  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
+  const [whatsNewEntries, setWhatsNewEntries] = useState<ParsedChangelog[]>([]);
   const { showToast } = useToast();
   const {
     notifications,
@@ -46,6 +53,7 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
     markAllAsRead,
     deleteNotification,
   } = useUserNotifications();
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed } = usePushNotifications();
 
   const sessionUser = session?.user;
   const userName = sessionUser?.user_metadata?.full_name || sessionUser?.user_metadata?.name;
@@ -237,10 +245,29 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
     setPasswordResetLoading(false);
   };
 
+  const handleOpenWhatsNew = (): void => {
+    const entries = parseWhatsNewAllVersions();
+    setWhatsNewEntries(entries);
+    setIsWhatsNewOpen(true);
+  };
+
   return (
     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
-      <div className="relative flex items-center justify-end">
-        {appVersion && <p className="absolute left-1/2 -translate-x-1/2 text-[10px] text-gray-400">v{appVersion}</p>}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        {pushSupported && pushSubscribed && <NotificationToggle compact className="text-gray-500 p-1.5" />}
+        {appVersion ? (
+          <button
+            type="button"
+            onClick={handleOpenWhatsNew}
+            className="text-[10px] text-gray-400 hover:text-gray-600 underline underline-offset-2 transition-colors justify-self-center"
+            aria-label="Voir l'historique des mises à jour"
+            title="Voir l'historique des mises à jour"
+          >
+            {`v${appVersion}`}
+          </button>
+        ) : (
+          <span className="text-[10px] text-gray-400 justify-self-center" />
+        )}
         <button
           type="button"
           onClick={onLogout}
@@ -434,6 +461,8 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
           </div>
         )}
       </Modal>
+
+      {isWhatsNewOpen && whatsNewEntries.length > 0 && <WhatsNewModal entries={whatsNewEntries} onDismiss={() => setIsWhatsNewOpen(false)} />}
     </div>
   );
 };

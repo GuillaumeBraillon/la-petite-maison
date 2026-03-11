@@ -23,6 +23,7 @@ import { UserMenu } from "./components/ui/UserMenu";
 import { NotificationToggle } from "./components/ui/NotificationToggle";
 import { WhatsNewModal } from "./components/ui/WhatsNewModal";
 import { useWhatsNew } from "./hooks/useWhatsNew";
+import { usePushNotifications } from "./hooks/usePushNotifications";
 
 // ------------------------------------------------------------
 // Types
@@ -170,6 +171,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const { error, clearError, setError } = useError();
   const { install, isInstallable } = usePWAInstall();
   const { shouldShow: showWhatsNew, entries: whatsNewEntries, dismiss: dismissWhatsNew } = useWhatsNew();
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed } = usePushNotifications();
 
   const currentMember = members.find((m) => m.email === session.user.email);
 
@@ -269,7 +271,7 @@ const AppShell = ({ session }: AppShellProps) => {
         {/* Profil + Sign out */}
         <div className="flex items-center bg-gray-100 rounded-full px-1 mb-4 mx-3">
           <UserMenu session={session} userEmail={session.user.email ?? undefined} onLogout={handleSignOut} appVersion={packageJson.version} />
-          <NotificationToggle compact className="text-gray-500 p-1.5" />
+          {pushSupported && !pushSubscribed && <NotificationToggle compact className="text-gray-500 p-1.5" />}
         </div>
       </aside>
 
@@ -284,7 +286,7 @@ const AppShell = ({ session }: AppShellProps) => {
             </div>
             <div className="flex items-center bg-gray-100 rounded-full px-1">
               <UserMenu session={session} userEmail={session.user.email ?? undefined} onLogout={handleSignOut} appVersion={packageJson.version} compact />
-              <NotificationToggle compact className="text-gray-500 p-1.5" />
+              {pushSupported && !pushSubscribed && <NotificationToggle compact className="text-gray-500 p-1.5" />}
             </div>
           </div>
           {loading ? (
