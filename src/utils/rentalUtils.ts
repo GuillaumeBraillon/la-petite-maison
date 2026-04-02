@@ -216,3 +216,73 @@ export const getDaysForRental = (rental: { actualStartDate?: string; actualEndDa
   const diff = (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24);
   return Math.max(0, diff);
 };
+
+const formatOffsetLabel = (label: string, diffMs: number): string | null => {
+  if (diffMs === 0) return null;
+
+  const sign = diffMs > 0 ? "+" : "-";
+  const totalMinutes = Math.abs(Math.round(diffMs / (1000 * 60)));
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+
+  if (days > 0) {
+    parts.push(`${days} ${days > 1 ? "jours" : "jour"}`);
+  }
+  if (hours > 0) {
+    parts.push(`${hours} h`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes} min`);
+  }
+
+  if (parts.length === 0) {
+    parts.push("moins d'une minute");
+  }
+
+  return `${label} ${sign}${parts.join(" ")}`;
+};
+
+export const getActualDateDiffLabel = (params: { startDate: string; endDate: string; actualStartDate?: string; actualEndDate?: string }): string => {
+  const { startDate, endDate, actualStartDate, actualEndDate } = params;
+  const actualStartOffsetMs = actualStartDate ? new Date(actualStartDate).getTime() - new Date(startDate).getTime() : 0;
+  const actualEndOffsetMs = actualEndDate ? new Date(actualEndDate).getTime() - new Date(endDate).getTime() : 0;
+
+  return [formatOffsetLabel("arrivée", actualStartOffsetMs), formatOffsetLabel("départ", actualEndOffsetMs)].filter(Boolean).join(" · ");
+};
+
+const formatCompactOffsetLabel = (prefix: string, diffMs: number): string | null => {
+  if (diffMs === 0) return null;
+
+  const sign = diffMs > 0 ? "+" : "-";
+  const totalMinutes = Math.abs(Math.round(diffMs / (1000 * 60)));
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+
+  if (days > 0) {
+    parts.push(`${days}j`);
+  }
+  if (hours > 0) {
+    parts.push(`${hours}h`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes}min`);
+  }
+
+  if (parts.length === 0) {
+    parts.push("<1min");
+  }
+
+  return `${prefix}${sign}${parts.join(" ")}`;
+};
+
+export const getActualDateDiffCompactLabel = (params: { startDate: string; endDate: string; actualStartDate?: string; actualEndDate?: string }): string => {
+  const { startDate, endDate, actualStartDate, actualEndDate } = params;
+  const actualStartOffsetMs = actualStartDate ? new Date(actualStartDate).getTime() - new Date(startDate).getTime() : 0;
+  const actualEndOffsetMs = actualEndDate ? new Date(actualEndDate).getTime() - new Date(endDate).getTime() : 0;
+
+  return [formatCompactOffsetLabel("A", actualStartOffsetMs), formatCompactOffsetLabel("D", actualEndOffsetMs)].filter(Boolean).join(" · ");
+};

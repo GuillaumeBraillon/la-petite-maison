@@ -5,7 +5,7 @@ import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Select } from "../ui/Select";
-import { getDurationDays, formatDateLong } from "../../utils/rentalUtils";
+import { getDurationDays, formatDateLong, getActualDateDiffLabel } from "../../utils/rentalUtils";
 import { Avatar } from "../ui/Avatar";
 
 // ------------------------------------------------------------
@@ -31,6 +31,7 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEdi
   const canEditStatusInDetail = canEditStatus && rental.status !== "completed";
   const durationDays = getDurationDays(rental.startDate, rental.endDate);
   const actualDurationDays = rental.actualStartDate && rental.actualEndDate ? getDurationDays(rental.actualStartDate, rental.actualEndDate) : durationDays;
+  const actualDateDiffParts = getActualDateDiffLabel(rental);
 
   const handleStatusChange = async (newStatus: RentalStatus) => {
     setUpdating(true);
@@ -120,7 +121,9 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEdi
             rental.actualStartDate &&
             rental.actualEndDate &&
             (rental.actualStartDate !== rental.startDate || rental.actualEndDate !== rental.endDate) && (
-              <p className="text-xs text-amber-600">⚠️ Les dates réelles diffèrent des dates prévues.</p>
+              <p className="text-xs text-amber-600">
+                ⚠️ Les dates réelles diffèrent des dates prévues{actualDateDiffParts ? ` : ${actualDateDiffParts}.` : "."}
+              </p>
             )}
           {rental.status === "completed" && rental.electricityCost !== undefined && (
             <DetailRow

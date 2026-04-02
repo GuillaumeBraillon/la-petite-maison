@@ -1,7 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import type { RentalStatus, RentalFormValues, RentalFormProps } from "../../types";
-import { getDurationDays, formatDateLabelLong, toDatetimeLocal, nextSunday, getAutoRentalPrice, getEffectiveRentalDates } from "../../utils/rentalUtils";
+import {
+  getDurationDays,
+  formatDateLabelLong,
+  toDatetimeLocal,
+  nextSunday,
+  getAutoRentalPrice,
+  getEffectiveRentalDates,
+  getActualDateDiffLabel,
+} from "../../utils/rentalUtils";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Button } from "../ui/Button";
@@ -93,6 +101,7 @@ export const RentalForm = ({
     }
     return base;
   });
+  const [priceInputValue, setPriceInputValue] = useState<string>(() => String((initialValues?.price ?? buildDefaultValues().price) || 0));
   // true = l'utilisateur a saisi un tarif manuellement (pas de recalcul automatique)
   const [isPriceLocked, setIsPriceLocked] = useState(() => {
     if (!hasComparableInitialAutoPrice || initialAutoPrice === undefined || initialValues?.price === undefined) {
@@ -104,6 +113,10 @@ export const RentalForm = ({
   const [isTotalLocked, setIsTotalLocked] = useState(() => !!initialValues?.totalPrice);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof RentalFormValues, string>>>({});
+
+  useEffect(() => {
+    setPriceInputValue(String(values.price));
+  }, [values.price]);
 
   // État du mini-formulaire de création de membre
   const [newMember, setNewMember] = useState<{
@@ -242,6 +255,7 @@ export const RentalForm = ({
   const durationDays = getDurationDays(values.startDate, values.endDate);
   const actualDurationDays = values.actualStartDate && values.actualEndDate ? getDurationDays(values.actualStartDate, values.actualEndDate) : 0;
   const actualDatesChanged = values.actualStartDate !== values.startDate || values.actualEndDate !== values.endDate;
+  const actualDateDiffParts = getActualDateDiffLabel(values);
   const recalculatedPrice = actualDurationDays * values.guestCount * PRICE_PER_NIGHT_PER_PERSON;
   const isOwnerEditingOwnRental = !!currentMember && currentMember.role === "owner" && !currentMember.isEditor && currentMember.id === values.ownerId;
   const isSubMemberEditingOwnRental = !!currentMember && currentMember.role === "sub_member" && currentMember.id === values.subMemberId;
@@ -382,12 +396,26 @@ export const RentalForm = ({
           type="number"
           min={0}
           step={0.01}
-          value={values.price === 0 ? "" : values.price}
-          onChange={(e) => {
-            const val = e.target.value;
-            if (val === "") {
+          value={priceInputValue}
+          onFocus={(e) => {
+            if (priceInputValue === "0") {
+              setPriceInputValue("");
+              return;
+            }
+            e.target.select();
+          }}
+          onBlur={() => {
+            if (priceInputValue === "") {
+              setPriceInputValue("0");
               setIsPriceLocked(false);
               set("price", 0);
+            }
+          }}
+          onChange={(e) => {
+            const val = e.target.value;
+            setPriceInputValue(val);
+            if (val === "") {
+              return;
             } else {
               const num = Number(val);
               if (!isNaN(num)) {
@@ -473,7 +501,9 @@ export const RentalForm = ({
               </p>
             )}
             {values.actualStartDate && values.actualEndDate && (values.actualStartDate !== values.startDate || values.actualEndDate !== values.endDate) && (
-              <p className="mt-2 text-xs text-amber-600">⚠️ Les dates réelles diffèrent des dates prévues.</p>
+              <p className="mt-2 text-xs text-amber-600">
+                ⚠️ Les dates réelles diffèrent des dates prévues{actualDateDiffParts ? ` : ${actualDateDiffParts}.` : "."}
+              </p>
             )}
           </div>
           {/* Tarif recalculé sur dates réelles */}

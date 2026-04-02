@@ -4,7 +4,7 @@ import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { RENTAL_STATUS_BADGE_VARIANT_MAP, getRentalStatusLabel } from "../../services/rentalStatus";
-import { getDurationDays, formatDateShort } from "../../utils/rentalUtils";
+import { getDurationDays, formatDateShort, getActualDateDiffCompactLabel } from "../../utils/rentalUtils";
 import { Avatar } from "../ui/Avatar";
 
 // ------------------------------------------------------------
@@ -16,6 +16,7 @@ export const RentalCard = ({ rental, owner, subMember, canEdit = true, canDelete
   const hasActualDates = rental.status === "completed" && (rental.actualStartDate || rental.actualEndDate);
   const datesChanged = hasActualDates && (rental.actualStartDate !== rental.startDate || rental.actualEndDate !== rental.endDate);
   const actualDurationDays = hasActualDates ? getDurationDays(rental.actualStartDate ?? rental.startDate, rental.actualEndDate ?? rental.endDate) : null;
+  const actualDateDiffCompact = getActualDateDiffCompactLabel(rental);
 
   return (
     <Card hover={!!onClick} onClick={() => onClick?.(rental)} padding="sm" className="flex flex-col gap-2 h-full">
@@ -54,6 +55,7 @@ export const RentalCard = ({ rental, owner, subMember, canEdit = true, canDelete
               {formatDateShort(rental.actualStartDate ?? rental.startDate)} → {formatDateShort(rental.actualEndDate ?? rental.endDate)}
             </span>
             <span className="text-[10px] opacity-70">(réel)</span>
+            {actualDateDiffCompact && <span className="text-[10px] opacity-80">{actualDateDiffCompact}</span>}
           </div>
         )}
 

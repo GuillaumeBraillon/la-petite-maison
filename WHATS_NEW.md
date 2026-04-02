@@ -5,6 +5,13 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.30] - 2 avril 2026
+
+### Ce qui change pour vous
+
+- **Carte location** : l'application indique plus clairement de combien l'arrivée ou le départ diffèrent des dates prévues
+- **Carte location** : un résumé court de l'écart réel est visible directement dans la carte quand les dates ont changé
+
 ## [0.3.29] - 2 avril 2026
 
 ### Ce qui change pour vous

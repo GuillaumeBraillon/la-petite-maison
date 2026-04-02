@@ -7,6 +7,19 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.30] - 2026-04-02
+
+### Améliorations
+
+- **Locations** : le champ "Tarif location" accepte explicitement la valeur `0` sans gêner la saisie d'un nouveau montant
+- **Locations** : les écarts entre dates prévues et dates réelles sont maintenant détaillés dans le formulaire et dans la vue détail (jours, heures, minutes)
+- **Carte location** : ajout d'un résumé compact des écarts de dates réelles directement dans la carte
+
+### Technique
+
+- **Locations** : séparation de la valeur affichée et de la valeur enregistrée pour améliorer l'édition du tarif dans `RentalForm`
+- **Utilitaires** : ajout de helpers partagés dans `rentalUtils.ts` pour générer les libellés détaillés et compacts des écarts de dates réelles
+
 ## [0.3.29] - 2026-04-02
 
 ### Améliorations
