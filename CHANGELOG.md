@@ -7,6 +7,23 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.28] - 2026-04-02
+
+### Améliorations
+
+- **Dashboard** : les cartes de statut globales sont maintenant cliquables et ouvrent la page des locations avec le filtre de statut correspondant
+- **Dashboard** : les statuts dans les cartes par propriétaire sont aussi cliquables et appliquent à la fois le filtre de statut et le filtre propriétaire
+- **Locations** : les filtres transmis depuis le dashboard sont repris automatiquement à l'ouverture de la page pour faciliter la navigation entre synthèse et détail
+- **Notifications** : la carte utilisateur affiche désormais le nombre de notifications visibles par rapport au total (ex. `8/12`)
+- **Notifications** : ajout d'une action de suppression en lot limitée aux notifications déjà lues et visibles dans la carte, avec confirmation préalable
+
+### Technique
+
+- **Navigation interne** : centralisation dans l'application de l'état des filtres de locations pour permettre l'ouverture contextualisée depuis le dashboard
+- **Typage partagé** : ajout de types dédiés pour les props du dashboard et de la page locations (`DashboardPageProps`, `RentalsPageProps`, `RentalStatusFilter`)
+- **Notifications** : enrichissement du hook `useUserNotifications` avec le comptage total des notifications et une suppression ciblée par liste d'identifiants
+- **Messages UI** : extension du catalogue `messageCatalog.ts` pour couvrir les toasts de suppression groupée des notifications
+
 ## [0.3.27] - 2026-03-11
 
 ### Améliorations

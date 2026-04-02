@@ -108,9 +108,17 @@ export const TOAST_MESSAGES = {
       title: "Notification supprimée",
       message: "La notification a été supprimée.",
     },
+    deletedAll: {
+      title: "Notifications supprimées",
+      message: "Les notifications lues affichées ont été supprimées.",
+    },
     deleteError: {
       title: "Erreur",
       message: "Impossible de supprimer la notification.",
+    },
+    deleteAllError: {
+      title: "Erreur",
+      message: "Impossible de supprimer les notifications lues affichées.",
     },
   },
 } as const;

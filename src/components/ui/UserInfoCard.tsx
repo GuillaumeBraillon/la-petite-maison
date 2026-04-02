@@ -13,6 +13,7 @@ import { Badge } from "./Badge";
 import { NotificationToggle } from "./NotificationToggle";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { WhatsNewModal } from "./WhatsNewModal";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { parseWhatsNewAllVersions } from "../../services/whatsNewParser";
 import type { ParsedChangelog } from "../../services/changelogParser";
 
@@ -41,17 +42,21 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
   const [emailUpdateLoading, setEmailUpdateLoading] = useState(false);
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
   const [deleteNotificationLoading, setDeleteNotificationLoading] = useState(false);
+  const [deleteAllNotificationsLoading, setDeleteAllNotificationsLoading] = useState(false);
+  const [isDeleteAllNotificationsOpen, setIsDeleteAllNotificationsOpen] = useState(false);
   const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
   const [whatsNewEntries, setWhatsNewEntries] = useState<ParsedChangelog[]>([]);
   const { showToast } = useToast();
   const {
     notifications,
+    totalCount,
     unreadCount,
     loading: notificationsLoading,
     error: notificationsError,
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    deleteNotifications,
   } = useUserNotifications();
   const { isSupported: pushSupported, isSubscribed: pushSubscribed } = usePushNotifications();
 
@@ -62,6 +67,8 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
   const secondaryDisplayName = memberFullName && memberFullName !== primaryDisplayName ? memberFullName : null;
   const authProvider = typeof sessionUser?.app_metadata?.provider === "string" ? sessionUser.app_metadata.provider : null;
   const isGoogleAccount = authProvider === "google";
+  const visibleReadNotifications = notifications.filter((notification) => notification.isRead);
+  const visibleNotificationCount = notifications.length;
 
   useEffect(() => {
     let isCancelled = false;
@@ -183,6 +190,39 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
       });
     }
     setDeleteNotificationLoading(false);
+  };
+
+  const handleDeleteAllNotifications = async (): Promise<void> => {
+    const visibleReadNotificationIds = visibleReadNotifications.map((notification) => notification.id);
+    if (visibleReadNotificationIds.length === 0) {
+      return;
+    }
+
+    setDeleteAllNotificationsLoading(true);
+    setNotificationModalError(null);
+
+    try {
+      await deleteNotifications(visibleReadNotificationIds);
+      showToast({
+        variant: "success",
+        title: TOAST_MESSAGES.notification.deletedAll.title,
+        message: TOAST_MESSAGES.notification.deletedAll.message,
+      });
+      if (selectedNotification && visibleReadNotificationIds.includes(selectedNotification.id)) {
+        setSelectedNotification(null);
+      }
+      setIsDeleteAllNotificationsOpen(false);
+    } catch (err: unknown) {
+      const message = err instanceof Error && err.message ? err.message : TOAST_MESSAGES.notification.deleteAllError.message;
+      setNotificationModalError(message);
+      showToast({
+        variant: "error",
+        title: TOAST_MESSAGES.notification.deleteAllError.title,
+        message,
+      });
+    }
+
+    setDeleteAllNotificationsLoading(false);
   };
 
   const handleOpenEmailModal = (): void => {
@@ -336,24 +376,38 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
         <div className="pt-2 border-t border-gray-100 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="text-xs font-medium text-gray-600">
-              Notifications
+              {`Notifications (${visibleNotificationCount}/${totalCount})`}
               {unreadCount > 0 && (
                 <span className="ml-1 text-primary-600">
                   ({unreadCount} non lue{unreadCount > 1 ? "s" : ""})
                 </span>
               )}
             </div>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  void markAllAsRead();
-                }}
-                className="text-[11px] text-gray-500 hover:text-gray-700"
-              >
-                Tout marquer lu
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {visibleReadNotifications.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotificationModalError(null);
+                    setIsDeleteAllNotificationsOpen(true);
+                  }}
+                  className="text-[11px] text-red-500 hover:text-red-700"
+                >
+                  Supprimer les lues
+                </button>
+              )}
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void markAllAsRead();
+                  }}
+                  className="text-[11px] text-gray-500 hover:text-gray-700"
+                >
+                  Tout marquer lu
+                </button>
+              )}
+            </div>
           </div>
 
           {notificationsLoading && <p className="text-[11px] text-gray-500">Chargement…</p>}
@@ -461,6 +515,21 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        isOpen={isDeleteAllNotificationsOpen}
+        title="Supprimer les notifications lues affichées"
+        message="Cette action supprimera uniquement les notifications déjà lues et visibles dans cette carte. Voulez-vous continuer ?"
+        confirmLabel="Supprimer les lues"
+        onConfirm={() => {
+          void handleDeleteAllNotifications();
+        }}
+        onCancel={() => {
+          if (deleteAllNotificationsLoading) return;
+          setIsDeleteAllNotificationsOpen(false);
+        }}
+        loading={deleteAllNotificationsLoading}
+      />
 
       {isWhatsNewOpen && whatsNewEntries.length > 0 && <WhatsNewModal entries={whatsNewEntries} onDismiss={() => setIsWhatsNewOpen(false)} />}
     </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { LayoutDashboard, Users, CalendarDays, List } from "lucide-react";
-import type { Member, Rental, AppShellProps } from "./types";
+import type { Member, Rental, RentalStatus, RentalStatusFilter, AppShellProps } from "./types";
 import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
 import { fetchMembers, fetchRentals } from "./services/api";
@@ -165,6 +165,8 @@ const LoginScreen = ({ error }: { error?: string | null }) => {
 
 const AppShell = ({ session }: AppShellProps) => {
   const [view, setView] = useState<View>("dashboard");
+  const [rentalsStatusFilter, setRentalsStatusFilter] = useState<RentalStatusFilter>("all");
+  const [rentalsOwnerFilter, setRentalsOwnerFilter] = useState<string | "all">("all");
   const [members, setMembers] = useState<Member[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(true);
@@ -241,6 +243,20 @@ const AppShell = ({ session }: AppShellProps) => {
     await supabase.auth.signOut();
   };
 
+  const handleOpenRentalsWithStatus = (status: RentalStatus, ownerId?: string): void => {
+    setRentalsStatusFilter(status);
+    setRentalsOwnerFilter(ownerId ?? "all");
+    setView("rentals");
+  };
+
+  const handleViewChange = (nextView: View): void => {
+    if (nextView === "rentals") {
+      setRentalsStatusFilter("all");
+      setRentalsOwnerFilter("all");
+    }
+    setView(nextView);
+  };
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
       {/* Sidebar */}
@@ -256,7 +272,7 @@ const AppShell = ({ session }: AppShellProps) => {
           {getAvailableNavItems().map((item) => (
             <button
               key={item.id}
-              onClick={() => setView(item.id)}
+              onClick={() => handleViewChange(item.id)}
               className={[
                 "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium w-full text-left transition-colors",
                 view === item.id ? "bg-primary-50 text-primary-700" : "text-gray-600 hover:bg-gray-100",
@@ -295,8 +311,25 @@ const AppShell = ({ session }: AppShellProps) => {
             </div>
           ) : (
             <>
-              {view === "dashboard" && <DashboardPage rentals={rentals} members={members} currentMember={currentMember ?? undefined} onRefresh={refresh} />}
-              {view === "rentals" && <RentalsPage rentals={rentals} members={members} currentMember={currentMember ?? undefined} onRefresh={refresh} />}
+              {view === "dashboard" && (
+                <DashboardPage
+                  rentals={rentals}
+                  members={members}
+                  currentMember={currentMember ?? undefined}
+                  onRefresh={refresh}
+                  onOpenRentalsWithStatus={handleOpenRentalsWithStatus}
+                />
+              )}
+              {view === "rentals" && (
+                <RentalsPage
+                  rentals={rentals}
+                  members={members}
+                  currentMember={currentMember ?? undefined}
+                  onRefresh={refresh}
+                  initialStatusFilter={rentalsStatusFilter}
+                  initialOwnerFilter={rentalsOwnerFilter}
+                />
+              )}
               {view === "calendar" && <CalendarPage rentals={rentals} members={members} currentMember={currentMember ?? undefined} onRefresh={refresh} />}
               {view === "members" && <MembersPage members={members} currentMember={currentMember ?? undefined} onRefresh={refresh} />}
             </>
@@ -310,7 +343,7 @@ const AppShell = ({ session }: AppShellProps) => {
           {getAvailableNavItems().map((item) => (
             <button
               key={item.id}
-              onClick={() => setView(item.id)}
+              onClick={() => handleViewChange(item.id)}
               className={[
                 "flex flex-col items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors",
                 view === item.id ? "text-primary-700" : "text-gray-600",

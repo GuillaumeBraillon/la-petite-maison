@@ -8,6 +8,7 @@ import type { ParsedChangelog } from "./services/changelogParser";
 
 export type MemberRole = "admin" | "owner" | "sub_member";
 export type RentalStatus = "pending" | "confirmed" | "rejected" | "completed";
+export type RentalStatusFilter = "all" | RentalStatus;
 export type NotificationType = "rental_created" | "rental_confirmed" | "rental_rejected" | "rental_completed" | "rental_deleted" | "request_pending";
 
 // ------------------------------------------------------------
@@ -131,6 +132,15 @@ export interface RentalsMembersPageSharedProps extends BasePageProps {
   members: Member[];
 }
 
+export interface DashboardPageProps extends RentalsMembersPageSharedProps {
+  onOpenRentalsWithStatus?: (status: RentalStatus, ownerId?: string) => void;
+}
+
+export interface RentalsPageProps extends RentalsMembersPageSharedProps {
+  initialStatusFilter?: RentalStatusFilter;
+  initialOwnerFilter?: string | "all";
+}
+
 // ------------------------------------------------------------
 // Form values partagées
 // ------------------------------------------------------------
@@ -180,6 +190,7 @@ export interface DashboardStatsProps {
   rentals: Rental[];
   members: Member[];
   currentMember?: Member;
+  onStatusCardClick?: (status: RentalStatus, ownerId?: string) => void;
 }
 
 export interface MemberFormProps {

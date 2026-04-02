@@ -7,6 +7,7 @@ const USER_NOTIFICATIONS_UPDATED_EVENT = "user-notifications-updated";
 
 interface UseUserNotificationsReturn {
   notifications: UserNotification[];
+  totalCount: number;
   unreadCount: number;
   loading: boolean;
   error: string | null;
@@ -14,6 +15,7 @@ interface UseUserNotificationsReturn {
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
+  deleteNotifications: (ids: string[]) => Promise<void>;
 }
 
 const getErrorMessage = (err: unknown): string => {
@@ -24,6 +26,7 @@ const getErrorMessage = (err: unknown): string => {
 
 export const useUserNotifications = (): UseUserNotificationsReturn => {
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -31,15 +34,20 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
   const refresh = useCallback(async (): Promise<void> => {
     if (!userId) {
       setNotifications([]);
+      setTotalCount(0);
       setLoading(false);
       return;
     }
 
     setLoading(true);
     try {
-      const { data, error: fetchError } = await supabase
+      const {
+        data,
+        error: fetchError,
+        count,
+      } = await supabase
         .from("user_notifications")
-        .select("id,user_id,type,title,body,url,is_read,created_at")
+        .select("id,user_id,type,title,body,url,is_read,created_at", { count: "exact" })
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(8);
@@ -49,9 +57,11 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
       const mapped = ((data ?? []) as DbUserNotification[]).map(mapUserNotificationFromDb);
 
       setNotifications(mapped);
+      setTotalCount(count ?? mapped.length);
       setError(null);
     } catch (err: unknown) {
       setNotifications([]);
+      setTotalCount(0);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -199,6 +209,37 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
         }
 
         setNotifications((prev) => prev.filter((item) => item.id !== id));
+        setTotalCount((prev) => Math.max(0, prev - 1));
+        broadcastNotificationsUpdated();
+      } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        setError(message);
+        throw new Error(message);
+      }
+    },
+    [broadcastNotificationsUpdated, userId]
+  );
+
+  const deleteNotifications = useCallback(
+    async (ids: string[]): Promise<void> => {
+      if (!userId) {
+        const noSessionError = new Error("Session utilisateur introuvable.");
+        setError(noSessionError.message);
+        throw noSessionError;
+      }
+
+      if (ids.length === 0) {
+        return;
+      }
+
+      try {
+        const { error: deleteError } = await supabase.from("user_notifications").delete().eq("user_id", userId).eq("is_read", true).in("id", ids);
+
+        if (deleteError) throw deleteError;
+
+        const idsToDelete = new Set(ids);
+        setNotifications((prev) => prev.filter((item) => !idsToDelete.has(item.id)));
+        setTotalCount((prev) => Math.max(0, prev - ids.length));
         broadcastNotificationsUpdated();
       } catch (err: unknown) {
         const message = getErrorMessage(err);
@@ -211,6 +252,7 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
 
   return {
     notifications,
+    totalCount,
     unreadCount: notifications.filter((item) => !item.isRead).length,
     loading,
     error,
@@ -218,5 +260,6 @@ export const useUserNotifications = (): UseUserNotificationsReturn => {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    deleteNotifications,
   };
 };

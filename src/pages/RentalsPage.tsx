@@ -1,6 +1,6 @@
 import { PlusCircle } from "lucide-react";
-import { useState } from "react";
-import type { RentalStatus, RentalsMembersPageSharedProps } from "../types";
+import { useEffect, useState } from "react";
+import type { RentalStatusFilter, RentalsPageProps } from "../types";
 import { getPermissions, isMemberRental } from "../services/permissions";
 import { createMember } from "../services/apiCrud";
 import { RentalList } from "../components/rentals/RentalList";
@@ -20,7 +20,7 @@ import { TOAST_MESSAGES } from "../services/messageCatalog";
 // Page
 // ------------------------------------------------------------
 
-export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: RentalsMembersPageSharedProps) => {
+export const RentalsPage = ({ rentals, members, currentMember, onRefresh, initialStatusFilter, initialOwnerFilter }: RentalsPageProps) => {
   const { showToast } = useToast();
   const {
     formOpen,
@@ -48,9 +48,15 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: Rent
   const permissions = getPermissions(currentMember ?? null);
 
   // Filters
-  type StatusFilter = "all" | RentalStatus;
+  type StatusFilter = RentalStatusFilter;
   type OwnerFilter = "all" | string;
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatusFilter ?? "all");
+
+  useEffect(() => {
+    if (initialStatusFilter !== undefined) {
+      setStatusFilter(initialStatusFilter);
+    }
+  }, [initialStatusFilter]);
 
   const defaultOwnerFilter = (): OwnerFilter => {
     if (!currentMember) return "all";
@@ -58,7 +64,13 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh }: Rent
     if (currentMember.role === "sub_member" && currentMember.ownerId) return currentMember.ownerId;
     return "all";
   };
-  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>(defaultOwnerFilter);
+  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>(initialOwnerFilter ?? defaultOwnerFilter());
+
+  useEffect(() => {
+    if (initialOwnerFilter !== undefined) {
+      setOwnerFilter(initialOwnerFilter);
+    }
+  }, [initialOwnerFilter]);
 
   const ownerOptions = [{ value: "all", label: "Tous propriétaires" }].concat(
     members

@@ -1,4 +1,4 @@
-import type { RentalsMembersPageSharedProps } from "../types";
+import type { DashboardPageProps } from "../types";
 import { DashboardStats } from "../components/dashboard/DashboardStats";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
@@ -7,7 +7,7 @@ import { useRentalModals } from "../hooks/useRentalModals";
 // Page
 // ------------------------------------------------------------
 
-export const DashboardPage = ({ rentals, members, currentMember, onRefresh }: RentalsMembersPageSharedProps) => {
+export const DashboardPage = ({ rentals, members, currentMember, onRefresh, onOpenRentalsWithStatus }: DashboardPageProps) => {
   const { error, clearError } = useRentalModals(onRefresh);
 
   return (
@@ -20,7 +20,7 @@ export const DashboardPage = ({ rentals, members, currentMember, onRefresh }: Re
 
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
 
-      <DashboardStats rentals={rentals} members={members} currentMember={currentMember} />
+      <DashboardStats rentals={rentals} members={members} currentMember={currentMember} onStatusCardClick={onOpenRentalsWithStatus} />
     </div>
   );
 };

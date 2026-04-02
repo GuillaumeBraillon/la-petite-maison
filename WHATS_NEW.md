@@ -5,6 +5,15 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.28] - 2 avril 2026
+
+### Ce qui change pour vous
+
+- **Tableau de bord** : vous pouvez maintenant cliquer sur un statut global pour ouvrir directement la liste des locations filtrée sur ce statut
+- **Tableau de bord** : dans les cartes par propriétaire, un clic sur un statut ouvre la liste avec le bon propriétaire et le bon statut déjà sélectionnés
+- **Notifications** : la carte profil indique maintenant combien de notifications sont affichées par rapport au total
+- **Notifications** : vous pouvez supprimer d'un coup uniquement les notifications déjà lues qui sont visibles dans la carte, avec une confirmation avant action
+
 ## [0.3.27] - 11 mars 2026
 
 ### Ce qui change pour vous
