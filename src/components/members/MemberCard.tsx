@@ -1,9 +1,10 @@
-import { User, Mail, MapPin, Pencil, Trash2 } from "lucide-react";
+import { Mail, MapPin, Pencil, Trash2 } from "lucide-react";
 import type { MemberCardProps } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { MEMBER_ROLE_BADGE_VARIANT_MAP, MEMBER_ROLE_LABEL_MAP } from "../../services/memberStatus";
+import { Avatar } from "../ui/Avatar";
 
 // ------------------------------------------------------------
 // Component
@@ -24,24 +25,14 @@ export const MemberCard = ({
   const maybeAuth = member as unknown as { authProvider?: string };
   const authProvider = maybeAuth.authProvider;
   const isGoogleAccount = authProvider ? authProvider === "google" : !!email && (email.endsWith("@gmail.com") || email.endsWith("@googlemail.com"));
+
   return (
     <Card hover padding="sm" className="flex flex-col gap-2 h-full">
       <div className="flex-1 flex-col flex gap-2">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
-            {member.avatarUrl ? (
-              <img
-                src={member.avatarUrl}
-                alt={`${member.firstName} ${member.lastName}`}
-                className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                <User size={18} className="text-primary-600" />
-              </div>
-            )}
+            <Avatar member={member} size="md" fallbackInitialSource="firstName" />
             <div>
               <p className="font-semibold text-gray-900 text-sm leading-tight">
                 {member.firstName} {member.lastName}

@@ -409,7 +409,7 @@ Checklist PR — Toast vs ErrorContext :
 | Infos post-location (completed) |            ✅             |                ❌                 |             ❌             |
 
 > **Règle clé** : Un `owner` non-éditeur ne peut éditer que ses propres locations (`ownerId === member.id`).
-> Un `sub_member` ne peut éditer que les locations où il est référencé comme sous-membre (`subMemberId === member.id`).
+> Un `sub_member` ne peut éditer que les locations où il est référencé comme membre (`subMemberId === member.id`).
 > Un `sub_member` **ne peut pas** modifier les locations de son owner parent.
 
 ### Implémentation des permissions (`services/permissions.ts`)

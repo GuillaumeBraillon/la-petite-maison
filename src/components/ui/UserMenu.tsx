@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { User, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import type { UserMenuProps } from "../../types";
 import { UserInfoCard } from "./UserInfoCard";
+import { Avatar } from "./Avatar";
 import { supabase } from "../../services/supabaseClient";
 import { useUserNotifications } from "../../hooks/useUserNotifications";
 
@@ -22,6 +23,13 @@ export const UserMenu = ({ userEmail, onLogout, session, appVersion, className =
   const fallbackName = userEmail?.split("@")[0] ?? "";
   const primaryDisplayName = memberLabel || userName || fallbackName;
   const secondaryDisplayName = memberFullName && memberFullName !== primaryDisplayName ? memberFullName : null;
+  const accountNameSource = (memberFullName || userName || primaryDisplayName || "").trim();
+  const accountNameParts = accountNameSource.split(/\s+/).filter(Boolean);
+  const accountAvatarMember = {
+    firstName: accountNameParts[0] ?? primaryDisplayName ?? "Utilisateur",
+    lastName: accountNameParts.slice(1).join(" ") || primaryDisplayName || accountNameParts[0] || "Utilisateur",
+    avatarUrl,
+  };
 
   useEffect(() => {
     let isCancelled = false;
@@ -106,13 +114,7 @@ export const UserMenu = ({ userEmail, onLogout, session, appVersion, className =
         aria-haspopup="menu"
       >
         <div className="relative">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={String(userName ?? "Avatar")} className="w-8 h-8 rounded-full border border-gray-200" referrerPolicy="no-referrer" />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-              <User size={16} />
-            </div>
-          )}
+          <Avatar member={accountAvatarMember} size="sm" fallbackInitialSource="firstName" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary-600 text-white text-[10px] leading-4 text-center font-semibold">
               {unreadCount > 99 ? "99+" : unreadCount}

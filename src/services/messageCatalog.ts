@@ -167,7 +167,7 @@ export const PUSH_MESSAGES = {
       return `Votre demande du ${startDate} au ${endDate} (${guests}) est en attente de validation.`;
     },
     /**
-     * Message destiné au sous-membre demandeur.
+     * Message destiné au membre demandeur.
      */
     newRequestForSubMember: (params: { startDate: string; endDate: string; guests: string }): string => {
       const { startDate, endDate, guests } = params;
@@ -311,7 +311,7 @@ export const PUSH_MESSAGES = {
       return `Votre location du ${startDate} au ${endDate} (${guests}) a été supprimée.`;
     },
     /**
-     * Message pour le sous-membre lorsque sa location est supprimée.
+     * Message pour le membre lorsque sa location est supprimée.
      */
     deletedForSubMember: (params: { startDate: string; endDate: string; guests: string }): string => {
       const { startDate, endDate, guests } = params;

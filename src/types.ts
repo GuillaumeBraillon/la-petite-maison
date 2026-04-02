@@ -186,6 +186,20 @@ export interface RentalBadgeProps {
   onClick?: (rental: Rental) => void;
 }
 
+export type AvatarSize = "xs" | "sm" | "md";
+export type AvatarInitialSource = "firstName" | "lastName" | "all";
+
+export interface AvatarProps {
+  member?: Pick<Member, "firstName" | "lastName" | "avatarUrl">;
+  owner?: Pick<Member, "firstName" | "lastName" | "avatarUrl">;
+  subMember?: Pick<Member, "firstName" | "lastName" | "avatarUrl">;
+  alt?: string;
+  size?: AvatarSize;
+  fallbackInitialSource?: AvatarInitialSource;
+  className?: string;
+  showFallback?: boolean;
+}
+
 export interface DashboardStatsProps {
   rentals: Rental[];
   members: Member[];

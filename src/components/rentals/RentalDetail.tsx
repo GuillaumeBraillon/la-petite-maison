@@ -1,4 +1,4 @@
-import { CalendarDays, Users, Euro, Zap, FileText, User, Pencil, Trash2 } from "lucide-react";
+import { CalendarDays, Users, Euro, Zap, FileText, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { RentalStatus, RentalDetailProps, DetailRowProps } from "../../types";
 import { Button } from "../ui/Button";
@@ -6,6 +6,7 @@ import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Select } from "../ui/Select";
 import { getDurationDays, formatDateLong } from "../../utils/rentalUtils";
+import { Avatar } from "../ui/Avatar";
 
 // ------------------------------------------------------------
 // Sub-components (définis hors du composant parent — règle Atomic Design)
@@ -84,35 +85,13 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEdi
       {/* Infos principales */}
       <Card padding="md" className="flex flex-col gap-4">
         <DetailRow
-          icon={
-            owner?.avatarUrl ? (
-              <img
-                src={owner.avatarUrl}
-                alt={`${owner.firstName} ${owner.lastName}`}
-                className="w-4 h-4 rounded-full object-cover border border-gray-200"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <User size={16} />
-            )
-          }
+          icon={<Avatar member={owner} size="xs" fallbackInitialSource="firstName" />}
           label="Propriétaire"
           value={owner ? `${owner.firstName} ${owner.lastName}` : "—"}
         />
         {subMember && (
           <DetailRow
-            icon={
-              subMember.avatarUrl ? (
-                <img
-                  src={subMember.avatarUrl}
-                  alt={`${subMember.firstName} ${subMember.lastName}`}
-                  className="w-4 h-4 rounded-full object-cover border border-gray-200"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <User size={16} />
-              )
-            }
+            icon={<Avatar member={subMember} size="xs" fallbackInitialSource="firstName" />}
             label="Membre"
             value={`${subMember.firstName} ${subMember.lastName} — ${subMember.label}`}
           />

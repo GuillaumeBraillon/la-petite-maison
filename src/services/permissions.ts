@@ -113,7 +113,7 @@ export const hasPermission = (member: Member | null, permission: keyof Permissio
  * Peut être utilisé partout dans l'app pour restreindre la visibilité/édition aux données personnelles.
  * - Admin / owner éditeur : toujours vrai (accès global)
  * - Owner non-éditeur : ses propres locations uniquement (ownerId === member.id)
- * - Sub_member : uniquement les locations où il est sous-membre (subMemberId === member.id)
+ * - Sub_member : uniquement les locations où il est membre (subMemberId === member.id)
  *   → ne doit PAS pouvoir accéder aux locations de son owner parent
  */
 export const isMemberRental = (member: Member | null, rental: Rental): boolean => {

@@ -11,6 +11,7 @@ import {
   getRentalStatusLabel,
 } from "../../services/rentalStatus";
 import { getDaysForRental } from "../../utils/rentalUtils";
+import { Avatar } from "../ui/Avatar";
 
 // ------------------------------------------------------------
 // Stats communes
@@ -220,6 +221,7 @@ export const DashboardStats = ({ rentals, members: _members, currentMember: _cur
                   {ownerStats.count} loc. - {Math.round(ownerStats.days)} nuit{Math.round(ownerStats.days) > 1 ? "s" : ""} - Occ. {`${ownerStats.occupancy} %`}
                 </p>
               </div>
+              <Avatar member={ownerStats.owner} size="sm" fallbackInitialSource="firstName" />
             </div>
 
             {/* Detail par statut */}

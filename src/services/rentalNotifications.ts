@@ -2,7 +2,7 @@
  * rentalNotifications.ts — Orchestrateur des notifications push métier
  *
  * Fonctions publiques :
- * - `notifyNewRental(rental)` : notifie le propriétaire, le(s) sous-membre(s),
+ * - `notifyNewRental(rental)` : notifie le propriétaire, le(s) membre(s),
  *   les propriétaires observateurs et les validateurs d'une nouvelle demande.
  * - `notifyStatusChange(rental, previousStatus?)` : notifie les acteurs lors
  *   d'un changement de statut (pending/confirmed/rejected).
@@ -49,7 +49,7 @@ const getRentalDisplayInfo = (rental: Rental): { startDate: string; endDate: str
  * - validateurs (admins + owners éditeurs)
  * - propriétaires observateurs (tous owners)
  * - propriétaire principal
- * - sous-membre demandeur
+ * - membre demandeur
  *
  * Le contenu des messages est construit via `PUSH_MESSAGES`.
  */
@@ -272,7 +272,7 @@ export const notifyCompleted = async (rental: Rental): Promise<void> => {
 
 /**
  * Notifie la suppression d'une location aux acteurs concernés : propriétaire,
- * sous-membre, observers et validateurs.
+ * membre, observers et validateurs.
  */
 export const notifyDeletedRental = async (rental: Rental): Promise<void> => {
   const { ownerEmail, subMemberEmail, subMemberName, ownerName } = await getRentalActors(rental);

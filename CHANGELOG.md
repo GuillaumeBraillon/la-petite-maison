@@ -7,6 +7,19 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.29] - 2026-04-02
+
+### Améliorations
+
+- **Avatars** : harmonisation de l'affichage dans les cartes membres, locations, détails, badges calendrier et zones utilisateur
+- **Avatars** : quand aucune photo n'est disponible, l'interface affiche désormais des initiales cohérentes au lieu d'icônes génériques
+- **Locations** : pour une sous-location sans avatar du membre, le fallback affiche bien les initiales du membre sans réutiliser l'avatar du propriétaire
+
+### Technique
+
+- **UI** : extraction d'un composant partagé `Avatar` pour centraliser le rendu image/fallback et la priorité `member` / `subMember` / `owner`
+- **Typage** : ajout des types `AvatarProps`, `AvatarSize` et extension de `AvatarInitialSource` avec l'option `all` pour afficher deux initiales (`G B`)
+
 ## [0.3.28] - 2026-04-02
 
 ### Améliorations
@@ -62,7 +75,7 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 - **Locations** : correction du recalcul automatique du tarif dans le formulaire
   lors des changements de dates (et dates réelles en clôture)
 - **Notifications** : diffusion étendue à tous les propriétaires observateurs,
-  avec messages différenciés pour propriétaire principal, sous-membre,
+  avec messages différenciés pour propriétaire principal, membre,
   propriétaires observateurs et validateurs
 
 ### Technique
@@ -146,7 +159,7 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 ### Technique
 
 - **Permissions** : restriction des droits `sub_member` — accès limité aux locations
-  où ils sont explicitement sous-membre (suppression de l'accès implicite propriétaire)
+  où ils sont explicitement membre (suppression de l'accès implicite propriétaire)
 - **Permissions** : maintien du droit d'édition sur leurs propres locations
   dans les listes, pages et formulaires
 

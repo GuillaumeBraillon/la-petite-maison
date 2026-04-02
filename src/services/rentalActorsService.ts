@@ -7,7 +7,7 @@ import type { Rental } from "../types";
  * Services d'accès aux acteurs métier et aux audiences de notification.
  *
  * Fournit des helpers pour récupérer les noms/emails du propriétaire et du
- * sous-membre liés à une `Rental`, ainsi que les listes d'emails des
+ * membre liés à une `Rental`, ainsi que les listes d'emails des
  * propriétaires observateurs et des validateurs (admins + owners éditeurs).
  */
 
@@ -24,7 +24,7 @@ export type NotificationAudiences = {
 };
 
 /**
- * Récupère les informations (nom, email) du propriétaire et du sous-membre
+ * Récupère les informations (nom, email) du propriétaire et du membre
  * associés à une `rental` donnée.
  *
  * Retourne des valeurs par défaut (nom = "membre", email = null) en cas

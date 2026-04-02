@@ -5,6 +5,14 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.29] - 2 avril 2026
+
+### Ce qui change pour vous
+
+- **Avatars** : l'affichage est maintenant cohérent dans toute l'application
+- **Avatars** : si une photo est absente, vous voyez des initiales à la place d'une icône générique
+- **Sous-locations** : un membre sans photo affiche maintenant ses propres initiales, sans reprendre l'avatar du propriétaire
+
 ## [0.3.28] - 2 avril 2026
 
 ### Ce qui change pour vous

@@ -1,10 +1,11 @@
-import { CalendarDays, Users, Euro, Pencil, Trash2, User, Zap, FileText } from "lucide-react";
+import { CalendarDays, Users, Euro, Pencil, Trash2, Zap, FileText } from "lucide-react";
 import type { RentalCardProps } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { RENTAL_STATUS_BADGE_VARIANT_MAP, getRentalStatusLabel } from "../../services/rentalStatus";
 import { getDurationDays, formatDateShort } from "../../utils/rentalUtils";
+import { Avatar } from "../ui/Avatar";
 
 // ------------------------------------------------------------
 // Component
@@ -22,25 +23,7 @@ export const RentalCard = ({ rental, owner, subMember, canEdit = true, canDelete
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
-            {subMember?.avatarUrl ? (
-              <img
-                src={subMember.avatarUrl}
-                alt={`${subMember.firstName} ${subMember.lastName}`}
-                className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200"
-                referrerPolicy="no-referrer"
-              />
-            ) : owner?.avatarUrl ? (
-              <img
-                src={owner.avatarUrl}
-                alt={`${owner.firstName} ${owner.lastName}`}
-                className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                <User size={14} className="text-primary-600" />
-              </div>
-            )}
+            <Avatar owner={owner} subMember={subMember} size="md" fallbackInitialSource="firstName" />
             <div className="min-w-0">
               <p className="font-semibold text-gray-900 text-sm truncate">
                 {subMember ? subMember.label : owner ? `${owner.firstName} ${owner.lastName}` : "—"}

@@ -58,11 +58,11 @@ export const isBroadcastStatus = (status: RentalStatus): status is "pending" | "
 
 /**
  * Construit le message (titre + corps + type) à envoyer à un destinataire
- * personnel (propriétaire ou sous-membre) en fonction du statut.
+ * personnel (propriétaire ou membre) en fonction du statut.
  *
  * @param rental - Objet `Rental` concerné.
  * @param recipient - Type de destinataire : `owner` ou `sub_member`.
- * @param subMemberName - Nom du sous-membre si présent.
+ * @param subMemberName - Nom du membre si présent.
  * @returns Un objet `StatusMessage` ou `null` si aucun message applicable.
  */
 export const buildStatusMessage = (rental: Rental, recipient: "owner" | "sub_member", subMemberName: string | null): StatusMessage | null => {
@@ -108,7 +108,7 @@ export const buildStatusMessage = (rental: Rental, recipient: "owner" | "sub_mem
  *
  * @param rental - Objet `Rental` avec les champs financiers et dates.
  * @param recipient - `owner` ou `sub_member` pour adapter l'en-tête.
- * @param subMemberName - Nom du sous-membre si applicable.
+ * @param subMemberName - Nom du membre si applicable.
  * @returns Le texte complet du message (multi-lignes).
  */
 export const buildCompletedBody = (rental: Rental, recipient: "owner" | "sub_member", subMemberName: string | null): string => {

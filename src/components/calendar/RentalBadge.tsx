@@ -1,4 +1,5 @@
 import type { RentalBadgeProps } from "../../types";
+import { Avatar } from "../ui/Avatar";
 import { RENTAL_STATUS_BADGE_COLOR_MAP } from "../../services/rentalStatus";
 import { getDurationDays, formatDateShort } from "../../utils/rentalUtils";
 
@@ -49,9 +50,7 @@ export const RentalBadge = ({ rental, owner, labelOverride, cellDate, onClick }:
         RENTAL_STATUS_BADGE_COLOR_MAP[rental.status],
       ].join(" ")}
     >
-      {owner?.avatarUrl ? (
-        <img src={owner.avatarUrl} alt={label} className="w-4 h-4 rounded-full object-cover border border-white/70 shrink-0" referrerPolicy="no-referrer" />
-      ) : null}
+      <Avatar member={owner} alt={label} size="xs" fallbackInitialSource="firstName" className="border-white/70" showFallback={!!owner} />
       <span className={["truncate", outsideActualReason ? "line-through" : ""].join(" ")}>{label}</span>
       <span className="shrink-0 text-[10px] font-semibold">{durationDays}n</span>
     </button>

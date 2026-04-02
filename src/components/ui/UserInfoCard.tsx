@@ -10,6 +10,7 @@ import { TOAST_MESSAGES } from "../../services/messageCatalog";
 import type { UserNotification, MemberRole, UserInfoCardProps } from "../../types";
 import { MEMBER_ROLE_BADGE_VARIANT_MAP, MEMBER_ROLE_LABEL_MAP } from "../../services/memberStatus";
 import { Badge } from "./Badge";
+import { Avatar } from "./Avatar";
 import { NotificationToggle } from "./NotificationToggle";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { WhatsNewModal } from "./WhatsNewModal";
@@ -136,6 +137,13 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
   const user = session.user;
 
   const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+  const accountNameSource = (memberFullName || userName || primaryDisplayName || "").trim();
+  const accountNameParts = accountNameSource.split(/\s+/).filter(Boolean);
+  const accountAvatarMember = {
+    firstName: accountNameParts[0] ?? primaryDisplayName ?? "Utilisateur",
+    lastName: accountNameParts.slice(1).join(" ") || primaryDisplayName || accountNameParts[0] || "Utilisateur",
+    avatarUrl,
+  };
 
   const formatNotificationDate = (value: string): string => {
     const date = new Date(value);
@@ -322,12 +330,10 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
 
       <div className="space-y-3">
         {/* Avatar & Nom */}
-        {(avatarUrl || primaryDisplayName) && (
+        {primaryDisplayName && (
           <div className="flex items-center justify-between gap-1.5 pb-2 border-b border-gray-100 min-w-0">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              {avatarUrl && (
-                <img src={avatarUrl} alt="Avatar" className="w-7 h-7 rounded-full border border-gray-200 flex-shrink-0" referrerPolicy="no-referrer" />
-              )}
+              <Avatar member={accountAvatarMember} size="sm" fallbackInitialSource="firstName" />
               {primaryDisplayName && (
                 <div className="min-w-0">
                   <div className="text-xs text-gray-900 font-semibold truncate leading-tight">
