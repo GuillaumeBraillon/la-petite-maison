@@ -38,6 +38,7 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Ren
     cancelDelete,
     confirmDelete,
     handleStatusChange,
+    handleTogglePayment,
   } = useRentalModals(onRefresh);
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
@@ -120,9 +121,11 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Ren
               subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
               canEdit={getPermissions(currentMember ?? null).createWithAnyStatus || isMemberRental(currentMember ?? null, selected)}
               canEditStatus={getPermissions(currentMember ?? null).createWithAnyStatus}
+              canTogglePayment={getPermissions(currentMember ?? null).togglePayment}
               onEdit={openEdit}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
+              onTogglePayment={handleTogglePayment}
             />
           )}
         </Modal>

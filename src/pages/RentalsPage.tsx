@@ -1,6 +1,6 @@
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { RentalStatusFilter, RentalsPageProps } from "../types";
+import type { RentalStatusFilter, RentalPaymentFilter, RentalsPageProps } from "../types";
 import { getPermissions, isMemberRental } from "../services/permissions";
 import { createMember } from "../services/apiCrud";
 import { RentalList } from "../components/rentals/RentalList";
@@ -20,7 +20,15 @@ import { TOAST_MESSAGES } from "../services/messageCatalog";
 // Page
 // ------------------------------------------------------------
 
-export const RentalsPage = ({ rentals, members, currentMember, onRefresh, initialStatusFilter, initialOwnerFilter }: RentalsPageProps) => {
+export const RentalsPage = ({
+  rentals,
+  members,
+  currentMember,
+  onRefresh,
+  initialStatusFilter,
+  initialOwnerFilter,
+  initialPaymentFilter,
+}: RentalsPageProps) => {
   const { showToast } = useToast();
   const {
     formOpen,
@@ -42,6 +50,7 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh, initia
     handleDelete,
     confirmDelete,
     handleStatusChange,
+    handleTogglePayment,
   } = useRentalModals(onRefresh);
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
@@ -51,12 +60,19 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh, initia
   type StatusFilter = RentalStatusFilter;
   type OwnerFilter = "all" | string;
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatusFilter ?? "all");
+  const [paymentFilter, setPaymentFilter] = useState<RentalPaymentFilter>(initialPaymentFilter ?? "all");
 
   useEffect(() => {
     if (initialStatusFilter !== undefined) {
       setStatusFilter(initialStatusFilter);
     }
   }, [initialStatusFilter]);
+
+  useEffect(() => {
+    if (initialPaymentFilter !== undefined) {
+      setPaymentFilter(initialPaymentFilter);
+    }
+  }, [initialPaymentFilter]);
 
   const defaultOwnerFilter = (): OwnerFilter => {
     if (!currentMember) return "all";
@@ -84,6 +100,8 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh, initia
   const filteredRentals = rentals.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     if (ownerFilter !== "all" && r.ownerId !== ownerFilter) return false;
+    if (paymentFilter === "paid" && !(r.status === "completed" && r.isPaid)) return false;
+    if (paymentFilter === "unpaid" && !(r.status === "completed" && !r.isPaid)) return false;
     return true;
   });
 
@@ -160,10 +178,23 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh, initia
             options: ownerOptions,
             onChange: (v: string) => setOwnerFilter(v as OwnerFilter),
           },
+          {
+            id: "payment",
+            label: "Paiement",
+            type: "select",
+            value: paymentFilter,
+            options: [
+              { value: "all", label: "Tous paiements" },
+              { value: "paid", label: "Payé" },
+              { value: "unpaid", label: "Non payé" },
+            ],
+            onChange: (v: string) => setPaymentFilter(v as RentalPaymentFilter),
+          },
         ]}
         onReset={() => {
           setStatusFilter("all");
           setOwnerFilter(defaultOwnerFilter());
+          setPaymentFilter("all");
         }}
       />
 
@@ -173,9 +204,11 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh, initia
         currentMember={currentMember}
         canEdit={permissions.editLocations}
         canDelete={permissions.deleteLocations}
+        canTogglePayment={permissions.togglePayment}
         onClick={openDetail}
         onEdit={openEdit}
         onDelete={handleDelete}
+        onTogglePayment={handleTogglePayment}
       />
 
       {/* Formulaire */}
@@ -201,9 +234,11 @@ export const RentalsPage = ({ rentals, members, currentMember, onRefresh, initia
             subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
             canEdit={permissions.createWithAnyStatus || isMemberRental(currentMember ?? null, selected)}
             canEditStatus={permissions.createWithAnyStatus}
+            canTogglePayment={permissions.togglePayment}
             onEdit={openEdit}
             onDelete={handleDelete}
             onStatusChange={handleStatusChange}
+            onTogglePayment={handleTogglePayment}
           />
         )}
       </Modal>

@@ -7,6 +7,34 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.31] - 2026-04-05
+
+### Ajout
+
+- **Suivi du paiement** : les locations terminées affichent un indicateur de paiement visible par tous ("Non payé" en ambre / "Payé" en vert)
+- **Suivi du paiement** : les validateurs (propriétaire éditeur et admin) peuvent basculer le statut de paiement d'un clic, sur la carte ou dans la vue détail
+- **Paiement** : notification push envoyée à tous les propriétaires (et au sous-membre si applicable) lors du basculement du statut de paiement
+- **Paiement** : une note horodatée (ex : "Payé le 05/04/2026") est automatiquement ajoutée dans le champ notes à la validation du paiement
+- **Locations** : filtre "Payé / Non payé" ajouté dans la barre de filtres de la vue Locations
+- **Dashboard** : bandeau d'alerte ambre cliquable affichant le nombre et le montant total des locations terminées en attente de paiement (masqué si tout est réglé)
+- **Dashboard** : clic sur le bandeau ouvre la vue Locations avec le filtre "Non payé" pré-sélectionné
+
+### Corrections
+
+- **Paiement** : libellé du bouton "Non payé" remplacé par "Marquer comme payé" pour les validateurs (texte d'action plus explicite)
+- **Permissions** : correction d'une erreur de syntaxe dans `permissions.ts` (commentaire inline mal placé après un `};`)
+
+### Technique
+
+- **DB** : ajout de la colonne `is_paid boolean NOT NULL DEFAULT false` sur la table `rentals` (migration SQL + index `rentals_is_paid_idx`)
+- **Permissions** : nouvelle permission `togglePayment` réservée aux admins et aux owners éditeurs
+- **Notifications** : nouveau type `rental_paid` ajouté à `NotificationType`, au check constraint `user_notifications_type_check` et à la Edge Function `send-push`
+- **Notifications** : type `app_updated` ajouté rétroactivement pour être en phase avec la production
+- **Notifications** : fonction `notifyPaymentToggled` ajoutée dans `rentalNotifications.ts`
+- **Messages** : messages push `paidForOwner`, `paidForSubMember`, `paidForOwners` ajoutés dans `messageCatalog.ts`
+- **Types** : `isPaid` ajouté à l'interface `Rental` ; `RentalPaymentFilter` ajouté dans `types.ts` ; props `canTogglePayment` / `onTogglePayment` sur `RentalCardProps`, `RentalListProps`, `RentalDetailProps` ; `initialPaymentFilter` dans `RentalsPageProps` ; `onPaymentCardClick` dans `DashboardStatsProps` et `DashboardPageProps`
+- **Hook** : ajout de `handleTogglePayment` dans `useRentalModals`
+
 ## [0.3.30] - 2026-04-02
 
 ### Améliorations

@@ -10,7 +10,7 @@ export const RENTAL_STATUS_LABEL_MAP: Record<RentalStatus, string> = {
   pending: "En attente",
   confirmed: "Confirmé",
   completed: "Terminé",
-  rejected: "Refusé",
+  rejected: "Rejeté",
 };
 
 export const RENTAL_STATUS_BADGE_VARIANT_MAP: Record<RentalStatus, RentalStatusBadgeVariant> = {

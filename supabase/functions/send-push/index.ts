@@ -1,7 +1,15 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import webPush from "npm:web-push@3.6.7";
 
-type NotificationType = "rental_created" | "rental_confirmed" | "rental_rejected" | "rental_completed" | "rental_deleted" | "request_pending";
+type NotificationType =
+  | "rental_created"
+  | "rental_confirmed"
+  | "rental_rejected"
+  | "rental_completed"
+  | "rental_deleted"
+  | "rental_paid"
+  | "request_pending"
+  | "app_updated";
 
 interface NotificationPayload {
   type: NotificationType;

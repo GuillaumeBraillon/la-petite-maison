@@ -36,6 +36,7 @@ export interface DbRental {
   total_price: number | null;
   actual_start_date: string | null;
   actual_end_date: string | null;
+  is_paid: boolean;
   created_at: string;
   updated_at: string;
 }

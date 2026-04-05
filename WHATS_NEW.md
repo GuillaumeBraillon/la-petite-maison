@@ -5,6 +5,17 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.31] - 5 avril 2026
+
+### Ce qui change pour vous
+
+- **Paiement** : les locations terminées indiquent maintenant si elles ont été payées ou non
+- **Paiement** : si vous êtes validateur, vous pouvez marquer une location comme payée (ou annuler) en un clic, depuis la liste ou la vue détail
+- **Paiement** : quand une location est marquée comme payée, une note avec la date est automatiquement ajoutée
+- **Paiement** : les propriétaires et le membre concerné reçoivent une notification lors du changement de statut de paiement
+- **Tableau de bord** : un encart orange s'affiche quand des locations terminées ne sont pas encore payées — cliquez dessus pour les voir directement
+- **Locations** : nouveau filtre "Payé / Non payé" dans la liste des locations
+
 ## [0.3.30] - 2 avril 2026
 
 ### Ce qui change pour vous

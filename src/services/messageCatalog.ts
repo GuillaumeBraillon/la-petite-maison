@@ -333,5 +333,35 @@ export const PUSH_MESSAGES = {
       const target = subMemberName ? `${subMemberName} via ${ownerName}` : ownerName;
       return `Suppression de location: ${target}, du ${startDate} au ${endDate} (${guests}).`;
     },
+    paidTitle: "Paiement confirmé",
+    unpaidTitle: "Paiement annulé",
+    /**
+     * Message de paiement pour le propriétaire principal.
+     */
+    paidForOwner: (params: { subMemberName: string | null; startDate: string; endDate: string; isPaid: boolean }): string => {
+      const { subMemberName, startDate, endDate, isPaid } = params;
+      const action = isPaid ? "a été confirmé" : "a été annulé";
+      if (subMemberName) {
+        return `Le paiement du séjour de ${subMemberName}, du ${startDate} au ${endDate}, ${action}.`;
+      }
+      return `Le paiement de votre séjour du ${startDate} au ${endDate} ${action}.`;
+    },
+    /**
+     * Message de paiement pour le sous-membre.
+     */
+    paidForSubMember: (params: { startDate: string; endDate: string; isPaid: boolean }): string => {
+      const { startDate, endDate, isPaid } = params;
+      const action = isPaid ? "a été confirmé" : "a été annulé";
+      return `Le paiement de votre séjour du ${startDate} au ${endDate} ${action}.`;
+    },
+    /**
+     * Message broadcast aux propriétaires observateurs.
+     */
+    paidForOwners: (params: { subMemberName: string | null; ownerName: string; startDate: string; endDate: string; isPaid: boolean }): string => {
+      const { subMemberName, ownerName, startDate, endDate, isPaid } = params;
+      const target = subMemberName ? `${subMemberName} via ${ownerName}` : ownerName;
+      const action = isPaid ? "marqué comme payé" : "marqué comme non payé";
+      return `Le séjour de ${target}, du ${startDate} au ${endDate}, a été ${action}.`;
+    },
   },
 } as const;

@@ -18,6 +18,8 @@ export interface Permissions {
   viewCalendar: boolean;
   viewCalendarDetails: boolean;
   authorizeUsers: boolean;
+  /** true = peut marquer une location comme payée (validateur uniquement) */
+  togglePayment: boolean;
 }
 
 /**
@@ -43,6 +45,7 @@ export const getPermissions = (member: Member | null): Permissions => {
       viewCalendar: false,
       viewCalendarDetails: false,
       authorizeUsers: false,
+      togglePayment: false,
     };
   }
 
@@ -61,6 +64,7 @@ export const getPermissions = (member: Member | null): Permissions => {
       viewCalendar: true,
       viewCalendarDetails: true,
       authorizeUsers: true,
+      togglePayment: true,
     };
   }
 
@@ -80,9 +84,9 @@ export const getPermissions = (member: Member | null): Permissions => {
       viewCalendar: true,
       viewCalendarDetails: true,
       authorizeUsers: false,
+      togglePayment: isEditor,
     };
   }
-
   // Sub_member : peut voir le calendrier + ses locations, et créer des demandes
   return {
     viewLocations: true,
@@ -97,6 +101,7 @@ export const getPermissions = (member: Member | null): Permissions => {
     viewCalendar: true,
     viewCalendarDetails: true,
     authorizeUsers: false,
+    togglePayment: false,
   };
 };
 

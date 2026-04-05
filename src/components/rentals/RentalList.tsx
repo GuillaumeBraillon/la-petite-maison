@@ -21,7 +21,18 @@ const EmptyState = () => (
 // Component
 // ------------------------------------------------------------
 
-export const RentalList = ({ rentals, members, currentMember, canEdit = true, canDelete = true, onClick, onEdit, onDelete }: RentalListProps) => {
+export const RentalList = ({
+  rentals,
+  members,
+  currentMember,
+  canEdit = true,
+  canDelete = true,
+  canTogglePayment = false,
+  onClick,
+  onEdit,
+  onDelete,
+  onTogglePayment,
+}: RentalListProps) => {
   if (rentals.length === 0) return <EmptyState />;
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
@@ -36,9 +47,11 @@ export const RentalList = ({ rentals, members, currentMember, canEdit = true, ca
           subMember={rental.subMemberId ? memberIndex.get(rental.subMemberId) : undefined}
           canEdit={canEdit || isMemberRental(currentMember ?? null, rental)}
           canDelete={canDelete}
+          canTogglePayment={canTogglePayment}
           onClick={onClick}
           onEdit={onEdit}
           onDelete={onDelete}
+          onTogglePayment={onTogglePayment}
         />
       ))}
     </div>

@@ -26,7 +26,18 @@ const DetailRow = ({ icon, label, value }: DetailRowProps) => (
 // Component
 // ------------------------------------------------------------
 
-export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEditStatus = false, onEdit, onDelete, onStatusChange }: RentalDetailProps) => {
+export const RentalDetail = ({
+  rental,
+  owner,
+  subMember,
+  canEdit = false,
+  canEditStatus = false,
+  canTogglePayment = false,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  onTogglePayment,
+}: RentalDetailProps) => {
   const [updating, setUpdating] = useState(false);
   const canEditStatusInDetail = canEditStatus && rental.status !== "completed";
   const durationDays = getDurationDays(rental.startDate, rental.endDate);
@@ -57,7 +68,7 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEdi
             >
               <option value="pending">En attente</option>
               <option value="confirmed">Confirmé</option>
-              <option value="rejected">Refusé</option>
+              <option value="rejected">Rejeté</option>
             </Select>
           ) : (
             <Badge
@@ -67,7 +78,7 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEdi
             >
               {rental.status === "pending" && "En attente"}
               {rental.status === "confirmed" && "Confirmé"}
-              {rental.status === "rejected" && "Refusé"}
+              {rental.status === "rejected" && "Rejeté"}
               {rental.status === "completed" && "Terminé"}
             </Badge>
           )}
@@ -103,6 +114,32 @@ export const RentalDetail = ({ rental, owner, subMember, canEdit = false, canEdi
         <DetailRow icon={<Users size={16} />} label="Nombre de personnes" value={`${rental.guestCount} personne${rental.guestCount > 1 ? "s" : ""}`} />
         <DetailRow icon={<Euro size={16} />} label="Tarif location (€)" value={`${rental.price.toFixed(2)} €`} />
       </Card>
+
+      {/* Paiement */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-gray-500">Paiement :</span>
+          <span
+            className={["px-2 py-0.5 rounded-full text-xs font-medium", rental.isPaid ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"].join(
+              " "
+            )}
+          >
+            {rental.isPaid ? "✓ Payé" : "💳 Non payé"}
+          </span>
+        </div>
+        {canTogglePayment && (
+          <button
+            type="button"
+            onClick={() => onTogglePayment?.(rental)}
+            className={[
+              "text-xs px-3 py-1 rounded-lg font-medium transition-colors",
+              rental.isPaid ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-green-600 text-white hover:bg-green-700",
+            ].join(" ")}
+          >
+            {rental.isPaid ? "Annuler le paiement" : "Marquer comme payé"}
+          </button>
+        )}
+      </div>
 
       {/* Post-location */}
       {((rental.status === "completed" &&

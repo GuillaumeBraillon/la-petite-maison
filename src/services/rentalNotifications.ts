@@ -21,7 +21,7 @@ import { getObserverRecipients } from "../utils/notificationUtils";
 import { formatDate, formatEuro, getDurationDays, pluralize } from "../utils/rentalUtils";
 import type { Rental, RentalStatus } from "../types";
 
-type PushType = "rental_created" | "rental_confirmed" | "rental_rejected" | "request_pending" | "rental_completed" | "rental_deleted";
+type PushType = "rental_created" | "rental_confirmed" | "rental_rejected" | "request_pending" | "rental_completed" | "rental_deleted" | "rental_paid";
 
 const sendPush = (emails: string[], type: PushType, title: string, body: string): void => {
   if (emails.length === 0) return;
@@ -339,5 +339,43 @@ export const notifyDeletedRental = async (rental: Rental): Promise<void> => {
       endDate,
       guests,
     })
+  );
+};
+
+// ------------------------------------------------------------
+// Déclencheur 5 — Basculement du paiement
+// ------------------------------------------------------------
+
+/**
+ * Notifie le changement d'état du paiement d'une location.
+ *
+ * Notifications envoyées :
+ * - propriétaire principal (message personnalisé)
+ * - sous-membre si applicable (message personnalisé)
+ * - tous les autres propriétaires observateurs (message broadcast)
+ */
+export const notifyPaymentToggled = async (rental: Rental): Promise<void> => {
+  const { ownerEmail, subMemberEmail, subMemberName, ownerName } = await getRentalActors(rental);
+  const { ownerEmails } = await getNotificationAudiences();
+  const { startDate, endDate } = getRentalDisplayInfo(rental);
+  const sentEmails = new Set<string>();
+  const title = rental.isPaid ? PUSH_MESSAGES.rental.paidTitle : PUSH_MESSAGES.rental.unpaidTitle;
+
+  if (ownerEmail) {
+    sendPush([ownerEmail], "rental_paid", title, PUSH_MESSAGES.rental.paidForOwner({ subMemberName, startDate, endDate, isPaid: rental.isPaid }));
+    sentEmails.add(ownerEmail);
+  }
+
+  if (subMemberEmail && subMemberEmail !== ownerEmail) {
+    sendPush([subMemberEmail], "rental_paid", title, PUSH_MESSAGES.rental.paidForSubMember({ startDate, endDate, isPaid: rental.isPaid }));
+    sentEmails.add(subMemberEmail);
+  }
+
+  const ownerObserverRecipients = ownerEmails.filter((e) => !sentEmails.has(e));
+  sendPush(
+    ownerObserverRecipients,
+    "rental_paid",
+    title,
+    PUSH_MESSAGES.rental.paidForOwners({ subMemberName, ownerName, startDate, endDate, isPaid: rental.isPaid })
   );
 };

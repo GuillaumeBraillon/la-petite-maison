@@ -90,6 +90,7 @@ create table public.rentals (
   total_price numeric(10,2),
   actual_start_date timestamptz,
   actual_end_date   timestamptz,
+  is_paid boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint rentals_date_order_chk check (end_date > start_date)
@@ -100,6 +101,7 @@ create index rentals_end_date_idx on public.rentals(end_date);
 create index rentals_owner_id_idx on public.rentals(owner_id);
 create index rentals_sub_member_id_idx on public.rentals(sub_member_id);
 create index rentals_status_idx on public.rentals(status);
+create index rentals_is_paid_idx on public.rentals(is_paid);
 
 create trigger trg_rentals_set_updated_at
 before update on public.rentals
@@ -127,7 +129,7 @@ create index push_subscriptions_user_id_idx
 create table public.user_notifications (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  type text not null check (type in ('rental_created', 'rental_confirmed', 'rental_rejected', 'rental_reminder', 'rental_completed', 'rental_deleted', 'request_pending')),
+  type text not null check (type in ('rental_created', 'rental_confirmed', 'rental_rejected', 'rental_reminder', 'rental_completed', 'rental_deleted', 'rental_paid', 'request_pending', 'app_updated')),
   title text not null,
   body text not null,
   url text,

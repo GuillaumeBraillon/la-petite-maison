@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { LayoutDashboard, Users, CalendarDays, List } from "lucide-react";
-import type { Member, Rental, RentalStatus, RentalStatusFilter, AppShellProps } from "./types";
+import type { Member, Rental, RentalStatus, RentalStatusFilter, RentalPaymentFilter, AppShellProps } from "./types";
 import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
 import { fetchMembers, fetchRentals } from "./services/api";
@@ -167,6 +167,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const [view, setView] = useState<View>("dashboard");
   const [rentalsStatusFilter, setRentalsStatusFilter] = useState<RentalStatusFilter>("all");
   const [rentalsOwnerFilter, setRentalsOwnerFilter] = useState<string | "all">("all");
+  const [rentalsPaymentFilter, setRentalsPaymentFilter] = useState<RentalPaymentFilter>("all");
   const [members, setMembers] = useState<Member[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(true);
@@ -246,6 +247,14 @@ const AppShell = ({ session }: AppShellProps) => {
   const handleOpenRentalsWithStatus = (status: RentalStatus, ownerId?: string): void => {
     setRentalsStatusFilter(status);
     setRentalsOwnerFilter(ownerId ?? "all");
+    setRentalsPaymentFilter("all");
+    setView("rentals");
+  };
+
+  const handleOpenRentalsWithPayment = (payment: RentalPaymentFilter): void => {
+    setRentalsStatusFilter("all");
+    setRentalsOwnerFilter("all");
+    setRentalsPaymentFilter(payment);
     setView("rentals");
   };
 
@@ -253,6 +262,7 @@ const AppShell = ({ session }: AppShellProps) => {
     if (nextView === "rentals") {
       setRentalsStatusFilter("all");
       setRentalsOwnerFilter("all");
+      setRentalsPaymentFilter("all");
     }
     setView(nextView);
   };
@@ -318,6 +328,7 @@ const AppShell = ({ session }: AppShellProps) => {
                   currentMember={currentMember ?? undefined}
                   onRefresh={refresh}
                   onOpenRentalsWithStatus={handleOpenRentalsWithStatus}
+                  onOpenRentalsWithPayment={handleOpenRentalsWithPayment}
                 />
               )}
               {view === "rentals" && (
@@ -328,6 +339,7 @@ const AppShell = ({ session }: AppShellProps) => {
                   onRefresh={refresh}
                   initialStatusFilter={rentalsStatusFilter}
                   initialOwnerFilter={rentalsOwnerFilter}
+                  initialPaymentFilter={rentalsPaymentFilter}
                 />
               )}
               {view === "calendar" && <CalendarPage rentals={rentals} members={members} currentMember={currentMember ?? undefined} onRefresh={refresh} />}

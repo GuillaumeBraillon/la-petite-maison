@@ -7,7 +7,7 @@ import { useRentalModals } from "../hooks/useRentalModals";
 // Page
 // ------------------------------------------------------------
 
-export const DashboardPage = ({ rentals, members, currentMember, onRefresh, onOpenRentalsWithStatus }: DashboardPageProps) => {
+export const DashboardPage = ({ rentals, members, currentMember, onRefresh, onOpenRentalsWithStatus, onOpenRentalsWithPayment }: DashboardPageProps) => {
   const { error, clearError } = useRentalModals(onRefresh);
 
   return (
@@ -20,7 +20,13 @@ export const DashboardPage = ({ rentals, members, currentMember, onRefresh, onOp
 
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
 
-      <DashboardStats rentals={rentals} members={members} currentMember={currentMember} onStatusCardClick={onOpenRentalsWithStatus} />
+      <DashboardStats
+        rentals={rentals}
+        members={members}
+        currentMember={currentMember}
+        onStatusCardClick={onOpenRentalsWithStatus}
+        onPaymentCardClick={onOpenRentalsWithPayment}
+      />
     </div>
   );
 };

@@ -39,6 +39,7 @@ const buildDefaultValues = (): RentalFormValues => {
     totalPrice: undefined,
     actualStartDate: undefined,
     actualEndDate: undefined,
+    isPaid: false,
   };
 };
 
@@ -462,7 +463,7 @@ export const RentalForm = ({
           <Select label="Statut" value={values.status} onChange={(e) => set("status", e.target.value as RentalStatus)} disabled={!canEditStatus} required>
             <option value="pending">En attente</option>
             <option value="confirmed">Confirmé</option>
-            <option value="rejected">Refusé</option>
+            <option value="rejected">Rejeté</option>
             <option value="completed">Terminé</option>
           </Select>
         </div>

@@ -3,8 +3,10 @@ import type { Rental, RentalStatus } from "../types";
 import { useError } from "../contexts/ErrorContext";
 import { useToast } from "../contexts/ToastContext";
 import { createRental, updateRental, deleteRental } from "../services/apiCrud";
+import { notifyPaymentToggled } from "../services/rentalNotifications";
 import { TOAST_MESSAGES } from "../services/messageCatalog";
 import { getRentalStatusLabel } from "../services/rentalStatus";
+import { formatDate } from "../utils/rentalUtils";
 
 // ------------------------------------------------------------
 // Hook
@@ -162,6 +164,34 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
     [onRefresh, setError, showToast]
   );
 
+  const handleTogglePayment = useCallback(
+    async (rental: Rental) => {
+      try {
+        const markingAsPaid = !rental.isPaid;
+        const updatedNotes = markingAsPaid ? [rental.notes, `Payé le ${formatDate(new Date().toISOString())}`].filter(Boolean).join("\n") : rental.notes;
+        const updated = await updateRental(rental.id, { isPaid: markingAsPaid, notes: updatedNotes });
+        void notifyPaymentToggled(updated);
+        await onRefresh();
+        showToast({
+          variant: "success",
+          title: rental.isPaid ? "Paiement annulé" : "Paiement confirmé",
+          message: rental.isPaid ? "La location est marquée comme non payée." : "La location est marquée comme payée.",
+        });
+      } catch (err) {
+        showToast({
+          variant: "error",
+          title: "Erreur",
+          message: "Impossible de modifier l'état du paiement.",
+        });
+        setError({
+          message: err instanceof Error ? err.message : "Une erreur est survenue.",
+          context: "Modification du paiement",
+        });
+      }
+    },
+    [onRefresh, setError, showToast]
+  );
+
   return {
     // State
     formOpen,
@@ -185,5 +215,6 @@ export const useRentalModals = (onRefresh: () => Promise<void>) => {
     handleDelete,
     confirmDelete,
     handleStatusChange,
+    handleTogglePayment,
   };
 };

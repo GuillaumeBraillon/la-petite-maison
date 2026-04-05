@@ -9,7 +9,16 @@ import type { ParsedChangelog } from "./services/changelogParser";
 export type MemberRole = "admin" | "owner" | "sub_member";
 export type RentalStatus = "pending" | "confirmed" | "rejected" | "completed";
 export type RentalStatusFilter = "all" | RentalStatus;
-export type NotificationType = "rental_created" | "rental_confirmed" | "rental_rejected" | "rental_completed" | "rental_deleted" | "request_pending";
+export type RentalPaymentFilter = "all" | "paid" | "unpaid";
+export type NotificationType =
+  | "rental_created"
+  | "rental_confirmed"
+  | "rental_rejected"
+  | "rental_completed"
+  | "rental_deleted"
+  | "rental_paid"
+  | "request_pending"
+  | "app_updated";
 
 // ------------------------------------------------------------
 // Member
@@ -69,12 +78,11 @@ export interface Rental {
   actualStartDate?: string;
   /** Date de fin réelle (si différente de la date prévue) */
   actualEndDate?: string;
+  /** Paiement confirmé par le validateur */
+  isPaid: boolean;
   createdAt: string;
   updatedAt: string;
 }
-
-// ------------------------------------------------------------
-// Push notifications
 // ------------------------------------------------------------
 
 export interface PushSubscriptionRecord {
@@ -134,11 +142,13 @@ export interface RentalsMembersPageSharedProps extends BasePageProps {
 
 export interface DashboardPageProps extends RentalsMembersPageSharedProps {
   onOpenRentalsWithStatus?: (status: RentalStatus, ownerId?: string) => void;
+  onOpenRentalsWithPayment?: (payment: RentalPaymentFilter) => void;
 }
 
 export interface RentalsPageProps extends RentalsMembersPageSharedProps {
   initialStatusFilter?: RentalStatusFilter;
   initialOwnerFilter?: string | "all";
+  initialPaymentFilter?: RentalPaymentFilter;
 }
 
 // ------------------------------------------------------------
@@ -205,6 +215,7 @@ export interface DashboardStatsProps {
   members: Member[];
   currentMember?: Member;
   onStatusCardClick?: (status: RentalStatus, ownerId?: string) => void;
+  onPaymentCardClick?: (payment: RentalPaymentFilter) => void;
 }
 
 export interface MemberFormProps {
@@ -259,9 +270,11 @@ export interface RentalCardProps {
   subMember?: Member;
   canEdit?: boolean;
   canDelete?: boolean;
+  canTogglePayment?: boolean;
   onClick?: (rental: Rental) => void;
   onEdit?: (rental: Rental) => void;
   onDelete?: (rental: Rental) => void;
+  onTogglePayment?: (rental: Rental) => void;
 }
 
 export interface RentalListProps {
@@ -270,9 +283,11 @@ export interface RentalListProps {
   currentMember?: Member | null;
   canEdit?: boolean;
   canDelete?: boolean;
+  canTogglePayment?: boolean;
   onClick?: (rental: Rental) => void;
   onEdit?: (rental: Rental) => void;
   onDelete?: (rental: Rental) => void;
+  onTogglePayment?: (rental: Rental) => void;
 }
 
 export interface RentalDetailProps {
@@ -281,9 +296,11 @@ export interface RentalDetailProps {
   subMember?: Member;
   canEdit?: boolean;
   canEditStatus?: boolean;
+  canTogglePayment?: boolean;
   onEdit: (rental: Rental) => void;
   onDelete: (rental: Rental) => void;
   onStatusChange: (rentalId: string, newStatus: RentalStatus) => Promise<void>;
+  onTogglePayment?: (rental: Rental) => void;
 }
 
 export interface DetailRowProps {

@@ -1,5 +1,5 @@
 import { Euro, Clock, Zap } from "lucide-react";
-import type { Rental, Member, RentalStatus, DashboardStatsProps } from "../../types";
+import type { Rental, Member, RentalStatus, RentalPaymentFilter, DashboardStatsProps } from "../../types";
 import { KpiCard } from "./KpiCard";
 import { Card } from "../ui/Card";
 import {
@@ -145,7 +145,7 @@ const computeOwnerStats = (rentals: Rental[], members: Member[], currentYear: nu
 // Component
 // ------------------------------------------------------------
 
-export const DashboardStats = ({ rentals, members: _members, currentMember: _currentMember, onStatusCardClick }: DashboardStatsProps) => {
+export const DashboardStats = ({ rentals, members: _members, currentMember: _currentMember, onStatusCardClick, onPaymentCardClick }: DashboardStatsProps) => {
   const stats = computeStats(rentals);
   const allOwnerStats = computeOwnerStats(rentals, _members, stats.currentYear, stats.now, stats.daysInYear);
 
@@ -159,6 +159,15 @@ export const DashboardStats = ({ rentals, members: _members, currentMember: _cur
     onStatusCardClick?.(status, ownerId);
   };
 
+  const handlePaymentCardClick = (payment: RentalPaymentFilter): void => {
+    onPaymentCardClick?.(payment);
+  };
+
+  // Stats paiement (locations terminées uniquement)
+  const completedRentals = rentals.filter((r) => r.status === "completed");
+  const unpaidRentals = completedRentals.filter((r) => !r.isPaid);
+  const unpaidTotal = unpaidRentals.reduce((sum, r) => sum + (r.totalPrice ?? r.price), 0);
+
   return (
     <div className="flex flex-col gap-4">
       {/* Stats globales */}
@@ -169,6 +178,20 @@ export const DashboardStats = ({ rentals, members: _members, currentMember: _cur
           {stats.totalRentals} location{stats.totalRentals > 1 ? "s" : ""} — {Math.round(stats.occupiedDays)} nuit
           {Math.round(stats.occupiedDays) > 1 ? "s" : ""} — Taux d&apos;occupation {`${stats.occupancy} %`}
         </p>
+
+        {/* Alerte paiements en attente */}
+        {unpaidRentals.length > 0 && (
+          <button
+            type="button"
+            onClick={() => handlePaymentCardClick("unpaid")}
+            className="w-full flex items-center justify-between rounded border border-amber-300 bg-amber-100 px-3 py-2 mt-2 text-left transition-colors hover:bg-amber-200"
+          >
+            <span className="text-sm font-semibold text-amber-800">
+              💳 {unpaidRentals.length} location{unpaidRentals.length > 1 ? "s" : ""} en attente de paiement
+            </span>
+            <span className="text-sm font-bold text-amber-700">{unpaidTotal.toFixed(0)} €</span>
+          </button>
+        )}
 
         {/* Detail par statut */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 mt-1">

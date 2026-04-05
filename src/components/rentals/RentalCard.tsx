@@ -11,7 +11,18 @@ import { Avatar } from "../ui/Avatar";
 // Component
 // ------------------------------------------------------------
 
-export const RentalCard = ({ rental, owner, subMember, canEdit = true, canDelete = true, onClick, onEdit, onDelete }: RentalCardProps) => {
+export const RentalCard = ({
+  rental,
+  owner,
+  subMember,
+  canEdit = true,
+  canDelete = true,
+  canTogglePayment = false,
+  onClick,
+  onEdit,
+  onDelete,
+  onTogglePayment,
+}: RentalCardProps) => {
   const durationDays = getDurationDays(rental.startDate, rental.endDate);
   const hasActualDates = rental.status === "completed" && (rental.actualStartDate || rental.actualEndDate);
   const datesChanged = hasActualDates && (rental.actualStartDate !== rental.startDate || rental.actualEndDate !== rental.endDate);
@@ -103,6 +114,35 @@ export const RentalCard = ({ rental, owner, subMember, canEdit = true, canDelete
           {rental.status === "completed" && rental.totalPrice != null && (
             <div className="flex items-center gap-1 font-bold text-gray-700">
               <Euro size={13} /> <span>Total:</span> {rental.totalPrice.toFixed(2)} €
+            </div>
+          )}
+          {/* Statut paiement */}
+          {rental.status === "completed" && (
+            <div className="flex items-center gap-1">
+              {canTogglePayment ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTogglePayment?.(rental);
+                  }}
+                  className={[
+                    "flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors",
+                    rental.isPaid ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-amber-100 text-amber-700 hover:bg-amber-200",
+                  ].join(" ")}
+                >
+                  {rental.isPaid ? "✓ Payé" : "Marquer comme payé"}
+                </button>
+              ) : (
+                <span
+                  className={[
+                    "px-1.5 py-0.5 rounded text-[11px] font-medium",
+                    rental.isPaid ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700",
+                  ].join(" ")}
+                >
+                  {rental.isPaid ? "✓ Payé" : "💳 Non payé"}
+                </span>
+              )}
             </div>
           )}
           {/* Notes */}
