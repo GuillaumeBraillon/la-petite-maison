@@ -60,3 +60,20 @@ export interface DbUserNotification {
   is_read: boolean;
   created_at: string;
 }
+
+export interface DbPublicPage {
+  id: number;
+  title: string;
+  subtitle: string | null;
+  description: string | null;
+  practical_info: string | null;
+  updated_at: string;
+}
+
+export interface DbPublicPageImage {
+  id: string;
+  storage_path: string;
+  caption: string | null;
+  position: number;
+  created_at: string;
+}

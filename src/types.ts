@@ -461,3 +461,55 @@ export interface ToastProviderProps {
 export interface AppShellProps {
   session: Session;
 }
+
+// ------------------------------------------------------------
+// Page publique
+// ------------------------------------------------------------
+
+export interface PublicPageContent {
+  title: string;
+  subtitle?: string;
+  description?: string;
+  practicalInfo?: string;
+  updatedAt: string;
+}
+
+export interface PublicPageImage {
+  id: string;
+  storagePath: string;
+  publicUrl: string;
+  caption?: string;
+  position: number;
+  createdAt: string;
+}
+
+export type PublicPageData = {
+  content: PublicPageContent;
+  images: PublicPageImage[];
+};
+
+export interface PublicPageViewProps {
+  content: PublicPageContent;
+  images: PublicPageImage[];
+  canEdit: boolean;
+  hasSession: boolean;
+  onEditClick: () => void;
+}
+
+export interface PublicPageEditorProps {
+  content: PublicPageContent;
+  images: PublicPageImage[];
+  saving: boolean;
+  onSave: (updates: Partial<Pick<PublicPageContent, "title" | "subtitle" | "description" | "practicalInfo">>) => Promise<void>;
+  onAddImage: (file: File) => Promise<void>;
+  onDeleteImage: (image: PublicPageImage) => Promise<void>;
+  onCancel: () => void;
+}
+
+export interface PublicPageImageGridProps {
+  images: PublicPageImage[];
+  editMode?: boolean;
+  uploading?: boolean;
+  onAdd?: (file: File) => Promise<void>;
+  onDelete?: (image: PublicPageImage) => Promise<void>;
+}

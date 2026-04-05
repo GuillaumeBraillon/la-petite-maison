@@ -222,6 +222,157 @@ on public.user_notifications
 for delete
 using (auth.uid() = user_id);
 
+-- ------------------------------------------------------------
+-- Table: public_page (singleton — contenu de la page publique)
+-- ------------------------------------------------------------
+drop table if exists public.public_page_images cascade;
+drop table if exists public.public_page cascade;
+
+create table public.public_page (
+  id integer primary key default 1 check (id = 1),
+  title text not null default 'La Petite Maison',
+  subtitle text,
+  description text,
+  practical_info text,
+  updated_at timestamptz not null default now()
+);
+
+create trigger trg_public_page_set_updated_at
+before update on public.public_page
+for each row
+execute function public.set_updated_at();
+
+-- Seed du singleton
+insert into public.public_page (id, title)
+values (1, 'La Petite Maison')
+on conflict (id) do nothing;
+
+-- ------------------------------------------------------------
+-- Table: public_page_images
+-- ------------------------------------------------------------
+create table public.public_page_images (
+  id uuid primary key default gen_random_uuid(),
+  storage_path text not null unique,
+  caption text,
+  position integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index public_page_images_position_idx
+  on public.public_page_images(position);
+
+-- ------------------------------------------------------------
+-- Storage: bucket public-page-images
+-- ------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('public-page-images', 'public-page-images', true)
+on conflict (id) do nothing;
+
+-- ------------------------------------------------------------
+-- RLS: public_page + public_page_images
+-- ------------------------------------------------------------
+alter table public.public_page enable row level security;
+alter table public.public_page_images enable row level security;
+
+create policy "public_page_select_all"
+  on public.public_page for select
+  using (true);
+
+create policy "public_page_update_editors"
+  on public.public_page for update
+  using (
+    auth.role() = 'authenticated'
+    and exists (
+      select 1 from public.members m
+      where m.auth_user_id = auth.uid()
+      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+    )
+  )
+  with check (
+    auth.role() = 'authenticated'
+    and exists (
+      select 1 from public.members m
+      where m.auth_user_id = auth.uid()
+      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+    )
+  );
+
+create policy "public_page_images_select_all"
+  on public.public_page_images for select
+  using (true);
+
+create policy "public_page_images_insert_editors"
+  on public.public_page_images for insert
+  with check (
+    auth.role() = 'authenticated'
+    and exists (
+      select 1 from public.members m
+      where m.auth_user_id = auth.uid()
+      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+    )
+  );
+
+create policy "public_page_images_delete_editors"
+  on public.public_page_images for delete
+  using (
+    auth.role() = 'authenticated'
+    and exists (
+      select 1 from public.members m
+      where m.auth_user_id = auth.uid()
+      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+    )
+  );
+
+create policy "public_page_images_update_editors"
+  on public.public_page_images for update
+  using (
+    auth.role() = 'authenticated'
+    and exists (
+      select 1 from public.members m
+      where m.auth_user_id = auth.uid()
+      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+    )
+  )
+  with check (
+    auth.role() = 'authenticated'
+    and exists (
+      select 1 from public.members m
+      where m.auth_user_id = auth.uid()
+      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+    )
+  );
+
+-- ------------------------------------------------------------
+-- Storage policies: public-page-images
+-- ------------------------------------------------------------
+create policy "Public page images accessible to all"
+  on storage.objects for select
+  using (bucket_id = 'public-page-images');
+
+create policy "Editors can upload public page images"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'public-page-images'
+    and auth.role() = 'authenticated'
+    and exists (
+      select 1 from public.members m
+      where m.auth_user_id = auth.uid()
+      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+    )
+  );
+
+create policy "Editors can delete public page images"
+  on storage.objects for delete
+  using (
+    bucket_id = 'public-page-images'
+    and auth.role() = 'authenticated'
+    and exists (
+      select 1 from public.members m
+      where m.auth_user_id = auth.uid()
+      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+    )
+  );
+
 commit;
 
 -- Migration disponible: supabase/migrations/20260225_add_last_login.sql

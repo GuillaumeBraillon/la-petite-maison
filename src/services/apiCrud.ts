@@ -4,9 +4,9 @@
 // ============================================================
 
 import { supabase } from "./supabaseClient";
-import { mapMemberFromDb, mapMemberToDb, mapRentalFromDb, mapRentalToDb } from "./apiMappers";
-import type { DbMember, DbRental } from "./dbTypes";
-import type { Member, Rental, RentalStatus } from "../types";
+import { mapMemberFromDb, mapMemberToDb, mapRentalFromDb, mapRentalToDb, mapPublicPageFromDb, mapPublicPageImageFromDb } from "./apiMappers";
+import type { DbMember, DbRental, DbPublicPage, DbPublicPageImage } from "./dbTypes";
+import type { Member, Rental, RentalStatus, PublicPageContent, PublicPageImage } from "../types";
 import { notifyNewRental, notifyStatusChange, notifyCompleted, notifyDeletedRental } from "./rentalNotifications";
 
 const isLocalEnv = (): boolean => {
@@ -115,4 +115,65 @@ export const deleteRental = async (id: string): Promise<void> => {
 
   const deletedRental = mapRentalFromDb(existingData as DbRental);
   if (!isLocalEnv()) void notifyDeletedRental(deletedRental);
+};
+
+// ------------------------------------------------------------
+// Public page CRUD
+// ------------------------------------------------------------
+
+export const updatePublicPageContent = async (
+  updates: Partial<Pick<PublicPageContent, "title" | "subtitle" | "description" | "practicalInfo">>
+): Promise<PublicPageContent> => {
+  const dbPayload: Partial<Omit<DbPublicPage, "id" | "updated_at">> = {};
+  if (updates.title !== undefined) dbPayload.title = updates.title;
+  if ("subtitle" in updates) dbPayload.subtitle = updates.subtitle ?? null;
+  if ("description" in updates) dbPayload.description = updates.description ?? null;
+  if ("practicalInfo" in updates) dbPayload.practical_info = updates.practicalInfo ?? null;
+
+  const { data, error } = await supabase.from("public_page").update(dbPayload).eq("id", 1).select().single();
+
+  if (error) throw error;
+  return mapPublicPageFromDb(data as DbPublicPage);
+};
+
+export const uploadPublicPageImage = async (file: File, caption?: string): Promise<PublicPageImage> => {
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage.from("public-page-images").upload(path, file, {
+    upsert: false,
+    contentType: file.type,
+  });
+
+  if (uploadError) throw uploadError;
+
+  const { data: lastImg } = await supabase.from("public_page_images").select("position").order("position", { ascending: false }).limit(1).maybeSingle();
+
+  const nextPosition = (lastImg?.position ?? -1) + 1;
+
+  const { data, error: dbError } = await supabase
+    .from("public_page_images")
+    .insert({ storage_path: path, caption: caption ?? null, position: nextPosition })
+    .select()
+    .single();
+
+  if (dbError) {
+    await supabase.storage.from("public-page-images").remove([path]);
+    throw dbError;
+  }
+
+  const { data: urlData } = supabase.storage.from("public-page-images").getPublicUrl(path);
+  return mapPublicPageImageFromDb(data as DbPublicPageImage, urlData.publicUrl);
+};
+
+export const deletePublicPageImage = async (image: PublicPageImage): Promise<void> => {
+  const { error: dbError } = await supabase.from("public_page_images").delete().eq("id", image.id);
+
+  if (dbError) throw dbError;
+
+  const { error: storageError } = await supabase.storage.from("public-page-images").remove([image.storagePath]);
+
+  if (storageError) {
+    console.error("Échec suppression image du storage:", storageError);
+  }
 };

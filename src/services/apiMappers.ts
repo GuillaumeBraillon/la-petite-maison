@@ -3,8 +3,8 @@
 // C'est LE SEUL endroit autorisé pour ces conversions.
 // ============================================================
 
-import type { Member, Rental, MemberRole, RentalStatus, PushSubscriptionRecord, UserNotification } from "../types";
-import type { DbMember, DbRental, DbPushSubscription, DbUserNotification } from "./dbTypes";
+import type { Member, Rental, MemberRole, RentalStatus, PushSubscriptionRecord, UserNotification, PublicPageContent, PublicPageImage } from "../types";
+import type { DbMember, DbRental, DbPushSubscription, DbUserNotification, DbPublicPage, DbPublicPageImage } from "./dbTypes";
 
 const normalizeOptionalTextToNull = (value: string | undefined): string | null => {
   if (value === undefined) return null;
@@ -140,5 +140,26 @@ export const mapUserNotificationFromDb = (db: DbUserNotification): UserNotificat
   body: db.body,
   url: db.url ?? undefined,
   isRead: db.is_read,
+  createdAt: db.created_at,
+});
+
+// ------------------------------------------------------------
+// PublicPage mappers
+// ------------------------------------------------------------
+
+export const mapPublicPageFromDb = (db: DbPublicPage): PublicPageContent => ({
+  title: db.title,
+  subtitle: db.subtitle ?? undefined,
+  description: db.description ?? undefined,
+  practicalInfo: db.practical_info ?? undefined,
+  updatedAt: db.updated_at,
+});
+
+export const mapPublicPageImageFromDb = (db: DbPublicPageImage, publicUrl: string): PublicPageImage => ({
+  id: db.id,
+  storagePath: db.storage_path,
+  publicUrl,
+  caption: db.caption ?? undefined,
+  position: db.position,
   createdAt: db.created_at,
 });

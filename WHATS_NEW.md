@@ -5,6 +5,19 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.32] - 5 avril 2026
+
+### Ce qui change pour vous
+
+- **Page publique** : La Petite Maison a maintenant une page de présentation partageable ! Envoyez simplement le lien `/presentation` à vos amis pour leur présenter la maison.
+- **Photos et description** : la page affiche des photos, une description et les infos pratiques.
+- **Modification facile** : si vous êtes propriétaire, un bouton "Modifier" s'affiche sur la page — vous pouvez mettre à jour le texte et les photos.
+- **Photos en grand** : un clic sur une photo permet de l'ouvrir en grand pour mieux la regarder.
+- **Partage plus simple** : un bouton "Partager" pour envoyer le lien.
+- **Accès plus pratique** : un lien vers la page à partager est visible directement depuis l'application.
+
+---
+
 ## [0.3.31] - 5 avril 2026
 
 ### Ce qui change pour vous

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { LayoutDashboard, Users, CalendarDays, List } from "lucide-react";
+import { LayoutDashboard, Users, CalendarDays, List, ExternalLink, Sparkles } from "lucide-react";
 import type { Member, Rental, RentalStatus, RentalStatusFilter, RentalPaymentFilter, AppShellProps } from "./types";
 import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
@@ -15,6 +15,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { MembersPage } from "./pages/MembersPage";
 import { RentalsPage } from "./pages/RentalsPage";
 import { CalendarPage } from "./pages/CalendarPage";
+import { PublicPage } from "./pages/PublicPage";
 import { useAuthorization } from "./hooks/useAuthorization";
 import { LoginView } from "./components/Auth/LoginView";
 import { ResetPasswordView } from "./components/Auth/ResetPasswordView";
@@ -276,7 +277,6 @@ const AppShell = ({ session }: AppShellProps) => {
           <img src="/icon-192.png" alt="La Petite Maison" className="w-8 h-8 rounded-lg object-cover" />
           <span className="font-bold text-gray-900 text-sm leading-tight">La Petite Maison</span>
         </div>
-
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
           {getAvailableNavItems().map((item) => (
@@ -294,6 +294,27 @@ const AppShell = ({ session }: AppShellProps) => {
           ))}
         </nav>
 
+        <div className="px-4 py-4 border-b border-gray-100">
+          <a
+            href="/presentation"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group block rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-yellow-50 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 rounded-xl bg-amber-100 p-2 text-amber-700">
+                  <Sparkles size={16} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-gray-900">Page public</p>
+                </div>
+              </div>
+              <ExternalLink size={15} className="mt-0.5 shrink-0 text-gray-400 transition-colors group-hover:text-amber-700" />
+            </div>
+          </a>
+        </div>
+
         {/* Profil + Sign out */}
         <div className="flex items-center bg-gray-100 rounded-full px-1 mb-4 mx-3">
           <UserMenu session={session} userEmail={session.user.email ?? undefined} onLogout={handleSignOut} appVersion={packageJson.version} />
@@ -308,7 +329,14 @@ const AppShell = ({ session }: AppShellProps) => {
           <div className="md:hidden flex items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-2">
               <img src="/icon-192.png" alt="La Petite Maison" className="w-8 h-8 rounded-lg object-cover" />
-              <span className="font-semibold text-gray-900 text-sm">La Petite Maison</span>
+              <div className="flex flex-col">
+                <span className="font-semibold text-gray-900 text-sm">La Petite Maison</span>
+                <a href="/presentation" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-amber-700">
+                  <Sparkles size={12} />
+                  Page public
+                  <ExternalLink size={11} />
+                </a>
+              </div>
             </div>
             <div className="flex items-center bg-gray-100 rounded-full px-1">
               <UserMenu session={session} userEmail={session.user.email ?? undefined} onLogout={handleSignOut} appVersion={packageJson.version} compact />
@@ -529,15 +557,19 @@ const AppRoot = () => {
 // App — wrapper avec providers
 // ------------------------------------------------------------
 
-const App = () => (
-  <ErrorBoundary>
-    <ErrorProvider>
-      <ToastProvider>
-        <AppRoot />
-        <ToastViewport />
-      </ToastProvider>
-    </ErrorProvider>
-  </ErrorBoundary>
-);
+const App = () => {
+  const isPublicPath = window.location.pathname === "/presentation";
+
+  return (
+    <ErrorBoundary>
+      <ErrorProvider>
+        <ToastProvider>
+          {isPublicPath ? <PublicPage /> : <AppRoot />}
+          <ToastViewport />
+        </ToastProvider>
+      </ErrorProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;

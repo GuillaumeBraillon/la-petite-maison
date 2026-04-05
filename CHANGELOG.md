@@ -7,6 +7,35 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.32] - 2026-04-05
+
+### Ajout
+
+- **Page publique** : nouvelle page de présentation accessible sans connexion, partageable via l'URL `/presentation`
+- **Page publique** : affiche titre, sous-titre, photos et informations pratiques
+- **Page publique** : les propriétaires éditeurs et admins peuvent modifier le contenu (texte + photos) directement depuis la page
+- **Page publique** : upload et suppression d'images stockées dans Supabase Storage (bucket `public-page-images`)
+- **Page publique** : bouton `Partager` ajouté avec partage natif sur mobile et copie du lien en fallback
+- **Page publique** : les photos peuvent être ouvertes en grand dans une visionneuse dédiée
+- **Application authentifiée** : ajout d'un accès direct vers la page de présentation depuis la navigation desktop et mobile
+- **Infrastructure** : ajout de `vercel.json` pour le routage SPA (`/presentation` → `index.html`)
+- **Base de données** : nouvelles tables `public_page` (singleton) et `public_page_images` avec RLS public en lecture, écriture réservée aux éditeurs
+
+### Améliorations
+
+- **Page publique** : en-tête mobile réorganisé pour mieux séparer le titre et les actions
+- **Navigation** : ton et wording du lien vers la page de présentation adoucis pour un rendu plus familial
+
+### Technique
+
+- Nouveaux types `PublicPageContent`, `PublicPageImage`, `PublicPageData` dans `types.ts`
+- Nouveaux types DB `DbPublicPage`, `DbPublicPageImage` dans `dbTypes.ts`
+- Nouveaux mappers `mapPublicPageFromDb`, `mapPublicPageImageFromDb` dans `apiMappers.ts`
+- Nouvelles fonctions API : `fetchPublicPage` (api.ts), `updatePublicPageContent`, `uploadPublicPageImage`, `deletePublicPageImage` (apiCrud.ts)
+- Nouveaux composants : `PublicPage`, `PublicPageView`, `PublicPageEditor`, `PublicPageImageGrid`, `Lightbox`
+
+---
+
 ## [0.3.31] - 2026-04-05
 
 ### Ajout
