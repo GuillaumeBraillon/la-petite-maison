@@ -1,6 +1,6 @@
 import { CalendarX } from "lucide-react";
 import type { RentalListProps } from "../../types";
-import { isMemberRental } from "../../services/permissions";
+import { getRentalActionPermissions } from "../../services/permissions";
 import { RentalCard } from "./RentalCard";
 
 // ------------------------------------------------------------
@@ -21,39 +21,32 @@ const EmptyState = () => (
 // Component
 // ------------------------------------------------------------
 
-export const RentalList = ({
-  rentals,
-  members,
-  currentMember,
-  canEdit = true,
-  canDelete = true,
-  canTogglePayment = false,
-  onClick,
-  onEdit,
-  onDelete,
-  onTogglePayment,
-}: RentalListProps) => {
+export const RentalList = ({ rentals, members, currentMember, onClick, onEdit, onDelete, onTogglePayment }: RentalListProps) => {
   if (rentals.length === 0) return <EmptyState />;
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {rentals.map((rental) => (
-        <RentalCard
-          key={rental.id}
-          rental={rental}
-          owner={memberIndex.get(rental.ownerId)}
-          subMember={rental.subMemberId ? memberIndex.get(rental.subMemberId) : undefined}
-          canEdit={canEdit || isMemberRental(currentMember ?? null, rental)}
-          canDelete={canDelete}
-          canTogglePayment={canTogglePayment}
-          onClick={onClick}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onTogglePayment={onTogglePayment}
-        />
-      ))}
+      {rentals.map((rental) => {
+        const actions = getRentalActionPermissions(currentMember ?? null, rental);
+
+        return (
+          <RentalCard
+            key={rental.id}
+            rental={rental}
+            owner={memberIndex.get(rental.ownerId)}
+            subMember={rental.subMemberId ? memberIndex.get(rental.subMemberId) : undefined}
+            canEdit={actions.canEdit}
+            canDelete={actions.canDelete}
+            canTogglePayment={actions.canTogglePayment}
+            onClick={onClick}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onTogglePayment={onTogglePayment}
+          />
+        );
+      })}
     </div>
   );
 };

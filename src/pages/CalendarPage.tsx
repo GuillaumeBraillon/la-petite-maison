@@ -6,7 +6,7 @@ import { Modal } from "../components/ui/Modal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
-import { getPermissions, isMemberRental } from "../services/permissions";
+import { canCreateInlineSubMember, getPermissions, getRentalActionPermissions } from "../services/permissions";
 import { createMember } from "../services/apiCrud";
 import { useToast } from "../contexts/ToastContext";
 import { TOAST_MESSAGES } from "../services/messageCatalog";
@@ -39,9 +39,11 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Ren
     confirmDelete,
     handleStatusChange,
     handleTogglePayment,
-  } = useRentalModals(onRefresh);
+  } = useRentalModals({ currentMember: currentMember ?? null, onRefresh });
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
+  const selectedRentalActions = selected ? getRentalActionPermissions(currentMember ?? null, selected) : null;
+  const editingRentalActions = editing && editing.id ? getRentalActionPermissions(currentMember ?? null, editing) : null;
 
   const handleCreateSubMember = async (data: { firstName: string; lastName: string; label: string; role: "sub_member"; ownerId?: string }) => {
     try {
@@ -119,9 +121,10 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Ren
               rental={selected}
               owner={memberIndex.get(selected.ownerId)}
               subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
-              canEdit={getPermissions(currentMember ?? null).createWithAnyStatus || isMemberRental(currentMember ?? null, selected)}
-              canEditStatus={getPermissions(currentMember ?? null).createWithAnyStatus}
-              canTogglePayment={getPermissions(currentMember ?? null).togglePayment}
+              canEdit={selectedRentalActions?.canEdit}
+              canDelete={selectedRentalActions?.canDelete}
+              canEditStatus={selectedRentalActions?.canEditStatus}
+              canTogglePayment={selectedRentalActions?.canTogglePayment}
               onEdit={openEdit}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
@@ -136,13 +139,12 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Ren
         <RentalForm
           initialValues={editing ?? undefined}
           members={members}
-          canEdit={
-            editing?.id ? getPermissions(currentMember ?? null).editLocations || (editing != null && isMemberRental(currentMember ?? null, editing)) : true
-          }
+          canEdit={editing?.id ? Boolean(editingRentalActions?.canEditStatus) : permissions.createWithAnyStatus}
+          isEditing={Boolean(editing?.id)}
           currentMember={currentMember}
           onSubmit={handleSubmit}
           onCancel={closeForm}
-          onCreateSubMember={getPermissions(currentMember ?? null).createMembers || currentMember?.role === "owner" ? handleCreateSubMember : undefined}
+          onCreateSubMember={canCreateInlineSubMember(currentMember ?? null) ? handleCreateSubMember : undefined}
           submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
         />
       </Modal>

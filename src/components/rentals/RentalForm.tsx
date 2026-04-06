@@ -51,6 +51,7 @@ export const RentalForm = ({
   initialValues,
   members,
   canEdit = true,
+  isEditing = false,
   currentMember,
   onSubmit,
   onCancel,
@@ -186,8 +187,8 @@ export const RentalForm = ({
     if (!validate()) return;
     setLoading(true);
     try {
-      // Sécurité supplémentaire côté client : forcer le statut pending pour les utilisateurs restreints
-      const submittedValues: RentalFormValues = isRestricted ? { ...values, status: "pending" } : values;
+      // En création restreinte, le statut reste forcément "pending".
+      const submittedValues: RentalFormValues = isRestricted && !isEditing ? { ...values, status: "pending" } : values;
       await onSubmit(submittedValues);
     } finally {
       setLoading(false);

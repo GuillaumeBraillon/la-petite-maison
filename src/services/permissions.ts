@@ -9,7 +9,9 @@ export interface Permissions {
   createLocations: boolean;
   /** true = peut choisir n'importe quel statut ; false = forcé à "pending" */
   createWithAnyStatus: boolean;
+  /** true = possède au moins un périmètre d'édition sur les locations */
   editLocations: boolean;
+  /** true = possède au moins un périmètre de suppression sur les locations */
   deleteLocations: boolean;
   viewMembers: boolean;
   createMembers: boolean;
@@ -22,12 +24,19 @@ export interface Permissions {
   togglePayment: boolean;
 }
 
+export interface RentalActionPermissions {
+  canEdit: boolean;
+  canDelete: boolean;
+  canEditStatus: boolean;
+  canTogglePayment: boolean;
+}
+
 /**
  * Récupère les permissions pour un utilisateur donné
  * Admin : tous les droits
- * Owner + isEditor=true : tous les droits sur locations & members
- * Owner + isEditor=false : peut créer des demandes (pending), voir et éditer ses propres locations (champs limités)
- * Sub_member : voir le calendrier + détails, créer des demandes, éditer ses propres locations (champs limités)
+ * Owner + isEditor=true : validation / paiement sur son périmètre owner + gestion membres
+ * Owner + isEditor=false : peut créer des demandes (pending) et agir sur les locations de son périmètre
+ * Sub_member : peut créer des demandes, voir les locations globales, et agir uniquement sur ses propres locations
  */
 export const getPermissions = (member: Member | null): Permissions => {
   // Pas de membre = pas de droits
@@ -75,8 +84,8 @@ export const getPermissions = (member: Member | null): Permissions => {
       viewLocations: true,
       createLocations: true, // non-éditeur peut créer des demandes (statut = pending)
       createWithAnyStatus: isEditor,
-      editLocations: isEditor,
-      deleteLocations: isEditor,
+      editLocations: true,
+      deleteLocations: true,
       viewMembers: true,
       createMembers: isEditor,
       editMembers: isEditor,
@@ -92,8 +101,8 @@ export const getPermissions = (member: Member | null): Permissions => {
     viewLocations: true,
     createLocations: true,
     createWithAnyStatus: false,
-    editLocations: false,
-    deleteLocations: false,
+    editLocations: true,
+    deleteLocations: true,
     viewMembers: false,
     createMembers: false,
     editMembers: false,
@@ -114,21 +123,50 @@ export const hasPermission = (member: Member | null, permission: keyof Permissio
 };
 
 /**
- * Détermine si une location concerne directement un membre (i.e. ses propres données).
- * Peut être utilisé partout dans l'app pour restreindre la visibilité/édition aux données personnelles.
- * - Admin / owner éditeur : toujours vrai (accès global)
- * - Owner non-éditeur : ses propres locations uniquement (ownerId === member.id)
- * - Sub_member : uniquement les locations où il est membre (subMemberId === member.id)
- *   → ne doit PAS pouvoir accéder aux locations de son owner parent
+ * Détermine si une location est dans le périmètre d'action du membre connecté.
+ * - Admin : accès global
+ * - Owner : locations rattachées à son `ownerId`
+ * - Sub_member : locations rattachées à son `subMemberId`
  */
-export const isMemberRental = (member: Member | null, rental: Rental): boolean => {
+export const isRentalInMemberScope = (member: Member | null, rental: Rental): boolean => {
   if (!member) return false;
-  if (getPermissions(member).createWithAnyStatus) return true;
+  if (member.role === "admin") return true;
   if (member.role === "owner") return rental.ownerId === member.id;
-  if (member.role === "sub_member") {
-    // Un `sub_member` ne doit pouvoir agir que sur SES propres locations (subMemberId).
-    // Ne pas autoriser l'accès aux locations du owner pour éviter modification non souhaitée.
-    return rental.subMemberId === member.id;
-  }
+  if (member.role === "sub_member") return rental.subMemberId === member.id;
   return false;
+};
+
+export const getRentalActionPermissions = (member: Member | null, rental: Rental): RentalActionPermissions => {
+  if (!member) {
+    return {
+      canEdit: false,
+      canDelete: false,
+      canEditStatus: false,
+      canTogglePayment: false,
+    };
+  }
+
+  if (member.role === "admin") {
+    return {
+      canEdit: true,
+      canDelete: true,
+      canEditStatus: true,
+      canTogglePayment: true,
+    };
+  }
+
+  const inScope = isRentalInMemberScope(member, rental);
+  const canValidateScopedRental = member.role === "owner" && member.isEditor && inScope;
+
+  return {
+    canEdit: inScope,
+    canDelete: inScope,
+    canEditStatus: canValidateScopedRental,
+    canTogglePayment: canValidateScopedRental,
+  };
+};
+
+export const canCreateInlineSubMember = (member: Member | null): boolean => {
+  if (!member) return false;
+  return member.role === "admin" || member.role === "owner";
 };

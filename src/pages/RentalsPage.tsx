@@ -1,7 +1,7 @@
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { RentalStatusFilter, RentalPaymentFilter, RentalsPageProps } from "../types";
-import { getPermissions, isMemberRental } from "../services/permissions";
+import { canCreateInlineSubMember, getPermissions, getRentalActionPermissions } from "../services/permissions";
 import { createMember } from "../services/apiCrud";
 import { RentalList } from "../components/rentals/RentalList";
 import { RentalDetail } from "../components/rentals/RentalDetail";
@@ -51,10 +51,12 @@ export const RentalsPage = ({
     confirmDelete,
     handleStatusChange,
     handleTogglePayment,
-  } = useRentalModals(onRefresh);
+  } = useRentalModals({ currentMember: currentMember ?? null, onRefresh });
 
   const memberIndex = new Map(members.map((m) => [m.id, m]));
   const permissions = getPermissions(currentMember ?? null);
+  const selectedRentalActions = selected ? getRentalActionPermissions(currentMember ?? null, selected) : null;
+  const editingRentalActions = editing && editing.id ? getRentalActionPermissions(currentMember ?? null, editing) : null;
 
   // Filters
   type StatusFilter = RentalStatusFilter;
@@ -202,9 +204,6 @@ export const RentalsPage = ({
         rentals={filteredRentals}
         members={members}
         currentMember={currentMember}
-        canEdit={permissions.editLocations}
-        canDelete={permissions.deleteLocations}
-        canTogglePayment={permissions.togglePayment}
         onClick={openDetail}
         onEdit={openEdit}
         onDelete={handleDelete}
@@ -216,11 +215,12 @@ export const RentalsPage = ({
         <RentalForm
           initialValues={editing ?? undefined}
           members={members}
-          canEdit={editing?.id ? permissions.editLocations || (editing && isMemberRental(currentMember ?? null, editing)) : true}
+          canEdit={editing?.id ? Boolean(editingRentalActions?.canEditStatus) : permissions.createWithAnyStatus}
+          isEditing={Boolean(editing?.id)}
           currentMember={currentMember}
           onSubmit={handleSubmit}
           onCancel={closeForm}
-          onCreateSubMember={permissions.createMembers || currentMember?.role === "owner" ? handleCreateSubMember : undefined}
+          onCreateSubMember={canCreateInlineSubMember(currentMember ?? null) ? handleCreateSubMember : undefined}
           submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
         />
       </Modal>
@@ -232,9 +232,10 @@ export const RentalsPage = ({
             rental={selected}
             owner={memberIndex.get(selected.ownerId)}
             subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
-            canEdit={permissions.createWithAnyStatus || isMemberRental(currentMember ?? null, selected)}
-            canEditStatus={permissions.createWithAnyStatus}
-            canTogglePayment={permissions.togglePayment}
+            canEdit={selectedRentalActions?.canEdit}
+            canDelete={selectedRentalActions?.canDelete}
+            canEditStatus={selectedRentalActions?.canEditStatus}
+            canTogglePayment={selectedRentalActions?.canTogglePayment}
             onEdit={openEdit}
             onDelete={handleDelete}
             onStatusChange={handleStatusChange}

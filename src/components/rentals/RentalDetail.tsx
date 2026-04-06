@@ -31,6 +31,7 @@ export const RentalDetail = ({
   owner,
   subMember,
   canEdit = false,
+  canDelete = false,
   canEditStatus = false,
   canTogglePayment = false,
   onEdit,
@@ -175,14 +176,18 @@ export const RentalDetail = ({
           {rental.notes && <DetailRow icon={<FileText size={16} />} label="Notes" value={rental.notes} />}
         </Card>
       )}
-      {canEdit && (
+      {(canEdit || canDelete) && (
         <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
-          <Button variant="danger" size="sm" onClick={() => onDelete(rental)} className="w-full sm:w-auto">
-            <Trash2 size={14} /> Supprimer
-          </Button>
-          <Button variant="secondary" size="sm" onClick={() => onEdit(rental)} className="w-full sm:w-auto">
-            <Pencil size={14} /> Modifier
-          </Button>
+          {canDelete && (
+            <Button variant="danger" size="sm" onClick={() => onDelete(rental)} className="w-full sm:w-auto">
+              <Trash2 size={14} /> Supprimer
+            </Button>
+          )}
+          {canEdit && (
+            <Button variant="secondary" size="sm" onClick={() => onEdit(rental)} className="w-full sm:w-auto">
+              <Pencil size={14} /> Modifier
+            </Button>
+          )}
         </div>
       )}
     </div>

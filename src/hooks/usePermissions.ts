@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { Member } from "../types";
-import { fetchMembers } from "../services/api";
+import { fetchCurrentMember } from "../services/api";
 import { getPermissions, type Permissions } from "../services/permissions";
 import { logger } from "../services/logger";
 
@@ -24,8 +24,7 @@ export const usePermissions = (session: Session | null): Permissions => {
 
     const loadMember = async () => {
       try {
-        const members = await fetchMembers();
-        const userMember = members.find((m) => m.email === session.user.email);
+        const userMember = await fetchCurrentMember(session);
         setMember(userMember ?? null);
       } catch (error) {
         logger.error("Failed to load member permissions:", error);
@@ -34,7 +33,7 @@ export const usePermissions = (session: Session | null): Permissions => {
     };
 
     loadMember();
-  }, [session?.user?.email]);
+  }, [session]);
 
   return getPermissions(member);
 };

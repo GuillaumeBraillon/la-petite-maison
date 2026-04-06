@@ -3,12 +3,14 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../services/supabaseClient";
 import { logger } from "../services/logger";
 import { PUSH_MESSAGES } from "../services/messageCatalog";
+import { getAuthProvider } from "../services/authProvider";
 
 interface AuthorizedUserRow {
   id: string;
   email: string;
   role: string;
   is_allowed: boolean;
+  auth_provider: string | null;
   avatar_url: string | null;
   auth_user_id: string | null;
 }
@@ -98,6 +100,7 @@ export const useAuthorization = (session: Session | null) => {
         const userEmail = currentUser.email;
         const userName = currentUser.user_metadata?.full_name ?? currentUser.user_metadata?.name ?? null;
         const avatarUrl = currentUser.user_metadata?.avatar_url ?? currentUser.user_metadata?.picture ?? null;
+        const authProvider = getAuthProvider(currentUser);
 
         const nameParts = userName?.trim().split(/\s+/) ?? [];
         const firstName = nameParts[0] ?? "";
@@ -107,7 +110,7 @@ export const useAuthorization = (session: Session | null) => {
 
         const { data: byAuthUserId, error: byAuthUserIdError } = await supabase
           .from("members")
-          .select("id, email, role, is_allowed, avatar_url, auth_user_id")
+          .select("id, email, role, is_allowed, auth_provider, avatar_url, auth_user_id")
           .eq("auth_user_id", currentUser.id)
           .maybeSingle();
 
@@ -120,7 +123,7 @@ export const useAuthorization = (session: Session | null) => {
         if (!authorizedUser) {
           const { data: byEmail, error: byEmailError } = await supabase
             .from("members")
-            .select("id, email, role, is_allowed, avatar_url, auth_user_id")
+            .select("id, email, role, is_allowed, auth_provider, avatar_url, auth_user_id")
             .ilike("email", normalizedEmail)
             .maybeSingle();
 
@@ -135,6 +138,7 @@ export const useAuthorization = (session: Session | null) => {
           const { error: insertError } = await supabase.from("members").insert({
             auth_user_id: currentUser.id,
             email: normalizedEmail,
+            auth_provider: authProvider,
             is_allowed: false,
             label,
             first_name: firstName,
@@ -167,6 +171,7 @@ export const useAuthorization = (session: Session | null) => {
         const syncPayload: {
           auth_user_id?: string;
           email?: string;
+          auth_provider?: string;
           avatar_url?: string;
         } = {};
 
@@ -176,6 +181,10 @@ export const useAuthorization = (session: Session | null) => {
 
         if (normalizedMemberEmail !== normalizedEmail) {
           syncPayload.email = normalizedEmail;
+        }
+
+        if (authProvider && authorizedUser.auth_provider !== authProvider) {
+          syncPayload.auth_provider = authProvider;
         }
 
         if (avatarUrl && avatarUrl !== authorizedUser.avatar_url) {

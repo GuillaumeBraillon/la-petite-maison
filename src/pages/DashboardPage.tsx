@@ -8,7 +8,7 @@ import { useRentalModals } from "../hooks/useRentalModals";
 // ------------------------------------------------------------
 
 export const DashboardPage = ({ rentals, members, currentMember, onRefresh, onOpenRentalsWithStatus, onOpenRentalsWithPayment }: DashboardPageProps) => {
-  const { error, clearError } = useRentalModals(onRefresh);
+  const { error, clearError } = useRentalModals({ currentMember: currentMember ?? null, onRefresh });
 
   return (
     <div className="flex flex-col gap-4">

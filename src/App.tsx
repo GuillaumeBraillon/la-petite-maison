@@ -4,7 +4,7 @@ import { LayoutDashboard, Users, CalendarDays, List, ExternalLink, Sparkles } fr
 import type { Member, Rental, RentalStatus, RentalStatusFilter, RentalPaymentFilter, AppShellProps } from "./types";
 import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
-import { fetchMembers, fetchRentals } from "./services/api";
+import { fetchCurrentMember, fetchMembers, fetchRentals } from "./services/api";
 import { ErrorProvider, useError } from "./contexts/ErrorContext";
 import { usePWAInstall } from "./hooks/usePWAInstall";
 import { ToastProvider } from "./contexts/ToastContext";
@@ -17,6 +17,7 @@ import { RentalsPage } from "./pages/RentalsPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { PublicPage } from "./pages/PublicPage";
 import { useAuthorization } from "./hooks/useAuthorization";
+import { getAuthProvider } from "./services/authProvider";
 import { LoginView } from "./components/Auth/LoginView";
 import { ResetPasswordView } from "./components/Auth/ResetPasswordView";
 import { UnauthorizedView } from "./components/Auth/UnauthorizedView";
@@ -169,6 +170,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const [rentalsStatusFilter, setRentalsStatusFilter] = useState<RentalStatusFilter>("all");
   const [rentalsOwnerFilter, setRentalsOwnerFilter] = useState<string | "all">("all");
   const [rentalsPaymentFilter, setRentalsPaymentFilter] = useState<RentalPaymentFilter>("all");
+  const [currentMember, setCurrentMember] = useState<Member | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,8 +178,6 @@ const AppShell = ({ session }: AppShellProps) => {
   const { install, isInstallable } = usePWAInstall();
   const { shouldShow: showWhatsNew, entries: whatsNewEntries, dismiss: dismissWhatsNew } = useWhatsNew();
   const { isSupported: pushSupported, isSubscribed: pushSubscribed } = usePushNotifications();
-
-  const currentMember = members.find((m) => m.email === session.user.email);
 
   // Helper pour filtrer les items de nav basés sur le rôle
   const getAvailableNavItems = (): NavItem[] => {
@@ -205,16 +205,21 @@ const AppShell = ({ session }: AppShellProps) => {
 
   const refresh = useCallback(async () => {
     try {
-      const [m, r] = await Promise.all([fetchMembers(), fetchRentals()]);
-      setMembers(m);
-      setRentals(r);
+      const [member, loadedMembers, loadedRentals] = await Promise.all([fetchCurrentMember(session), fetchMembers(), fetchRentals()]);
+      if (!member) {
+        throw new Error("Membre courant introuvable.");
+      }
+
+      setCurrentMember(member);
+      setMembers(loadedMembers);
+      setRentals(loadedRentals);
     } catch (err) {
       setError({
         message: err instanceof Error ? err.message : "Erreur de chargement.",
         context: "Chargement des données",
       });
     }
-  }, [setError]);
+  }, [session, setError]);
 
   useEffect(() => {
     void (async () => {
@@ -453,7 +458,17 @@ const AppRoot = () => {
     const updateLastLogin = async (sess: Session | null) => {
       try {
         if (!sess?.user?.email) return;
-        const { error } = await supabase.from("members").update({ last_login: new Date().toISOString() }).eq("email", sess.user.email);
+        const normalizedEmail = sess.user.email.trim().toLowerCase();
+        const authProvider = getAuthProvider(sess.user);
+        const { error } = await supabase
+          .from("members")
+          .update({
+            last_login: new Date().toISOString(),
+            auth_user_id: sess.user.id,
+            email: normalizedEmail,
+            ...(authProvider ? { auth_provider: authProvider } : {}),
+          })
+          .ilike("email", normalizedEmail);
         if (error) {
           setError({
             message: error.message,

@@ -24,6 +24,7 @@ export const mapMemberFromDb = (db: DbMember): Member => ({
   lastName: db.last_name,
   role: db.role as MemberRole,
   email: db.email ?? undefined,
+  authProvider: db.auth_provider ?? undefined,
   avatarUrl: db.avatar_url ?? undefined,
   lastLogin: db.last_login ?? undefined,
   address: db.address ?? undefined,
@@ -44,6 +45,9 @@ export const mapMemberToDb = (member: Partial<Omit<Member, "id" | "createdAt" | 
     // de "champ undefined dans un create" → on envoie null pour insérer NULL en DB
     ...("email" in member && {
       email: normalizeOptionalTextToNull(member.email),
+    }),
+    ...("authProvider" in member && {
+      auth_provider: normalizeOptionalTextToNull(member.authProvider),
     }),
     ...(member.avatarUrl !== undefined && {
       avatar_url: normalizeOptionalTextToNull(member.avatarUrl),

@@ -21,10 +21,7 @@ export const MemberCard = ({
   onEdit,
   onDelete,
 }: MemberCardProps) => {
-  const email = member.email?.trim().toLowerCase();
-  const maybeAuth = member as unknown as { authProvider?: string };
-  const authProvider = maybeAuth.authProvider;
-  const isGoogleAccount = authProvider ? authProvider === "google" : !!email && (email.endsWith("@gmail.com") || email.endsWith("@googlemail.com"));
+  const isGoogleAccount = member.authProvider === "google";
 
   return (
     <Card hover padding="sm" className="flex flex-col gap-2 h-full">

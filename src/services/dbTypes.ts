@@ -13,6 +13,7 @@ export interface DbMember {
   last_name: string;
   role: string;
   email: string | null;
+  auth_provider: string | null;
   avatar_url: string | null;
   address: string | null;
   last_login: string | null;

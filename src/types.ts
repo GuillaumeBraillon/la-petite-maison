@@ -35,6 +35,8 @@ export interface Member {
   role: MemberRole;
   /** Email — optionnel */
   email?: string;
+  /** Provider d'authentification Supabase (`google`, `email`, ...) */
+  authProvider?: string;
   /** Avatar profil (Google) — optionnel */
   avatarUrl?: string;
   /** Date ISO de la dernière connexion — optionnel */
@@ -257,6 +259,7 @@ export interface RentalFormProps {
   initialValues?: Partial<RentalFormValues>;
   members: Member[];
   canEdit?: boolean;
+  isEditing?: boolean;
   currentMember?: Member;
   onSubmit: (values: RentalFormValues) => Promise<void>;
   onCancel: () => void;
@@ -281,9 +284,6 @@ export interface RentalListProps {
   rentals: Rental[];
   members: Member[];
   currentMember?: Member | null;
-  canEdit?: boolean;
-  canDelete?: boolean;
-  canTogglePayment?: boolean;
   onClick?: (rental: Rental) => void;
   onEdit?: (rental: Rental) => void;
   onDelete?: (rental: Rental) => void;
@@ -295,6 +295,7 @@ export interface RentalDetailProps {
   owner?: Member;
   subMember?: Member;
   canEdit?: boolean;
+  canDelete?: boolean;
   canEditStatus?: boolean;
   canTogglePayment?: boolean;
   onEdit: (rental: Rental) => void;
