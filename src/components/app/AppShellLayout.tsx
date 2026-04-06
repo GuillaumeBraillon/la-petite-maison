@@ -102,7 +102,7 @@ export const AppShellLayout = ({
         <div className="px-4 py-4 border-b border-gray-100">
           <a
             href="/presentation"
-            target="_blank"
+            target="_self"
             rel="noopener noreferrer"
             className="group block rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-yellow-50 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
@@ -139,7 +139,7 @@ export const AppShellLayout = ({
               <img src="/icon-192.png" alt="La Petite Maison" className="w-8 h-8 rounded-lg object-cover" />
               <div className="flex flex-col">
                 <span className="font-semibold text-gray-900 text-sm">La Petite Maison</span>
-                <a href="/presentation" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-amber-700">
+                <a href="/presentation" target="_self" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-amber-700">
                   <Sparkles size={12} />
                   Page public
                   <ExternalLink size={11} />

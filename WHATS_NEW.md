@@ -5,6 +5,13 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.35] - 6 avril 2026
+
+### Ce qui change pour vous
+
+- **Connexion plus simple** : l'accès avec Google est maintenant mis en avant sur l'écran de connexion pour rendre l'entrée dans l'application plus claire.
+- **Page de présentation plus visible** : si vous n'êtes pas membre de la famille, un accès direct vers la page de présentation est affiché dès l'écran de connexion.
+
 ## [0.3.34] - 6 avril 2026
 
 ### Ce qui change pour vous

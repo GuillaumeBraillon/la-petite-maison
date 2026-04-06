@@ -7,6 +7,20 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.35] - 2026-04-06
+
+### Améliorations
+
+- **Connexion** : l'écran de connexion met désormais en avant l'accès avec Google pour orienter plus clairement les utilisateurs vers la bonne méthode de connexion
+- **Connexion** : l'accès par email est replié dans un panneau dédié pour alléger l'interface et éviter les créations de compte involontaires avec une adresse Google
+- **Page de présentation** : un encart visible a été ajouté sur l'écran de connexion pour inviter les personnes extérieures à la famille à consulter directement la page de présentation
+- **Navigation** : les liens vers la page de présentation ouvrent maintenant la page dans l'onglet courant depuis l'application et l'écran de connexion
+
+### Technique
+
+- **UI login** : ajout d'une icône Google dédiée, d'un état local `isEmailExpanded` et réorganisation du composant `LoginView` pour séparer plus nettement les parcours Google et email
+- **Navigation UI** : harmonisation des liens `/presentation` dans `LoginView` et `AppShellLayout` avec une ouverture en `target="_self"`
+
 ## [0.3.34] - 2026-04-06
 
 ### Améliorations
