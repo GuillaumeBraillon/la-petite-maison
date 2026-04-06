@@ -106,16 +106,16 @@ export const AppShellLayout = ({
             rel="noopener noreferrer"
             className="group block rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-yellow-50 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 rounded-xl bg-amber-100 p-2 text-amber-700">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl bg-amber-100 p-2 text-amber-700">
                   <Sparkles size={16} />
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-gray-900">Page public</p>
                 </div>
               </div>
-              <ExternalLink size={15} className="mt-0.5 shrink-0 text-gray-400 transition-colors group-hover:text-amber-700" />
+              <ExternalLink size={15} className="shrink-0 text-gray-400 transition-colors group-hover:text-amber-700" />
             </div>
           </a>
         </div>

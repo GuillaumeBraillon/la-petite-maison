@@ -18,10 +18,20 @@ import { invokeSendPush } from "./pushService";
 import { getNotificationAudiences, getRentalActors } from "./rentalActorsService";
 import { buildCompletedBody, buildStatusMessage, getStatusNotificationTitle, getStatusNotificationType, isBroadcastStatus } from "./rentalMessageBuilder";
 import { getObserverRecipients } from "../utils/notificationUtils";
-import { formatDate, formatEuro, getDurationDays, pluralize } from "../utils/rentalUtils";
+import { formatDate, formatEuro, getDurationDays, normalizeEmail, pluralize } from "../utils/rentalUtils";
+import { fetchCurrentMember } from "./api";
+import { logger } from "./logger";
+import { supabase } from "./supabaseClient";
 import type { Rental, RentalStatus } from "../types";
 
 type PushType = "rental_created" | "rental_confirmed" | "rental_rejected" | "request_pending" | "rental_completed" | "rental_deleted" | "rental_paid";
+
+type NotificationActor = {
+  actorName: string | null;
+  actorEmail: string | null;
+};
+
+type NotificationActionKind = "created" | "confirmed" | "rejected" | "pending" | "completed" | "deleted" | "paid" | "unpaid";
 
 const sendPush = (emails: string[], type: PushType, title: string, body: string): void => {
   if (emails.length === 0) return;
@@ -36,6 +46,95 @@ const getRentalDisplayInfo = (rental: Rental): { startDate: string; endDate: str
   const endDate = formatDate(rental.endDate);
   const guests = `${rental.guestCount} ${pluralize(rental.guestCount, "personne", "personnes")}`;
   return { startDate, endDate, guests };
+};
+
+const getActorFallbackName = (email: string | null): string | null => {
+  if (!email) return null;
+  const [localPart] = email.split("@");
+  return localPart?.trim() || null;
+};
+
+const getCurrentNotificationActor = async (): Promise<NotificationActor> => {
+  try {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (error) {
+      logger.error("[rentalNotifications] getCurrentNotificationActor session:", error);
+      return { actorName: null, actorEmail: null };
+    }
+
+    if (!session) {
+      return { actorName: null, actorEmail: null };
+    }
+
+    const actorEmail = normalizeEmail(session.user.email);
+
+    try {
+      const currentMember = await fetchCurrentMember(session);
+      if (currentMember) {
+        const fullName = `${currentMember.firstName} ${currentMember.lastName}`.trim();
+        return {
+          actorName: fullName || currentMember.label.trim() || getActorFallbackName(actorEmail),
+          actorEmail,
+        };
+      }
+    } catch (memberError) {
+      logger.error("[rentalNotifications] getCurrentNotificationActor member:", memberError);
+    }
+
+    const userMetadata = session.user.user_metadata;
+    const metadataName =
+      (typeof userMetadata.full_name === "string" && userMetadata.full_name.trim()) ||
+      (typeof userMetadata.name === "string" && userMetadata.name.trim()) ||
+      getActorFallbackName(actorEmail);
+
+    return {
+      actorName: metadataName || null,
+      actorEmail,
+    };
+  } catch (unexpectedError) {
+    logger.error("[rentalNotifications] getCurrentNotificationActor unexpected:", unexpectedError);
+    return { actorName: null, actorEmail: null };
+  }
+};
+
+const getActorNameForRecipient = (actor: NotificationActor, recipientEmail?: string | null): string | null => {
+  if (!actor.actorName) return null;
+  if (actor.actorEmail && normalizeEmail(recipientEmail) === actor.actorEmail) return null;
+  return actor.actorName;
+};
+
+const getActorActionLabel = (action: NotificationActionKind): string => {
+  switch (action) {
+    case "created":
+      return "Demande créée";
+    case "confirmed":
+      return "Séjour validé";
+    case "rejected":
+      return "Demande refusée";
+    case "pending":
+      return "Demande remise en attente";
+    case "completed":
+      return "Séjour clôturé";
+    case "deleted":
+      return "Location supprimée";
+    case "paid":
+      return "Paiement confirmé";
+    case "unpaid":
+      return "Paiement annulé";
+  }
+};
+
+const appendActorToBody = (body: string, actorName: string | null, action: NotificationActionKind): string => {
+  if (!actorName) return body;
+  const actorLine = `${getActorActionLabel(action)} par ${actorName}.`;
+  if (body.includes("\n")) {
+    return `${body}\n\n${actorLine}`;
+  }
+  return `${body} ${actorLine}`;
 };
 
 // ------------------------------------------------------------
@@ -57,6 +156,7 @@ export const notifyNewRental = async (rental: Rental): Promise<void> => {
   const { ownerName, subMemberName, ownerEmail, subMemberEmail } = await getRentalActors(rental);
   const { ownerEmails, validatorEmails } = await getNotificationAudiences();
   const { startDate, endDate, guests } = getRentalDisplayInfo(rental);
+  const actor = await getCurrentNotificationActor();
 
   const personalRecipients = new Set([ownerEmail, subMemberEmail].filter((email): email is string => email !== null));
   const { validatorRecipients, ownerObserverRecipients } = getObserverRecipients({
@@ -69,26 +169,34 @@ export const notifyNewRental = async (rental: Rental): Promise<void> => {
     validatorRecipients,
     "rental_created",
     PUSH_MESSAGES.rental.newRequestTitle,
-    PUSH_MESSAGES.rental.newRequestForValidators({
-      subMemberName,
-      ownerName,
-      startDate,
-      endDate,
-      guests,
-    })
+    appendActorToBody(
+      PUSH_MESSAGES.rental.newRequestForValidators({
+        subMemberName,
+        ownerName,
+        startDate,
+        endDate,
+        guests,
+      }),
+      actor.actorName,
+      "created"
+    )
   );
 
   sendPush(
     ownerObserverRecipients,
     "rental_created",
     PUSH_MESSAGES.rental.newRequestTitle,
-    PUSH_MESSAGES.rental.newRequestForOwners({
-      subMemberName,
-      ownerName,
-      startDate,
-      endDate,
-      guests,
-    })
+    appendActorToBody(
+      PUSH_MESSAGES.rental.newRequestForOwners({
+        subMemberName,
+        ownerName,
+        startDate,
+        endDate,
+        guests,
+      }),
+      actor.actorName,
+      "created"
+    )
   );
 
   if (ownerEmail) {
@@ -96,12 +204,16 @@ export const notifyNewRental = async (rental: Rental): Promise<void> => {
       [ownerEmail],
       "rental_created",
       PUSH_MESSAGES.rental.newRequestTitle,
-      PUSH_MESSAGES.rental.newRequestForOwner({
-        subMemberName,
-        startDate,
-        endDate,
-        guests,
-      })
+      appendActorToBody(
+        PUSH_MESSAGES.rental.newRequestForOwner({
+          subMemberName,
+          startDate,
+          endDate,
+          guests,
+        }),
+        getActorNameForRecipient(actor, ownerEmail),
+        "created"
+      )
     );
   }
 
@@ -110,11 +222,15 @@ export const notifyNewRental = async (rental: Rental): Promise<void> => {
       [subMemberEmail],
       "rental_created",
       PUSH_MESSAGES.rental.newRequestTitle,
-      PUSH_MESSAGES.rental.newRequestForSubMember({
-        startDate,
-        endDate,
-        guests,
-      })
+      appendActorToBody(
+        PUSH_MESSAGES.rental.newRequestForSubMember({
+          startDate,
+          endDate,
+          guests,
+        }),
+        getActorNameForRecipient(actor, subMemberEmail),
+        "created"
+      )
     );
   }
 };
@@ -136,13 +252,23 @@ export const notifyStatusChange = async (rental: Rental, previousStatus?: Rental
 
   const { ownerEmail, subMemberEmail, subMemberName, ownerName } = await getRentalActors(rental);
   const { ownerEmails, validatorEmails } = await getNotificationAudiences();
+  const actor = await getCurrentNotificationActor();
 
   const sentEmails = new Set<string>();
 
   if (ownerEmail) {
     const ownerMessage = buildStatusMessage(rental, "owner", subMemberName);
     if (ownerMessage) {
-      sendPush([ownerEmail], ownerMessage.type, ownerMessage.title, ownerMessage.body);
+      sendPush(
+        [ownerEmail],
+        ownerMessage.type,
+        ownerMessage.title,
+        appendActorToBody(
+          ownerMessage.body,
+          getActorNameForRecipient(actor, ownerEmail),
+          rental.status === "confirmed" ? "confirmed" : rental.status === "rejected" ? "rejected" : "pending"
+        )
+      );
       sentEmails.add(ownerEmail);
     }
   }
@@ -150,7 +276,16 @@ export const notifyStatusChange = async (rental: Rental, previousStatus?: Rental
   if (subMemberEmail && !sentEmails.has(subMemberEmail)) {
     const subMemberMessage = buildStatusMessage(rental, "sub_member", subMemberName);
     if (subMemberMessage) {
-      sendPush([subMemberEmail], subMemberMessage.type, subMemberMessage.title, subMemberMessage.body);
+      sendPush(
+        [subMemberEmail],
+        subMemberMessage.type,
+        subMemberMessage.title,
+        appendActorToBody(
+          subMemberMessage.body,
+          getActorNameForRecipient(actor, subMemberEmail),
+          rental.status === "confirmed" ? "confirmed" : rental.status === "rejected" ? "rejected" : "pending"
+        )
+      );
       sentEmails.add(subMemberEmail);
     }
   }
@@ -172,28 +307,36 @@ export const notifyStatusChange = async (rental: Rental, previousStatus?: Rental
     ownerObserverRecipients,
     statusType,
     statusTitle,
-    PUSH_MESSAGES.rental.statusForOwnerObservers({
-      subMemberName,
-      ownerName,
-      status: rental.status,
-      startDate,
-      endDate,
-      guests,
-    })
+    appendActorToBody(
+      PUSH_MESSAGES.rental.statusForOwnerObservers({
+        subMemberName,
+        ownerName,
+        status: rental.status,
+        startDate,
+        endDate,
+        guests,
+      }),
+      actor.actorName,
+      rental.status === "confirmed" ? "confirmed" : rental.status === "rejected" ? "rejected" : "pending"
+    )
   );
 
   sendPush(
     validatorRecipients,
     statusType,
     statusTitle,
-    PUSH_MESSAGES.rental.statusForValidators({
-      subMemberName,
-      ownerName,
-      status: rental.status,
-      startDate,
-      endDate,
-      guests,
-    })
+    appendActorToBody(
+      PUSH_MESSAGES.rental.statusForValidators({
+        subMemberName,
+        ownerName,
+        status: rental.status,
+        startDate,
+        endDate,
+        guests,
+      }),
+      actor.actorName,
+      rental.status === "confirmed" ? "confirmed" : rental.status === "rejected" ? "rejected" : "pending"
+    )
   );
 };
 
@@ -211,15 +354,26 @@ export const notifyStatusChange = async (rental: Rental, previousStatus?: Rental
 export const notifyCompleted = async (rental: Rental): Promise<void> => {
   const { ownerEmail, subMemberEmail, subMemberName, ownerName } = await getRentalActors(rental);
   const { ownerEmails, validatorEmails } = await getNotificationAudiences();
+  const actor = await getCurrentNotificationActor();
   const sentEmails = new Set<string>();
 
   if (ownerEmail) {
-    sendPush([ownerEmail], "rental_completed", PUSH_MESSAGES.rental.completedTitle, buildCompletedBody(rental, "owner", subMemberName));
+    sendPush(
+      [ownerEmail],
+      "rental_completed",
+      PUSH_MESSAGES.rental.completedTitle,
+      appendActorToBody(buildCompletedBody(rental, "owner", subMemberName), getActorNameForRecipient(actor, ownerEmail), "completed")
+    );
     sentEmails.add(ownerEmail);
   }
 
   if (subMemberEmail && subMemberEmail !== ownerEmail) {
-    sendPush([subMemberEmail], "rental_completed", PUSH_MESSAGES.rental.completedTitle, buildCompletedBody(rental, "sub_member", subMemberName));
+    sendPush(
+      [subMemberEmail],
+      "rental_completed",
+      PUSH_MESSAGES.rental.completedTitle,
+      appendActorToBody(buildCompletedBody(rental, "sub_member", subMemberName), getActorNameForRecipient(actor, subMemberEmail), "completed")
+    );
     sentEmails.add(subMemberEmail);
   }
 
@@ -239,30 +393,38 @@ export const notifyCompleted = async (rental: Rental): Promise<void> => {
     ownerObserverRecipients,
     "rental_completed",
     PUSH_MESSAGES.rental.completedTitle,
-    PUSH_MESSAGES.rental.completedForOwners({
-      subMemberName,
-      ownerName,
-      startDate,
-      endDate,
-      guests: rental.guestCount,
-      durationDays,
-      total,
-    })
+    appendActorToBody(
+      PUSH_MESSAGES.rental.completedForOwners({
+        subMemberName,
+        ownerName,
+        startDate,
+        endDate,
+        guests: rental.guestCount,
+        durationDays,
+        total,
+      }),
+      actor.actorName,
+      "completed"
+    )
   );
 
   sendPush(
     validatorRecipients,
     "rental_completed",
     PUSH_MESSAGES.rental.completedTitle,
-    PUSH_MESSAGES.rental.completedForValidators({
-      subMemberName,
-      ownerName,
-      startDate,
-      endDate,
-      guests: rental.guestCount,
-      durationDays,
-      total,
-    })
+    appendActorToBody(
+      PUSH_MESSAGES.rental.completedForValidators({
+        subMemberName,
+        ownerName,
+        startDate,
+        endDate,
+        guests: rental.guestCount,
+        durationDays,
+        total,
+      }),
+      actor.actorName,
+      "completed"
+    )
   );
 };
 
@@ -277,6 +439,7 @@ export const notifyCompleted = async (rental: Rental): Promise<void> => {
 export const notifyDeletedRental = async (rental: Rental): Promise<void> => {
   const { ownerEmail, subMemberEmail, subMemberName, ownerName } = await getRentalActors(rental);
   const { ownerEmails, validatorEmails } = await getNotificationAudiences();
+  const actor = await getCurrentNotificationActor();
   const sentEmails = new Set<string>();
   const { startDate, endDate, guests } = getRentalDisplayInfo(rental);
 
@@ -285,12 +448,16 @@ export const notifyDeletedRental = async (rental: Rental): Promise<void> => {
       [ownerEmail],
       "rental_deleted",
       PUSH_MESSAGES.rental.deletedTitle,
-      PUSH_MESSAGES.rental.deletedForOwner({
-        subMemberName,
-        startDate,
-        endDate,
-        guests,
-      })
+      appendActorToBody(
+        PUSH_MESSAGES.rental.deletedForOwner({
+          subMemberName,
+          startDate,
+          endDate,
+          guests,
+        }),
+        getActorNameForRecipient(actor, ownerEmail),
+        "deleted"
+      )
     );
     sentEmails.add(ownerEmail);
   }
@@ -300,11 +467,15 @@ export const notifyDeletedRental = async (rental: Rental): Promise<void> => {
       [subMemberEmail],
       "rental_deleted",
       PUSH_MESSAGES.rental.deletedTitle,
-      PUSH_MESSAGES.rental.deletedForSubMember({
-        startDate,
-        endDate,
-        guests,
-      })
+      appendActorToBody(
+        PUSH_MESSAGES.rental.deletedForSubMember({
+          startDate,
+          endDate,
+          guests,
+        }),
+        getActorNameForRecipient(actor, subMemberEmail),
+        "deleted"
+      )
     );
     sentEmails.add(subMemberEmail);
   }
@@ -319,26 +490,34 @@ export const notifyDeletedRental = async (rental: Rental): Promise<void> => {
     ownerObserverRecipients,
     "rental_deleted",
     PUSH_MESSAGES.rental.deletedTitle,
-    PUSH_MESSAGES.rental.deletedForOwners({
-      subMemberName,
-      ownerName,
-      startDate,
-      endDate,
-      guests,
-    })
+    appendActorToBody(
+      PUSH_MESSAGES.rental.deletedForOwners({
+        subMemberName,
+        ownerName,
+        startDate,
+        endDate,
+        guests,
+      }),
+      actor.actorName,
+      "deleted"
+    )
   );
 
   sendPush(
     validatorRecipients,
     "rental_deleted",
     PUSH_MESSAGES.rental.deletedTitle,
-    PUSH_MESSAGES.rental.deletedForValidators({
-      subMemberName,
-      ownerName,
-      startDate,
-      endDate,
-      guests,
-    })
+    appendActorToBody(
+      PUSH_MESSAGES.rental.deletedForValidators({
+        subMemberName,
+        ownerName,
+        startDate,
+        endDate,
+        guests,
+      }),
+      actor.actorName,
+      "deleted"
+    )
   );
 };
 
@@ -358,16 +537,35 @@ export const notifyPaymentToggled = async (rental: Rental): Promise<void> => {
   const { ownerEmail, subMemberEmail, subMemberName, ownerName } = await getRentalActors(rental);
   const { ownerEmails } = await getNotificationAudiences();
   const { startDate, endDate } = getRentalDisplayInfo(rental);
+  const actor = await getCurrentNotificationActor();
   const sentEmails = new Set<string>();
   const title = rental.isPaid ? PUSH_MESSAGES.rental.paidTitle : PUSH_MESSAGES.rental.unpaidTitle;
 
   if (ownerEmail) {
-    sendPush([ownerEmail], "rental_paid", title, PUSH_MESSAGES.rental.paidForOwner({ subMemberName, startDate, endDate, isPaid: rental.isPaid }));
+    sendPush(
+      [ownerEmail],
+      "rental_paid",
+      title,
+      appendActorToBody(
+        PUSH_MESSAGES.rental.paidForOwner({ subMemberName, startDate, endDate, isPaid: rental.isPaid }),
+        getActorNameForRecipient(actor, ownerEmail),
+        rental.isPaid ? "paid" : "unpaid"
+      )
+    );
     sentEmails.add(ownerEmail);
   }
 
   if (subMemberEmail && subMemberEmail !== ownerEmail) {
-    sendPush([subMemberEmail], "rental_paid", title, PUSH_MESSAGES.rental.paidForSubMember({ startDate, endDate, isPaid: rental.isPaid }));
+    sendPush(
+      [subMemberEmail],
+      "rental_paid",
+      title,
+      appendActorToBody(
+        PUSH_MESSAGES.rental.paidForSubMember({ startDate, endDate, isPaid: rental.isPaid }),
+        getActorNameForRecipient(actor, subMemberEmail),
+        rental.isPaid ? "paid" : "unpaid"
+      )
+    );
     sentEmails.add(subMemberEmail);
   }
 
@@ -376,6 +574,10 @@ export const notifyPaymentToggled = async (rental: Rental): Promise<void> => {
     ownerObserverRecipients,
     "rental_paid",
     title,
-    PUSH_MESSAGES.rental.paidForOwners({ subMemberName, ownerName, startDate, endDate, isPaid: rental.isPaid })
+    appendActorToBody(
+      PUSH_MESSAGES.rental.paidForOwners({ subMemberName, ownerName, startDate, endDate, isPaid: rental.isPaid }),
+      actor.actorName,
+      rental.isPaid ? "paid" : "unpaid"
+    )
   );
 };

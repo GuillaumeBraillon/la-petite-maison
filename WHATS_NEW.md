@@ -5,6 +5,12 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.36] - 6 avril 2026
+
+### Ce qui change pour vous
+
+- **Vue du moment** : le tableau de bord peut maintenant indiquer qui est actuellement à La Petite Maison, ou jusqu'à quand elle est libre avant le prochain séjour.
+
 ## [0.3.35] - 6 avril 2026
 
 ### Ce qui change pour vous

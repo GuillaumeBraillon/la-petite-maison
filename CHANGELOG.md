@@ -7,6 +7,20 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.36] - 2026-04-06
+
+### Améliorations
+
+- **Notifications** : les notifications de location précisent maintenant qui a effectué l'action concernée (création de demande, validation, refus, remise en attente, clôture, suppression, paiement)
+- **Dashboard** : un encart indique désormais qui est actuellement à La Petite Maison, avec un message compact précisant aussi jusqu'à quand la maison est libre quand personne n'y séjourne
+- **Dashboard** : les libellés des séjours en cours ont été rendus plus naturels pour les sous-locations afin d'améliorer la lisibilité du résumé
+- **Navigation** : l'encart "Page public" de la sidebar a été ajusté pour un alignement visuel plus propre entre l'icône et le texte
+
+### Technique
+
+- **Notifications** : enrichissement de `rentalNotifications.ts` avec une résolution du membre courant connecté et une annotation contextuelle des messages envoyés selon le type d'action
+- **Dashboard** : `DashboardStats.tsx` calcule désormais explicitement les séjours en cours à partir des locations confirmées et des dates effectives, puis génère un résumé dédié pour l'encart de présence
+
 ## [0.3.35] - 2026-04-06
 
 ### Améliorations
