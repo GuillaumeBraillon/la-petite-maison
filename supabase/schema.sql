@@ -278,14 +278,14 @@ create policy "public_page_select_all"
   on public.public_page for select
   using (true);
 
-create policy "public_page_update_editors"
+create policy "public_page_update_owners"
   on public.public_page for update
   using (
     auth.role() = 'authenticated'
     and exists (
       select 1 from public.members m
       where m.auth_user_id = auth.uid()
-      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+      and m.role in ('admin', 'owner')
     )
   )
   with check (
@@ -293,7 +293,7 @@ create policy "public_page_update_editors"
     and exists (
       select 1 from public.members m
       where m.auth_user_id = auth.uid()
-      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+      and m.role in ('admin', 'owner')
     )
   );
 
@@ -301,36 +301,36 @@ create policy "public_page_images_select_all"
   on public.public_page_images for select
   using (true);
 
-create policy "public_page_images_insert_editors"
+create policy "public_page_images_insert_owners"
   on public.public_page_images for insert
   with check (
     auth.role() = 'authenticated'
     and exists (
       select 1 from public.members m
       where m.auth_user_id = auth.uid()
-      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+      and m.role in ('admin', 'owner')
     )
   );
 
-create policy "public_page_images_delete_editors"
+create policy "public_page_images_delete_owners"
   on public.public_page_images for delete
   using (
     auth.role() = 'authenticated'
     and exists (
       select 1 from public.members m
       where m.auth_user_id = auth.uid()
-      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+      and m.role in ('admin', 'owner')
     )
   );
 
-create policy "public_page_images_update_editors"
+create policy "public_page_images_update_owners"
   on public.public_page_images for update
   using (
     auth.role() = 'authenticated'
     and exists (
       select 1 from public.members m
       where m.auth_user_id = auth.uid()
-      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+      and m.role in ('admin', 'owner')
     )
   )
   with check (
@@ -338,7 +338,7 @@ create policy "public_page_images_update_editors"
     and exists (
       select 1 from public.members m
       where m.auth_user_id = auth.uid()
-      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+      and m.role in ('admin', 'owner')
     )
   );
 
@@ -349,7 +349,7 @@ create policy "Public page images accessible to all"
   on storage.objects for select
   using (bucket_id = 'public-page-images');
 
-create policy "Editors can upload public page images"
+create policy "Owners can upload public page images"
   on storage.objects for insert
   with check (
     bucket_id = 'public-page-images'
@@ -357,11 +357,11 @@ create policy "Editors can upload public page images"
     and exists (
       select 1 from public.members m
       where m.auth_user_id = auth.uid()
-      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+      and m.role in ('admin', 'owner')
     )
   );
 
-create policy "Editors can delete public page images"
+create policy "Owners can delete public page images"
   on storage.objects for delete
   using (
     bucket_id = 'public-page-images'
@@ -369,7 +369,7 @@ create policy "Editors can delete public page images"
     and exists (
       select 1 from public.members m
       where m.auth_user_id = auth.uid()
-      and (m.role = 'admin' or (m.role = 'owner' and m.is_editor = true))
+      and m.role in ('admin', 'owner')
     )
   );
 

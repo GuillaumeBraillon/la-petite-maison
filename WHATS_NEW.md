@@ -5,6 +5,15 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.33] - 6 avril 2026
+
+### Ce qui change pour vous
+
+- **Mise en forme du texte** : dans l'éditeur de la page de présentation, une barre d'outils permet de mettre du texte en **gras**, en _italique_, d'ajouter des titres et des listes.
+- **Aperçu fidèle** : le formatage s'affiche proprement pour les visiteurs une fois la page enregistrée.
+
+---
+
 ## [0.3.32] - 5 avril 2026
 
 ### Ce qui change pour vous

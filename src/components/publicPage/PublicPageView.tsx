@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Pencil, Share2, Check } from "lucide-react";
 import type { PublicPageViewProps } from "../../types";
 import { PublicPageImageGrid } from "./PublicPageImageGrid";
+import { MarkdownContent } from "./MarkdownContent";
 
 export const PublicPageView = ({ content, images, canEdit, hasSession, onEditClick }: PublicPageViewProps) => {
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
@@ -95,28 +96,16 @@ export const PublicPageView = ({ content, images, canEdit, hasSession, onEditCli
 
         {/* Description */}
         {content.description && (
-          <section className="space-y-3">
-            <div className="prose prose-gray max-w-none">
-              {content.description.split("\n").map((line, i) => (
-                <p key={i} className="text-gray-700 leading-relaxed">
-                  {line}
-                </p>
-              ))}
-            </div>
+          <section>
+            <MarkdownContent text={content.description} className="space-y-1" />
           </section>
         )}
 
         {/* Practical info */}
         {content.practicalInfo && (
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-2">Informations pratiques</h2>
-            <div className="prose prose-gray max-w-none">
-              {content.practicalInfo.split("\n").map((line, i) => (
-                <p key={i} className="text-gray-700 leading-relaxed">
-                  {line}
-                </p>
-              ))}
-            </div>
+            <h2 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-2">En résumé</h2>
+            <MarkdownContent text={content.practicalInfo} className="space-y-1" />
           </section>
         )}
 

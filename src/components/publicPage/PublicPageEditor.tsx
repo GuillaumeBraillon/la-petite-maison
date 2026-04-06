@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Save, X } from "lucide-react";
 import type { PublicPageEditorProps, PublicPageContent } from "../../types";
 import { PublicPageImageGrid } from "./PublicPageImageGrid";
+import { RichTextArea } from "./RichTextArea";
 
 export const PublicPageEditor = ({ content, images, saving, onSave, onAddImage, onDeleteImage, onCancel }: PublicPageEditorProps) => {
   const [title, setTitle] = useState(content.title);
@@ -115,12 +116,29 @@ export const PublicPageEditor = ({ content, images, saving, onSave, onAddImage, 
             <label htmlFor="public-description" className="block text-sm font-medium text-gray-700">
               Description
             </label>
-            <textarea
+            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-1">
+              <p>ℹ️ Les boutons de mise en forme ajoutent des petits caractères dans le texte.</p>
+              <ul className="space-y-0.5 pl-1">
+                <li>
+                  <code className="px-1 ">## Mon titre</code> → <span className="text-base font-semibold text-gray-900 mt-4 mb-0.5 first:mt-0">titre</span>
+                </li>
+                <li>
+                  <code className="px-1 ">**mon texte**</code> → <strong>gras</strong>
+                </li>
+                <li>
+                  <code className="px-1 ">*mon texte*</code> → <em>italique</em>
+                </li>
+                <li>
+                  <code className="px-1 ">- mon élément</code> → • liste
+                </li>
+              </ul>
+              <p>Ne vous inquiétez pas, ils disparaîtront une fois la page enregistrée et le résultat sera bien mis en forme.</p>
+            </div>
+            <RichTextArea
               id="public-description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={6}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y"
+              onChange={setDescription}
+              rows={30}
               placeholder="Décrivez la maison, le lieu, l'ambiance…"
             />
           </div>
@@ -128,16 +146,29 @@ export const PublicPageEditor = ({ content, images, saving, onSave, onAddImage, 
           {/* Practical info */}
           <div className="space-y-1.5">
             <label htmlFor="public-practical" className="block text-sm font-medium text-gray-700">
-              Informations pratiques
+              En résumé
             </label>
-            <textarea
-              id="public-practical"
-              value={practicalInfo}
-              onChange={(e) => setPracticalInfo(e.target.value)}
-              rows={4}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y"
-              placeholder="Adresse, accès, codes, équipements…"
-            />
+            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-1">
+              <p>
+                ℹ️ Les boutons de mise en forme ajoutent des petits caractères dans le texte. Ne vous inquiétez pas, ils disparaîtront une fois la page
+                enregistrée et le résultat sera bien mis en forme.
+              </p>
+              <ul className="space-y-0.5 pl-1">
+                <li>
+                  <code className="bg-amber-100 px-1 rounded">## Mon titre</code> → titre de section
+                </li>
+                <li>
+                  <code className="bg-amber-100 px-1 rounded">**mon texte**</code> → <strong>texte en gras</strong>
+                </li>
+                <li>
+                  <code className="bg-amber-100 px-1 rounded">*mon texte*</code> → <em>texte en italique</em>
+                </li>
+                <li>
+                  <code className="bg-amber-100 px-1 rounded">- mon élément</code> → • point de liste
+                </li>
+              </ul>
+            </div>
+            <RichTextArea id="public-practical" value={practicalInfo} onChange={setPracticalInfo} rows={10} placeholder="Adresse, accès, codes, équipements…" />
           </div>
 
           {saveError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{saveError}</p>}

@@ -7,6 +7,26 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.33] - 2026-04-06
+
+### Ajout
+
+- **Page publique** : mise en forme du texte — barre d'outils avec boutons Gras, Italique, Titre et Liste dans les zones de texte de l'éditeur
+- **Page publique** : rendu markdown côté visiteur — titres de section, gras, italique et listes à puces affichés proprement
+- **Page publique** : note d'aide contextuelle dans l'éditeur expliquant les caractères de mise en forme avant chaque zone de texte
+
+### Améliorations
+
+- **Page publique** : droit d'édition étendu à tous les propriétaires (plus seulement les propriétaires éditeurs)
+- **Base de données** : policies RLS `public_page` et `public_page_images` mises à jour pour autoriser tous les rôles `owner` (et non plus `owner + is_editor`)
+
+### Technique
+
+- Nouveau composant `RichTextArea` — textarea avec toolbar de formatage (toggle gras/italique/titre/liste, gestion de la sélection et des positions curseur)
+- Nouveau composant `MarkdownContent` — rendu de markdown léger sans dépendance externe (groupement en blocs `heading` / `list` / `paragraph` / `blank`)
+
+---
+
 ## [0.3.32] - 2026-04-05
 
 ### Ajout
