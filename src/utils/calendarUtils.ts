@@ -45,17 +45,44 @@ export const buildCalendarDays = (year: number, month: number): Date[] => {
   return days;
 };
 
-/**
- * Retourne les locations pour un jour donné.
- */
-export const getRentalsForDay = (day: Date, rentals: Rental[]): Rental[] =>
-  rentals.filter((r) => {
-    const start = new Date(r.startDate);
-    const end = new Date(r.endDate);
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
-    return day >= start && day <= end;
-  });
+const toDayStart = (date: Date): Date => {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+};
+
+export const getDayKey = (date: Date): string => {
+  const normalized = toDayStart(date);
+  const year = normalized.getFullYear();
+  const month = `${normalized.getMonth() + 1}`.padStart(2, "0");
+  const day = `${normalized.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+export const buildRentalsByDay = (days: Date[], rentals: Rental[]): Map<string, Rental[]> => {
+  const rentalsByDay = new Map<string, Rental[]>();
+
+  for (const day of days) {
+    rentalsByDay.set(getDayKey(day), []);
+  }
+
+  for (const rental of rentals) {
+    const start = toDayStart(new Date(rental.startDate));
+    const end = toDayStart(new Date(rental.endDate));
+    const cursor = new Date(start);
+
+    while (cursor <= end) {
+      const dayKey = getDayKey(cursor);
+      const dayRentals = rentalsByDay.get(dayKey);
+      if (dayRentals) {
+        dayRentals.push(rental);
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+
+  return rentalsByDay;
+};
 
 /**
  * Retourne le numéro ISO de la semaine (1-based) pour une date donnée.

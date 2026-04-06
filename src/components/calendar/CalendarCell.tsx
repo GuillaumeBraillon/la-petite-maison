@@ -5,9 +5,7 @@ import { RentalBadge } from "./RentalBadge";
 // Component
 // ------------------------------------------------------------
 
-export const CalendarCell = ({ date, rentals, members, isToday, isCurrentMonth, onRentalClick, onDayClick }: CalendarCellProps) => {
-  const memberIndex = new Map(members.map((m) => [m.id, m]));
-
+export const CalendarCell = ({ date, rentals, memberIndex, isToday, isCurrentMonth, onRentalClick, onDayClick }: CalendarCellProps) => {
   const handleCellClick = () => {
     if (onDayClick && isCurrentMonth) {
       onDayClick(date);

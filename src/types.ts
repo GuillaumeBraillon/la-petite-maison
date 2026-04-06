@@ -183,7 +183,7 @@ export interface CalendarViewProps {
 export interface CalendarCellProps {
   date: Date;
   rentals: Rental[];
-  members: Member[];
+  memberIndex: Map<string, Member>;
   isToday: boolean;
   isCurrentMonth: boolean;
   onRentalClick?: (rental: Rental) => void;
@@ -423,6 +423,7 @@ export interface ConfirmDialogProps {
 
 export interface UserMenuProps {
   userEmail?: string;
+  currentMember?: Member | null;
   onLogout: () => void;
   session: Session | null;
   appVersion?: string;
@@ -441,6 +442,7 @@ export interface WhatsNewModalProps {
 }
 
 export interface UserInfoCardProps {
+  currentMember?: Member | null;
   session: Session | null;
   onLogout: () => void;
   appVersion?: string;

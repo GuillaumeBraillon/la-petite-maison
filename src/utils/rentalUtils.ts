@@ -170,9 +170,10 @@ export const nextSunday = (fromDate: Date): Date => {
  */
 export const getAutoRentalPrice = (startIso: string, endIso: string, guestCount: number): number => {
   const nights = getDurationDays(startIso, endIso);
-  const PRICE_PER_NIGHT_PER_PERSON = 5; // € par nuit et par personne
-  return nights * guestCount * PRICE_PER_NIGHT_PER_PERSON;
+  return nights * guestCount * AUTO_RENTAL_PRICE_PER_NIGHT_PER_PERSON;
 };
+
+export const AUTO_RENTAL_PRICE_PER_NIGHT_PER_PERSON = 5;
 
 /**
  * Récupère les dates effectives d'une location (réelles ou prévues selon le statut).

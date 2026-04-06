@@ -1,23 +1,18 @@
 import type { RentalsMembersPageSharedProps } from "../types";
 import { CalendarView } from "../components/calendar/CalendarView";
-import { RentalDetail } from "../components/rentals/RentalDetail";
-import { RentalForm } from "../components/rentals/RentalForm";
-import { Modal } from "../components/ui/Modal";
-import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { RentalDialogs } from "../components/rentals/RentalDialogs";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
-import { canCreateInlineSubMember, getPermissions, getRentalActionPermissions } from "../services/permissions";
-import { createMember } from "../services/apiCrud";
-import { useToast } from "../contexts/ToastContext";
-import { TOAST_MESSAGES } from "../services/messageCatalog";
+import { getPermissions, getRentalActionPermissions } from "../services/permissions";
+import { useCreateSubMember } from "../hooks/useCreateSubMember";
 
 // ------------------------------------------------------------
 // Page
 // ------------------------------------------------------------
 
 export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: RentalsMembersPageSharedProps) => {
-  const { showToast } = useToast();
   const permissions = getPermissions(currentMember ?? null);
+  const handleCreateSubMember = useCreateSubMember({ onRefresh });
   const {
     formOpen,
     detailOpen,
@@ -41,39 +36,8 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Ren
     handleTogglePayment,
   } = useRentalModals({ currentMember: currentMember ?? null, onRefresh });
 
-  const memberIndex = new Map(members.map((m) => [m.id, m]));
   const selectedRentalActions = selected ? getRentalActionPermissions(currentMember ?? null, selected) : null;
   const editingRentalActions = editing && editing.id ? getRentalActionPermissions(currentMember ?? null, editing) : null;
-
-  const handleCreateSubMember = async (data: { firstName: string; lastName: string; label: string; role: "sub_member"; ownerId?: string }) => {
-    try {
-      const newMember = await createMember({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        label: data.label,
-        role: data.role,
-        email: undefined,
-        address: undefined,
-        ownerId: data.ownerId,
-        isAllowed: false,
-        isEditor: false,
-      });
-      await onRefresh();
-      showToast({
-        variant: "success",
-        title: TOAST_MESSAGES.member.created.title,
-        message: TOAST_MESSAGES.member.created.message,
-      });
-      return newMember;
-    } catch (error) {
-      showToast({
-        variant: "error",
-        title: TOAST_MESSAGES.member.saveError.title,
-        message: TOAST_MESSAGES.member.saveError.message,
-      });
-      throw error;
-    }
-  };
 
   const handleDayClick = (date: Date) => {
     // Vérifier les permissions avant de créer
@@ -112,58 +76,37 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Ren
         onCreateClick={permissions.createLocations ? () => openCreate() : undefined}
         onDayClick={permissions.createLocations ? handleDayClick : undefined}
       />
-
-      {/* Détail */}
       {permissions.viewCalendarDetails && (
-        <Modal isOpen={detailOpen && selected !== null} onClose={closeDetail} title="Détail de la location" size="lg">
-          {selected && (
-            <RentalDetail
-              rental={selected}
-              owner={memberIndex.get(selected.ownerId)}
-              subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
-              canEdit={selectedRentalActions?.canEdit}
-              canDelete={selectedRentalActions?.canDelete}
-              canEditStatus={selectedRentalActions?.canEditStatus}
-              canTogglePayment={selectedRentalActions?.canTogglePayment}
-              onEdit={openEdit}
-              onDelete={handleDelete}
-              onStatusChange={handleStatusChange}
-              onTogglePayment={handleTogglePayment}
-            />
-          )}
-        </Modal>
-      )}
-
-      {/* Formulaire création/modification */}
-      <Modal isOpen={formOpen} onClose={closeForm} title={editing?.id ? "Modifier la location" : "Nouvelle demande de location"} size="lg">
-        <RentalForm
-          initialValues={editing ?? undefined}
+        <RentalDialogs
           members={members}
-          canEdit={editing?.id ? Boolean(editingRentalActions?.canEditStatus) : permissions.createWithAnyStatus}
-          isEditing={Boolean(editing?.id)}
           currentMember={currentMember}
-          onSubmit={handleSubmit}
-          onCancel={closeForm}
-          onCreateSubMember={canCreateInlineSubMember(currentMember ?? null) ? handleCreateSubMember : undefined}
+          formOpen={formOpen}
+          detailOpen={detailOpen}
+          editing={editing}
+          selected={selected}
+          rentalToDelete={rentalToDelete}
+          deletingRental={deletingRental}
+          deleteConfirmationOpen={deleteConfirmationOpen}
+          selectedRentalActions={selectedRentalActions}
+          editingRentalActions={editingRentalActions}
+          createWithAnyStatus={permissions.createWithAnyStatus}
+          formTitle={editing?.id ? "Modifier la location" : "Nouvelle demande de location"}
+          detailTitle="Détail de la location"
           submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
+          onCloseForm={closeForm}
+          onCloseDetail={closeDetail}
+          onSubmit={handleSubmit}
+          onCreateSubMember={handleCreateSubMember}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+          onStatusChange={handleStatusChange}
+          onTogglePayment={handleTogglePayment}
+          onConfirmDelete={() => {
+            void confirmDelete();
+          }}
+          onCancelDelete={cancelDelete}
         />
-      </Modal>
-      <ConfirmDialog
-        isOpen={deleteConfirmationOpen}
-        title="Confirmer la suppression"
-        message={`Supprimer cette location${
-          rentalToDelete
-            ? ` du ${new Date(rentalToDelete.startDate).toLocaleDateString("fr-FR")} au ${new Date(rentalToDelete.endDate).toLocaleDateString("fr-FR")}`
-            : ""
-        } ?`}
-        confirmLabel="Supprimer"
-        cancelLabel="Annuler"
-        onConfirm={() => {
-          void confirmDelete();
-        }}
-        onCancel={cancelDelete}
-        loading={deletingRental}
-      />
+      )}
     </div>
   );
 };

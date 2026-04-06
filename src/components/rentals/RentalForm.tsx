@@ -5,7 +5,6 @@ import {
   getDurationDays,
   formatDateLabelLong,
   toDatetimeLocal,
-  nextSunday,
   getAutoRentalPrice,
   getEffectiveRentalDates,
   getActualDateDiffLabel,
@@ -14,34 +13,10 @@ import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Button } from "../ui/Button";
 import { Combobox } from "../ui/Combobox";
-
-// ------------------------------------------------------------
-// Constants
-// ------------------------------------------------------------
-
-const PRICE_PER_NIGHT_PER_PERSON = 5; // € par nuit et par personne
-
-// Helpers locales au formulaire
-const buildDefaultValues = (): RentalFormValues => {
-  const now = new Date();
-  const start = nextSunday(now);
-  const end = nextSunday(new Date(start.getTime() + 24 * 60 * 60 * 1000));
-  return {
-    startDate: start.toISOString(),
-    endDate: end.toISOString(),
-    ownerId: "",
-    subMemberId: undefined,
-    guestCount: 1,
-    price: 0,
-    status: "pending",
-    notes: undefined,
-    electricityCost: undefined,
-    totalPrice: undefined,
-    actualStartDate: undefined,
-    actualEndDate: undefined,
-    isPaid: false,
-  };
-};
+import { RentalPostStaySection } from "./RentalPostStaySection";
+import { RentalPricingSection } from "./RentalPricingSection";
+import { RentalSubMemberFields } from "./RentalSubMemberFields";
+import { buildDefaultRentalFormValues, buildInitialRentalFormValues, createSubMemberDraftState, type RentalSubMemberDraftState } from "./rentalFormUtils";
 
 // ------------------------------------------------------------
 // Component
@@ -83,27 +58,13 @@ export const RentalForm = ({
   const initialAutoPrice = hasComparableInitialAutoPrice ? getAutoRentalPrice(initialEffectiveStart, initialEffectiveEnd, initialGuests) : undefined;
 
   const [values, setValues] = useState<RentalFormValues>(() => {
-    const base: RentalFormValues = {
-      ...buildDefaultValues(),
-      ...initialValues,
-    };
-    // En mode restreint et lors d'une création (pas d'id), forcer les champs
-    if (isRestricted && !initialValues?.status) {
-      if (restrictedOwnerId !== undefined) base.ownerId = restrictedOwnerId;
-      base.subMemberId = restrictedSubMemberId;
-      base.status = "pending";
-    }
-    // Dates réelles : par défaut = dates prévues si non renseignées
-    if (!base.actualStartDate) base.actualStartDate = base.startDate;
-    if (!base.actualEndDate) base.actualEndDate = base.endDate;
-    // Tarif auto-calculé à la création uniquement
-    if (!initialValues?.price) {
-      const nights = getDurationDays(base.startDate, base.endDate);
-      base.price = nights * base.guestCount * PRICE_PER_NIGHT_PER_PERSON;
-    }
-    return base;
+    return buildInitialRentalFormValues(initialValues, {
+      isRestricted,
+      restrictedOwnerId,
+      restrictedSubMemberId,
+    });
   });
-  const [priceInputValue, setPriceInputValue] = useState<string>(() => String((initialValues?.price ?? buildDefaultValues().price) || 0));
+  const [priceInputValue, setPriceInputValue] = useState<string>(() => String((initialValues?.price ?? buildDefaultRentalFormValues().price) || 0));
   // true = l'utilisateur a saisi un tarif manuellement (pas de recalcul automatique)
   const [isPriceLocked, setIsPriceLocked] = useState(() => {
     if (!hasComparableInitialAutoPrice || initialAutoPrice === undefined || initialValues?.price === undefined) {
@@ -121,21 +82,7 @@ export const RentalForm = ({
   }, [values.price]);
 
   // État du mini-formulaire de création de membre
-  const [newMember, setNewMember] = useState<{
-    active: boolean;
-    label: string;
-    firstName: string;
-    lastName: string;
-    loading: boolean;
-    error: string;
-  }>({
-    active: false,
-    label: "",
-    firstName: "",
-    lastName: "",
-    loading: false,
-    error: "",
-  });
+  const [newMember, setNewMember] = useState<RentalSubMemberDraftState>(() => createSubMemberDraftState());
 
   const set = <K extends keyof RentalFormValues>(key: K, value: RentalFormValues[K]) => {
     setValues((prev) => {
@@ -146,9 +93,8 @@ export const RentalForm = ({
         const effectiveDates = getEffectiveRentalDates(next);
         const effectiveStart = effectiveDates.start;
         const effectiveEnd = effectiveDates.end;
-        const nights = effectiveStart && effectiveEnd ? getDurationDays(effectiveStart, effectiveEnd) : 0;
         const guests = typeof next.guestCount === "number" ? next.guestCount : 1;
-        next.price = nights * guests * PRICE_PER_NIGHT_PER_PERSON;
+        next.price = effectiveStart && effectiveEnd ? getAutoRentalPrice(effectiveStart, effectiveEnd, guests) : 0;
       }
       // Recalcul automatique du total si non verrouillé
       if (
@@ -167,6 +113,10 @@ export const RentalForm = ({
       return next;
     });
     setErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const updateNewMember = (updates: Partial<RentalSubMemberDraftState>) => {
+    setNewMember((prev) => ({ ...prev, ...updates }));
   };
 
   const validate = (): boolean => {
@@ -206,26 +156,16 @@ export const RentalForm = ({
   const isSubMemberFieldDisabled = !canEdit || isCurrentMemberSubMember;
 
   const handleCreateSubMemberTrigger = (searchText: string) => {
-    setNewMember({
-      active: true,
-      label: searchText,
-      firstName: "",
-      lastName: "",
-      loading: false,
-      error: "",
-    });
+    setNewMember(createSubMemberDraftState({ active: true, label: searchText }));
   };
 
   const handleCreateSubMemberConfirm = async () => {
     if (!newMember.firstName.trim() || !newMember.lastName.trim() || !newMember.label.trim()) {
-      setNewMember((prev) => ({
-        ...prev,
-        error: "Prénom, nom et libellé sont requis.",
-      }));
+      updateNewMember({ error: "Prénom, nom et libellé sont requis." });
       return;
     }
     if (!onCreateSubMember) return;
-    setNewMember((prev) => ({ ...prev, loading: true, error: "" }));
+    updateNewMember({ loading: true, error: "" });
     try {
       const created = await onCreateSubMember({
         firstName: newMember.firstName.trim(),
@@ -235,20 +175,9 @@ export const RentalForm = ({
         ownerId: values.ownerId || undefined,
       });
       set("subMemberId", created.id);
-      setNewMember({
-        active: false,
-        label: "",
-        firstName: "",
-        lastName: "",
-        loading: false,
-        error: "",
-      });
+      setNewMember(createSubMemberDraftState());
     } catch {
-      setNewMember((prev) => ({
-        ...prev,
-        loading: false,
-        error: "Erreur lors de la création du membre.",
-      }));
+      updateNewMember({ loading: false, error: "Erreur lors de la création du membre." });
     }
   };
 
@@ -256,13 +185,34 @@ export const RentalForm = ({
   const endDateLabel = values.endDate ? formatDateLabelLong(values.endDate) : "Fin";
   const durationDays = getDurationDays(values.startDate, values.endDate);
   const actualDurationDays = values.actualStartDate && values.actualEndDate ? getDurationDays(values.actualStartDate, values.actualEndDate) : 0;
-  const actualDatesChanged = values.actualStartDate !== values.startDate || values.actualEndDate !== values.endDate;
   const actualDateDiffParts = getActualDateDiffLabel(values);
-  const recalculatedPrice = actualDurationDays * values.guestCount * PRICE_PER_NIGHT_PER_PERSON;
+  const recalculatedPrice =
+    values.actualStartDate && values.actualEndDate ? getAutoRentalPrice(values.actualStartDate, values.actualEndDate, values.guestCount) : 0;
   const isOwnerEditingOwnRental = !!currentMember && currentMember.role === "owner" && !currentMember.isEditor && currentMember.id === values.ownerId;
   const isSubMemberEditingOwnRental = !!currentMember && currentMember.role === "sub_member" && currentMember.id === values.subMemberId;
+  const canEditRentalDetails = canEdit || isOwnerEditingOwnRental || isSubMemberEditingOwnRental;
+  const canEditPrice = canEdit && !isRestricted;
+  const computedTotalPrice = values.price + (values.electricityCost ?? 0);
   // Le statut n'est modifiable que par un admin ou un owner éditeur
   const canEditStatus = canEdit && (!currentMember || currentMember.role === "admin" || (currentMember.role === "owner" && !!currentMember.isEditor));
+
+  const resetAutomaticPrice = () => {
+    setIsPriceLocked(false);
+    const effectiveDates = getEffectiveRentalDates(values);
+    const effectiveStart = effectiveDates.start;
+    const effectiveEnd = effectiveDates.end;
+    set("price", effectiveStart && effectiveEnd ? getAutoRentalPrice(effectiveStart, effectiveEnd, values.guestCount) : 0);
+  };
+
+  const applyRecalculatedPrice = () => {
+    setIsPriceLocked(true);
+    set("price", recalculatedPrice);
+  };
+
+  const resetTotalPrice = () => {
+    setIsTotalLocked(false);
+    set("totalPrice", computedTotalPrice);
+  };
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -274,7 +224,7 @@ export const RentalForm = ({
           value={toDatetimeLocal(values.startDate)}
           onChange={(e) => set("startDate", new Date(e.target.value).toISOString())}
           error={errors.startDate}
-          disabled={!(canEdit || isOwnerEditingOwnRental || isSubMemberEditingOwnRental)}
+          disabled={!canEditRentalDetails}
           required
         />
         <Input
@@ -283,7 +233,7 @@ export const RentalForm = ({
           value={toDatetimeLocal(values.endDate)}
           onChange={(e) => set("endDate", new Date(e.target.value).toISOString())}
           error={errors.endDate}
-          disabled={!(canEdit || isOwnerEditingOwnRental || isSubMemberEditingOwnRental)}
+          disabled={!canEditRentalDetails}
           required
         />
       </div>
@@ -323,7 +273,7 @@ export const RentalForm = ({
         options={subMemberOptions}
         onChange={(id) => {
           set("subMemberId", id || undefined);
-          if (id) setNewMember((prev) => ({ ...prev, active: false }));
+          if (id) updateNewMember({ active: false });
         }}
         onCreate={canCreateSubMemberFromRequest ? handleCreateSubMemberTrigger : undefined}
         placeholder={isCurrentMemberSubMember ? "—" : "Rechercher ou créer un membre…"}
@@ -332,127 +282,52 @@ export const RentalForm = ({
 
       {/* Mini-formulaire de création de membre */}
       {newMember.active && canCreateSubMemberFromRequest && (
-        <div className="rounded-lg border border-primary-200 bg-primary-50/50 p-4 flex flex-col gap-3">
-          <p className="text-sm font-medium text-primary-700">Nouveau membre</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input label="Prénom" value={newMember.firstName} onChange={(e) => setNewMember((prev) => ({ ...prev, firstName: e.target.value }))} required />
-            <Input label="Nom" value={newMember.lastName} onChange={(e) => setNewMember((prev) => ({ ...prev, lastName: e.target.value }))} required />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input
-              label="Libellé"
-              placeholder="ex : Ami de Paul"
-              value={newMember.label}
-              onChange={(e) => setNewMember((prev) => ({ ...prev, label: e.target.value }))}
-              required
-            />
-          </div>
-          {newMember.error && <p className="text-xs text-red-500">{newMember.error}</p>}
-          <div className="flex gap-2 justify-end">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                setNewMember({
-                  active: false,
-                  label: "",
-                  firstName: "",
-                  lastName: "",
-                  loading: false,
-                  error: "",
-                })
-              }
-              disabled={newMember.loading}
-            >
-              Annuler
-            </Button>
-            <Button type="button" size="sm" loading={newMember.loading} onClick={handleCreateSubMemberConfirm}>
-              Créer le membre
-            </Button>
-          </div>
-        </div>
+        <RentalSubMemberFields
+          state={newMember}
+          onChange={updateNewMember}
+          onCancel={() => setNewMember(createSubMemberDraftState())}
+          onConfirm={handleCreateSubMemberConfirm}
+        />
       )}
 
-      {/* Invités & Tarif */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Input
-          label="Nombre de personnes"
-          type="number"
-          min={1}
-          value={values.guestCount === 0 ? "" : values.guestCount}
-          onChange={(e) => {
-            const val = e.target.value;
-            if (val === "") {
-              set("guestCount", 0);
-            } else {
-              set("guestCount", Number(val));
-            }
-          }}
-          error={errors.guestCount}
-          disabled={!(canEdit || isOwnerEditingOwnRental || isSubMemberEditingOwnRental)}
-          required
-        />
-        <Input
-          label="Tarif location (€)"
-          type="number"
-          min={0}
-          step={0.01}
-          value={priceInputValue}
-          onFocus={(e) => {
-            if (priceInputValue === "0") {
-              setPriceInputValue("");
-              return;
-            }
-            e.target.select();
-          }}
-          onBlur={() => {
-            if (priceInputValue === "") {
-              setPriceInputValue("0");
-              setIsPriceLocked(false);
-              set("price", 0);
-            }
-          }}
-          onChange={(e) => {
-            const val = e.target.value;
-            setPriceInputValue(val);
-            if (val === "") {
-              return;
-            } else {
-              const num = Number(val);
-              if (!isNaN(num)) {
-                setIsPriceLocked(true);
-                set("price", num);
-              }
-            }
-          }}
-          error={errors.price}
-          disabled={!canEdit || isRestricted}
-        />
-      </div>
-      {/* Hint tarif */}
-      <div className="-mt-2 flex flex-wrap items-center gap-2">
-        <p className="text-xs text-gray-500">
-          Calcul : {durationDays} nuit{durationDays > 1 ? "s" : ""} × {values.guestCount} pers. × {PRICE_PER_NIGHT_PER_PERSON} €{" = "}
-          <span className="font-medium text-gray-700">{(durationDays * values.guestCount * PRICE_PER_NIGHT_PER_PERSON).toFixed(2)} €</span>
-        </p>
-        {isPriceLocked && canEdit && !isRestricted && (
-          <button
-            type="button"
-            className="text-xs text-primary-600 underline hover:text-primary-800 transition-colors"
-            onClick={() => {
-              setIsPriceLocked(false);
-              const effectiveDates = getEffectiveRentalDates(values);
-              const effectiveStart = effectiveDates.start;
-              const effectiveEnd = effectiveDates.end;
-              const nights = effectiveStart && effectiveEnd ? getDurationDays(effectiveStart, effectiveEnd) : 0;
-              set("price", nights * values.guestCount * PRICE_PER_NIGHT_PER_PERSON);
-            }}
-          >
-            Réinitialiser
-          </button>
-        )}
-      </div>
+      <RentalPricingSection
+        canEditDetails={canEditRentalDetails}
+        canEditPrice={canEditPrice}
+        durationDays={durationDays}
+        guestCount={values.guestCount}
+        guestCountError={errors.guestCount}
+        priceError={errors.price}
+        priceInputValue={priceInputValue}
+        isPriceLocked={isPriceLocked}
+        onGuestCountChange={(guestCount) => set("guestCount", guestCount)}
+        onPriceFocus={(e) => {
+          if (priceInputValue === "0") {
+            setPriceInputValue("");
+            return;
+          }
+          e.target.select();
+        }}
+        onPriceBlur={() => {
+          if (priceInputValue === "") {
+            setPriceInputValue("0");
+            setIsPriceLocked(false);
+            set("price", 0);
+          }
+        }}
+        onPriceChange={(value) => {
+          setPriceInputValue(value);
+          if (value === "") {
+            return;
+          }
+
+          const parsed = Number(value);
+          if (!Number.isNaN(parsed)) {
+            setIsPriceLocked(true);
+            set("price", parsed);
+          }
+        }}
+        onResetPrice={resetAutomaticPrice}
+      />
 
       {/* Statut — masqué en mode restreint (toujours "En attente") */}
       {isRestricted ? (
@@ -470,145 +345,22 @@ export const RentalForm = ({
         </div>
       )}
 
-      {/* Infos post-location — visibles seulement si statut = completed */}
-      {values.status === "completed" && (
-        <>
-          {/* Dates réelles */}
-          <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">📅 Dates réelles du séjour</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input
-                label={values.actualStartDate ? formatDateLabelLong(values.actualStartDate) : "Début réel"}
-                type="datetime-local"
-                value={values.actualStartDate ? toDatetimeLocal(values.actualStartDate) : ""}
-                onChange={(e) => set("actualStartDate", e.target.value ? new Date(e.target.value).toISOString() : undefined)}
-                disabled={!canEdit}
-              />
-              <Input
-                label={values.actualEndDate ? formatDateLabelLong(values.actualEndDate) : "Fin réelle"}
-                type="datetime-local"
-                value={values.actualEndDate ? toDatetimeLocal(values.actualEndDate) : ""}
-                onChange={(e) => set("actualEndDate", e.target.value ? new Date(e.target.value).toISOString() : undefined)}
-                disabled={!canEdit}
-              />
-            </div>
-            {actualDurationDays > 0 && (
-              <p className="mt-2 text-xs text-gray-500">
-                Durée réelle :{" "}
-                <span className="font-medium text-gray-700">
-                  {actualDurationDays} nuit{actualDurationDays > 1 ? "s" : ""}
-                </span>
-              </p>
-            )}
-            {values.actualStartDate && values.actualEndDate && (values.actualStartDate !== values.startDate || values.actualEndDate !== values.endDate) && (
-              <p className="mt-2 text-xs text-amber-600">
-                ⚠️ Les dates réelles diffèrent des dates prévues{actualDateDiffParts ? ` : ${actualDateDiffParts}.` : "."}
-              </p>
-            )}
-          </div>
-          {/* Tarif recalculé sur dates réelles */}
-          {actualDatesChanged && (
-            <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/60 p-4 flex flex-col gap-2">
-              <p className="text-sm font-medium text-amber-800">💶 Recalcul sur dates réelles</p>
-              <p className="text-xs text-amber-700">
-                {actualDurationDays} nuit{actualDurationDays > 1 ? "s" : ""} × {values.guestCount} pers. × {PRICE_PER_NIGHT_PER_PERSON} €{" = "}
-                <span className="font-semibold">{recalculatedPrice.toFixed(2)} €</span>
-              </p>
-              {canEdit && !isRestricted && recalculatedPrice !== values.price && (
-                <button
-                  type="button"
-                  className="self-start text-xs font-medium text-amber-800 underline hover:text-amber-900 transition-colors"
-                  onClick={() => {
-                    setIsPriceLocked(true);
-                    set("price", recalculatedPrice);
-                  }}
-                >
-                  Appliquer ce tarif
-                </button>
-              )}
-              {recalculatedPrice === values.price && <p className="text-xs text-green-700">✅ Le tarif actuel correspond aux dates réelles.</p>}
-            </div>
-          )}
-          {/* Relevé électrique */}
-          <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">⚡️ Coût électrique</span>
-            </div>
-            <Input
-              label="Coût (€)"
-              type="number"
-              min={0}
-              step={0.01}
-              value={values.electricityCost ?? ""}
-              onChange={(e) => set("electricityCost", e.target.value ? Number(e.target.value) : undefined)}
-              disabled={!canEdit}
-              placeholder="Montant de la facture d'électricité"
-            />
-          </div>
-          {/* Tarif total */}
-          <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">💰 Total final</span>
-            </div>
-            <Input
-              label="Total (tarif + électricité)"
-              type="number"
-              min={0}
-              step={0.01}
-              value={values.totalPrice === undefined ? "" : values.totalPrice}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === "") {
-                  setIsTotalLocked(false);
-                  set("totalPrice", undefined);
-                } else {
-                  const num = Number(val);
-                  if (!isNaN(num)) {
-                    setIsTotalLocked(true);
-                    set("totalPrice", num);
-                  }
-                }
-              }}
-              disabled={!canEdit || isRestricted}
-              placeholder="Auto-calculé"
-            />
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <p className="text-xs text-gray-500">
-                Tarif : {values.price.toFixed(2)} €{values.electricityCost !== undefined && ` + électricité : ${values.electricityCost.toFixed(2)} €`}
-                {" = "}
-                <span className="font-medium text-gray-700">{(values.price + (values.electricityCost ?? 0)).toFixed(2)} €</span>
-              </p>
-              {canEdit && !isRestricted && values.totalPrice !== values.price + (values.electricityCost ?? 0) && (
-                <button
-                  type="button"
-                  className="text-xs text-primary-600 underline hover:text-primary-800 transition-colors"
-                  onClick={() => {
-                    setIsTotalLocked(false);
-                    set("totalPrice", values.price + (values.electricityCost ?? 0));
-                  }}
-                >
-                  Réinitialiser
-                </button>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Infos post-location — visibles seulement si statut = completed */}
-      {values.status !== "completed" && (
-        <>
-          {/* Info message */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3">
-            <p className="text-sm text-blue-700">
-              ℹ️ Lorsque le statut est passé à <span className="font-medium">Terminé</span>, les informations post-location (coût électrique, ...) deviennent
-              disponibles à la saisie.
-            </p>
-          </div>
-        </>
-      )}
+      <RentalPostStaySection
+        values={values}
+        canEdit={canEdit}
+        isRestricted={isRestricted}
+        actualDurationDays={actualDurationDays}
+        actualDateDiffLabel={actualDateDiffParts}
+        recalculatedPrice={recalculatedPrice}
+        onChange={(key, value) => {
+          if (key === "totalPrice") {
+            setIsTotalLocked(value !== undefined);
+          }
+          set(key, value);
+        }}
+        onApplyRecalculatedPrice={applyRecalculatedPrice}
+        onResetTotalPrice={resetTotalPrice}
+      />
 
       {/* Notes */}
       <div className="flex flex-col gap-1">
@@ -618,7 +370,7 @@ export const RentalForm = ({
           value={values.notes ?? ""}
           onChange={(e) => set("notes", e.target.value || undefined)}
           placeholder="Commentaires…"
-          disabled={!(canEdit || isOwnerEditingOwnRental || isSubMemberEditingOwnRental)}
+          disabled={!canEditRentalDetails}
           className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-colors disabled:bg-gray-100 disabled:text-gray-500"
         />
       </div>

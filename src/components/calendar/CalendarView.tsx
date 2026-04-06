@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import type { CalendarViewProps } from "../../types";
 import { CalendarCell } from "./CalendarCell";
 import { RentalBadge } from "./RentalBadge";
-import { DAYS_OF_WEEK, isSameDay, buildCalendarDays, getRentalsForDay, formatDayLabel, getISOWeekNumber } from "../../utils/calendarUtils";
+import { DAYS_OF_WEEK, isSameDay, buildCalendarDays, buildRentalsByDay, formatDayLabel, getDayKey, getISOWeekNumber } from "../../utils/calendarUtils";
 import { Button } from "../ui/Button";
 
 // ------------------------------------------------------------
@@ -16,12 +16,14 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
   const [month, setMonth] = useState(today.getMonth());
 
   const days = buildCalendarDays(year, month);
+  const rentalsByDay = buildRentalsByDay(days, rentals);
   // Group days by week (7 days each) for rendering week numbers
   const weeks: Date[][] = [];
   for (let i = 0; i < days.length; i += 7) {
     weeks.push(days.slice(i, i + 7));
   }
   const memberIndex = new Map(members.map((m) => [m.id, m]));
+  const getDayRentals = (day: Date) => rentalsByDay.get(getDayKey(day)) ?? [];
 
   const prevMonth = () => {
     if (month === 0) {
@@ -91,7 +93,7 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
 
               <div className="flex flex-col gap-1">
                 {weekDaysInMonth.map((day) => {
-                  const dayRentals = getRentalsForDay(day, rentals);
+                  const dayRentals = getDayRentals(day);
                   return (
                     <div
                       key={day.toISOString()}
@@ -171,8 +173,8 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
                   <CalendarCell
                     key={day.toISOString()}
                     date={day}
-                    rentals={getRentalsForDay(day, rentals)}
-                    members={members}
+                    rentals={getDayRentals(day)}
+                    memberIndex={memberIndex}
                     isToday={isSameDay(day, today)}
                     isCurrentMonth={day.getMonth() === month}
                     onRentalClick={onRentalClick}

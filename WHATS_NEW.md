@@ -5,6 +5,13 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.34] - 6 avril 2026
+
+### Ce qui change pour vous
+
+- **Petites améliorations en coulisses** : plusieurs optimisations ont été faites dans l'application pour la rendre plus fluide et plus cohérente au quotidien.
+- **Un souci à signaler ?** : si vous remarquez un bug ou quelque chose d'inhabituel, pensez à prévenir l'administrateur du site pour qu'il puisse regarder ça rapidement.
+
 ## [0.3.33] - 6 avril 2026
 
 ### Ce qui change pour vous

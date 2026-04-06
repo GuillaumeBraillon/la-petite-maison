@@ -1,39 +1,25 @@
-import { useEffect, useState } from "react";
-import { UserCircle, Mail, LogOut } from "lucide-react";
-import { Modal } from "./Modal";
-import { Button } from "./Button";
-import { Input } from "./Input";
+import { useState } from "react";
+import { UserCircle } from "lucide-react";
 import { supabase } from "../../services/supabaseClient";
 import { useUserNotifications } from "../../hooks/useUserNotifications";
 import { useToast } from "../../contexts/ToastContext";
 import { TOAST_MESSAGES } from "../../services/messageCatalog";
 import type { UserNotification, MemberRole, UserInfoCardProps } from "../../types";
-import { MEMBER_ROLE_BADGE_VARIANT_MAP, MEMBER_ROLE_LABEL_MAP } from "../../services/memberStatus";
-import { Badge } from "./Badge";
-import { Avatar } from "./Avatar";
-import { NotificationToggle } from "./NotificationToggle";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { WhatsNewModal } from "./WhatsNewModal";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { parseWhatsNewAllVersions } from "../../services/whatsNewParser";
 import type { ParsedChangelog } from "../../services/changelogParser";
-
-interface MemberIdentityRow {
-  first_name: string | null;
-  last_name: string | null;
-  label: string | null;
-  role: MemberRole;
-  is_editor: boolean;
-}
+import { UserAccountSection } from "./userInfo/UserAccountSection";
+import { UserEmailModal } from "./userInfo/UserEmailModal";
+import { UserInfoHeader } from "./userInfo/UserInfoHeader";
+import { UserNotificationModal } from "./userInfo/UserNotificationModal";
+import { UserNotificationsSection } from "./userInfo/UserNotificationsSection";
 
 /**
  * Carte affichant les informations de connexion de l'utilisateur Google.
  */
-export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProps) => {
-  const [memberLabel, setMemberLabel] = useState<string | null>(null);
-  const [memberFullName, setMemberFullName] = useState<string | null>(null);
-  const [memberRole, setMemberRole] = useState<MemberRole | null>(null);
-  const [memberIsEditor, setMemberIsEditor] = useState<boolean>(false);
+export const UserInfoCard = ({ currentMember, session, onLogout, appVersion }: UserInfoCardProps) => {
   const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -63,64 +49,15 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
 
   const sessionUser = session?.user;
   const userName = sessionUser?.user_metadata?.full_name || sessionUser?.user_metadata?.name;
-  const userEmail = sessionUser?.email;
+  const memberLabel = currentMember?.label?.trim() || null;
+  const memberFullName = currentMember ? `${currentMember.firstName} ${currentMember.lastName}`.trim() || null : null;
+  const memberRole: MemberRole | null = currentMember?.role ?? null;
+  const memberIsEditor = currentMember?.isEditor ?? false;
   const primaryDisplayName = memberLabel || userName || null;
   const secondaryDisplayName = memberFullName && memberFullName !== primaryDisplayName ? memberFullName : null;
   const authProvider = typeof sessionUser?.app_metadata?.provider === "string" ? sessionUser.app_metadata.provider : null;
   const isGoogleAccount = authProvider === "google";
   const visibleReadNotifications = notifications.filter((notification) => notification.isRead);
-  const visibleNotificationCount = notifications.length;
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const loadMemberName = async (): Promise<void> => {
-      const normalizedEmail = userEmail?.trim().toLowerCase();
-      if (!normalizedEmail) {
-        if (!isCancelled) {
-          setMemberLabel(null);
-          setMemberFullName(null);
-          setMemberRole(null);
-          setMemberIsEditor(false);
-        }
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("members")
-        .select("first_name, last_name, label, role, is_editor")
-        .ilike("email", normalizedEmail)
-        .maybeSingle<MemberIdentityRow>();
-
-      if (isCancelled || error || !data) {
-        if (!isCancelled) {
-          setMemberLabel(null);
-          setMemberFullName(null);
-          setMemberRole(null);
-          setMemberIsEditor(false);
-        }
-        return;
-      }
-
-      const firstName = data.first_name?.trim() ?? "";
-      const lastName = data.last_name?.trim() ?? "";
-      const fullName = `${firstName} ${lastName}`.trim();
-      const label = data.label?.trim() ?? "";
-
-      if (!isCancelled) {
-        setMemberLabel(label || null);
-        setMemberFullName(fullName || null);
-        setMemberRole(data.role);
-        setMemberIsEditor(data.is_editor);
-      }
-    };
-
-    void loadMemberName();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [userEmail]);
 
   if (!session || !session.user) {
     return (
@@ -301,226 +238,75 @@ export const UserInfoCard = ({ session, onLogout, appVersion }: UserInfoCardProp
 
   return (
     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        {pushSupported && pushSubscribed && <NotificationToggle compact className="text-gray-500 p-1.5" />}
-        {appVersion ? (
-          <button
-            type="button"
-            onClick={handleOpenWhatsNew}
-            className="text-[10px] text-gray-400 hover:text-gray-600 underline underline-offset-2 transition-colors justify-self-center"
-            aria-label="Voir l'historique des mises à jour"
-            title="Voir l'historique des mises à jour"
-          >
-            {`v${appVersion}`}
-          </button>
-        ) : (
-          <span className="text-[10px] text-gray-400 justify-self-center" />
-        )}
-        <button
-          type="button"
-          onClick={onLogout}
-          className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 transition-colors"
-          aria-label="Déconnexion"
-          title="Déconnexion"
-        >
-          <LogOut size={13} />
-          Déconnexion
-        </button>
-      </div>
+      <UserInfoHeader
+        appVersion={appVersion}
+        pushSupported={pushSupported}
+        pushSubscribed={pushSubscribed}
+        onOpenWhatsNew={handleOpenWhatsNew}
+        onLogout={onLogout}
+      />
 
       <div className="space-y-3">
-        {/* Avatar & Nom */}
-        {primaryDisplayName && (
-          <div className="flex items-center justify-between gap-1.5 pb-2 border-b border-gray-100 min-w-0">
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <Avatar member={accountAvatarMember} size="sm" fallbackInitialSource="firstName" />
-              {primaryDisplayName && (
-                <div className="min-w-0">
-                  <div className="text-xs text-gray-900 font-semibold truncate leading-tight">
-                    {primaryDisplayName}
-                    {secondaryDisplayName && <span className="font-normal text-gray-500">{` · ${secondaryDisplayName}`}</span>}
-                  </div>
-                  {memberRole && <Badge variant={MEMBER_ROLE_BADGE_VARIANT_MAP[memberRole]}>{MEMBER_ROLE_LABEL_MAP[memberRole]}</Badge>}
-                  {memberIsEditor && <Badge variant="primary">Validateur</Badge>}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <UserAccountSection
+          primaryDisplayName={primaryDisplayName}
+          secondaryDisplayName={secondaryDisplayName}
+          memberRole={memberRole}
+          memberIsEditor={memberIsEditor}
+          userEmail={user.email || "N/A"}
+          isGoogleAccount={isGoogleAccount}
+          passwordResetLoading={passwordResetLoading}
+          accountActionMessage={accountActionMessage}
+          accountActionError={accountActionError}
+          accountAvatarMember={accountAvatarMember}
+          onOpenEmailModal={handleOpenEmailModal}
+          onRequestPasswordReset={() => {
+            void handleRequestPasswordReset();
+          }}
+        />
 
-        {/* Email */}
-        <div className="flex items-start gap-3">
-          <Mail size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-          <div>
-            <div className="text-xs font-medium text-gray-500">Email</div>
-            <div className="text-sm text-gray-900 font-medium">{user.email || "N/A"}</div>
-            {!isGoogleAccount && (
-              <>
-                <div className="mt-1 flex items-center gap-3 text-[11px]">
-                  <button type="button" onClick={handleOpenEmailModal} className="text-primary-600 hover:text-primary-700 underline">
-                    Changer l&apos;email
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleRequestPasswordReset();
-                    }}
-                    disabled={passwordResetLoading}
-                    className="text-primary-600 hover:text-primary-700 underline disabled:opacity-50"
-                  >
-                    {passwordResetLoading ? "Envoi..." : "Changer le mot de passe"}
-                  </button>
-                </div>
-                {accountActionMessage && <p className="mt-1 text-[11px] text-blue-700">{accountActionMessage}</p>}
-                {accountActionError && <p className="mt-1 text-[11px] text-red-600">{accountActionError}</p>}
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Notifications */}
-        <div className="pt-2 border-t border-gray-100 space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-xs font-medium text-gray-600">
-              {`Notifications (${visibleNotificationCount}/${totalCount})`}
-              {unreadCount > 0 && (
-                <span className="ml-1 text-primary-600">
-                  ({unreadCount} non lue{unreadCount > 1 ? "s" : ""})
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              {visibleReadNotifications.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNotificationModalError(null);
-                    setIsDeleteAllNotificationsOpen(true);
-                  }}
-                  className="text-[11px] text-red-500 hover:text-red-700"
-                >
-                  Supprimer les lues
-                </button>
-              )}
-              {unreadCount > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    void markAllAsRead();
-                  }}
-                  className="text-[11px] text-gray-500 hover:text-gray-700"
-                >
-                  Tout marquer lu
-                </button>
-              )}
-            </div>
-          </div>
-
-          {notificationsLoading && <p className="text-[11px] text-gray-500">Chargement…</p>}
-
-          {!notificationsLoading && notificationsError && <p className="text-[11px] text-red-600">{notificationsError}</p>}
-
-          {!notificationsLoading && !notificationsError && notifications.length === 0 && (
-            <p className="text-[11px] text-gray-500">Aucune notification récente.</p>
-          )}
-
-          {!notificationsLoading && !notificationsError && notifications.length > 0 && (
-            <ul className="space-y-1.5">
-              {notifications.map((notification) => (
-                <li key={notification.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleNotificationClick(notification.id, notification.url);
-                    }}
-                    className={[
-                      "w-full text-left rounded-md px-2 py-1.5 border transition-colors",
-                      notification.isRead ? "border-gray-100 bg-gray-50" : "border-primary-200 bg-primary-50/40",
-                    ].join(" ")}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-xs font-medium text-gray-800 line-clamp-1">{notification.title}</p>
-                      <span className="text-[10px] text-gray-500 whitespace-nowrap">{formatNotificationDate(notification.createdAt)}</span>
-                    </div>
-                    <p className="text-[11px] text-gray-600 line-clamp-2 mt-0.5">{notification.body}</p>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <UserNotificationsSection
+          notifications={notifications}
+          totalCount={totalCount}
+          unreadCount={unreadCount}
+          notificationsLoading={notificationsLoading}
+          notificationsError={notificationsError}
+          visibleReadNotificationCount={visibleReadNotifications.length}
+          onOpenDeleteAll={() => {
+            setNotificationModalError(null);
+            setIsDeleteAllNotificationsOpen(true);
+          }}
+          onMarkAllAsRead={() => {
+            void markAllAsRead();
+          }}
+          onNotificationClick={(notification) => {
+            void handleNotificationClick(notification.id, notification.url);
+          }}
+          formatNotificationDate={formatNotificationDate}
+        />
       </div>
 
-      <Modal
+      <UserEmailModal
         isOpen={isEmailModalOpen}
+        newEmail={newEmail}
+        loading={emailUpdateLoading}
         onClose={() => setIsEmailModalOpen(false)}
-        title="Changer l'email"
-        size="md"
-        footer={
-          <>
-            <Button type="button" variant="secondary" onClick={() => setIsEmailModalOpen(false)}>
-              Annuler
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              loading={emailUpdateLoading}
-              onClick={() => {
-                void handleUpdateEmail();
-              }}
-            >
-              Enregistrer
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-2">
-          <Input label="Nouvel email" type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} autoComplete="email" required />
-          <p className="text-xs text-gray-500">Un email de confirmation sera envoyé à la nouvelle adresse.</p>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={selectedNotification !== null}
-        onClose={() => {
-          if (deleteNotificationLoading) return;
-          setSelectedNotification(null);
+        onChangeEmail={setNewEmail}
+        onSave={() => {
+          void handleUpdateEmail();
         }}
-        title={selectedNotification?.title ?? "Notification"}
-        size="md"
-        footer={
-          <>
-            {selectedNotification && (
-              <Button
-                type="button"
-                variant="danger"
-                loading={deleteNotificationLoading}
-                onClick={() => {
-                  void handleDeleteSelectedNotification();
-                }}
-              >
-                Supprimer
-              </Button>
-            )}
-            <Button type="button" variant="secondary" disabled={deleteNotificationLoading} onClick={() => setSelectedNotification(null)}>
-              Fermer
-            </Button>
-            {selectedNotification?.url && (
-              <Button type="button" variant="primary" onClick={handleOpenNotificationUrl}>
-                Ouvrir
-              </Button>
-            )}
-          </>
-        }
-      >
-        {selectedNotification && (
-          <div className="space-y-3">
-            {notificationModalError && <p className="text-xs text-red-600">{notificationModalError}</p>}
-            <p className="text-xs text-gray-500">{formatNotificationDate(selectedNotification.createdAt)}</p>
-            <p className="text-sm text-gray-800 whitespace-pre-wrap">{selectedNotification.body}</p>
-          </div>
-        )}
-      </Modal>
+      />
+
+      <UserNotificationModal
+        notification={selectedNotification}
+        deleteLoading={deleteNotificationLoading}
+        error={notificationModalError}
+        formatNotificationDate={formatNotificationDate}
+        onClose={() => setSelectedNotification(null)}
+        onDelete={() => {
+          void handleDeleteSelectedNotification();
+        }}
+        onOpenUrl={handleOpenNotificationUrl}
+      />
 
       <ConfirmDialog
         isOpen={isDeleteAllNotificationsOpen}

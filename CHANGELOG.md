@@ -7,6 +7,27 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.34] - 2026-04-06
+
+### Améliorations
+
+- **Permissions locations** : application de règles d'action plus fines selon le rôle et le périmètre réel de la location (admin, propriétaire, membre rattaché)
+- **Locations** : édition, suppression, changement de statut et validation de paiement mieux bornés dans l'interface pour éviter les actions non autorisées
+- **Connexion membre** : enrichissement du profil courant avec le provider d'authentification et meilleure synchronisation des informations de connexion
+- **Calendrier** : pré-calcul des locations par jour et partage d'un index des membres pour alléger le rendu de la vue mensuelle
+- **Formulaires et navigation** : simplification structurelle de l'application avec extraction des sections lourdes dans des composants dédiés pour améliorer la lisibilité et la maintenance
+- **Compte utilisateur** : suppression des rechargements redondants d'identité membre dans le menu et la carte profil, en s'appuyant sur le membre courant déjà chargé par l'application
+
+### Technique
+
+- **Permissions client** : centralisation des droits de location dans `services/permissions.ts` avec de nouveaux helpers de périmètre et d'actions (`getRentalActionPermissions`, `canCreateInlineSubMember`)
+- **Locations** : `useRentalModals.ts` renforcé pour appliquer les permissions côté UI avec refus explicites et messages utilisateur cohérents
+- **Auth** : ajout de `services/authProvider.ts`, de `fetchCurrentMember` dans `api.ts` et mapping de `auth_provider` dans les types et mappers
+- **Base de données** : durcissement de `schema.sql` avec nouvelles fonctions SQL métier et politiques RLS pour sécuriser les membres et locations côté serveur
+- **Refactor location** : extraction de blocs dédiés dans `RentalForm` (`RentalPricingSection`, `RentalPostStaySection`, `RentalSubMemberFields`, `rentalFormUtils`) et mutualisation des modales via `RentalDialogs`
+- **Refactor UI** : extraction de `LoginScreen`, `LoadingScreen`, `AppShellLayout`, `AppViewRouter` et des sous-sections de `UserInfoCard` pour réduire la taille de `App.tsx` et des composants d'interface utilisateur
+- **Utilitaires** : ajout de helpers de calendrier (`buildRentalsByDay`, `getDayKey`) et centralisation de la constante de calcul automatique du tarif dans `rentalUtils.ts`
+
 ## [0.3.33] - 2026-04-06
 
 ### Ajout

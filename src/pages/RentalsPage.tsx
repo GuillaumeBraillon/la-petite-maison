@@ -1,20 +1,15 @@
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { RentalStatusFilter, RentalPaymentFilter, RentalsPageProps } from "../types";
-import { canCreateInlineSubMember, getPermissions, getRentalActionPermissions } from "../services/permissions";
-import { createMember } from "../services/apiCrud";
+import { getPermissions, getRentalActionPermissions } from "../services/permissions";
+import { useCreateSubMember } from "../hooks/useCreateSubMember";
 import { RentalList } from "../components/rentals/RentalList";
-import { RentalDetail } from "../components/rentals/RentalDetail";
-import { RentalForm } from "../components/rentals/RentalForm";
+import { RentalDialogs } from "../components/rentals/RentalDialogs";
 import { FilterBar } from "../components/ui/FilterBar";
 import { RENTAL_STATUS_LIST, getRentalStatusLabel } from "../services/rentalStatus";
-import { ConfirmDialog } from "../components/ui/ConfirmDialog";
-import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
 import { useRentalModals } from "../hooks/useRentalModals";
-import { useToast } from "../contexts/ToastContext";
-import { TOAST_MESSAGES } from "../services/messageCatalog";
 
 // ------------------------------------------------------------
 // Page
@@ -29,7 +24,7 @@ export const RentalsPage = ({
   initialOwnerFilter,
   initialPaymentFilter,
 }: RentalsPageProps) => {
-  const { showToast } = useToast();
+  const handleCreateSubMember = useCreateSubMember({ onRefresh });
   const {
     formOpen,
     detailOpen,
@@ -53,7 +48,6 @@ export const RentalsPage = ({
     handleTogglePayment,
   } = useRentalModals({ currentMember: currentMember ?? null, onRefresh });
 
-  const memberIndex = new Map(members.map((m) => [m.id, m]));
   const permissions = getPermissions(currentMember ?? null);
   const selectedRentalActions = selected ? getRentalActionPermissions(currentMember ?? null, selected) : null;
   const editingRentalActions = editing && editing.id ? getRentalActionPermissions(currentMember ?? null, editing) : null;
@@ -106,36 +100,6 @@ export const RentalsPage = ({
     if (paymentFilter === "unpaid" && !(r.status === "completed" && !r.isPaid)) return false;
     return true;
   });
-
-  const handleCreateSubMember = async (data: { firstName: string; lastName: string; label: string; role: "sub_member"; ownerId?: string }) => {
-    try {
-      const newMember = await createMember({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        label: data.label,
-        role: data.role,
-        email: undefined,
-        address: undefined,
-        ownerId: data.ownerId,
-        isAllowed: false,
-        isEditor: false,
-      });
-      await onRefresh();
-      showToast({
-        variant: "success",
-        title: TOAST_MESSAGES.member.created.title,
-        message: TOAST_MESSAGES.member.created.message,
-      });
-      return newMember;
-    } catch (error) {
-      showToast({
-        variant: "error",
-        title: TOAST_MESSAGES.member.saveError.title,
-        message: TOAST_MESSAGES.member.saveError.message,
-      });
-      throw error;
-    }
-  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -209,56 +173,34 @@ export const RentalsPage = ({
         onDelete={handleDelete}
         onTogglePayment={handleTogglePayment}
       />
-
-      {/* Formulaire */}
-      <Modal isOpen={formOpen} onClose={closeForm} title={editing?.id ? "Modifier la location" : "Nouvelle location"} size="lg">
-        <RentalForm
-          initialValues={editing ?? undefined}
-          members={members}
-          canEdit={editing?.id ? Boolean(editingRentalActions?.canEditStatus) : permissions.createWithAnyStatus}
-          isEditing={Boolean(editing?.id)}
-          currentMember={currentMember}
-          onSubmit={handleSubmit}
-          onCancel={closeForm}
-          onCreateSubMember={canCreateInlineSubMember(currentMember ?? null) ? handleCreateSubMember : undefined}
-          submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
-        />
-      </Modal>
-
-      {/* Détail */}
-      <Modal isOpen={detailOpen && selected !== null} onClose={closeDetail} title="Détail de la location" size="lg">
-        {selected && (
-          <RentalDetail
-            rental={selected}
-            owner={memberIndex.get(selected.ownerId)}
-            subMember={selected.subMemberId ? memberIndex.get(selected.subMemberId) : undefined}
-            canEdit={selectedRentalActions?.canEdit}
-            canDelete={selectedRentalActions?.canDelete}
-            canEditStatus={selectedRentalActions?.canEditStatus}
-            canTogglePayment={selectedRentalActions?.canTogglePayment}
-            onEdit={openEdit}
-            onDelete={handleDelete}
-            onStatusChange={handleStatusChange}
-            onTogglePayment={handleTogglePayment}
-          />
-        )}
-      </Modal>
-
-      <ConfirmDialog
-        isOpen={deleteConfirmationOpen}
-        title="Confirmer la suppression"
-        message={`Supprimer cette location${
-          rentalToDelete
-            ? ` du ${new Date(rentalToDelete.startDate).toLocaleDateString("fr-FR")} au ${new Date(rentalToDelete.endDate).toLocaleDateString("fr-FR")}`
-            : ""
-        } ?`}
-        confirmLabel="Supprimer"
-        cancelLabel="Annuler"
-        onConfirm={() => {
+      <RentalDialogs
+        members={members}
+        currentMember={currentMember}
+        formOpen={formOpen}
+        detailOpen={detailOpen}
+        editing={editing}
+        selected={selected}
+        rentalToDelete={rentalToDelete}
+        deletingRental={deletingRental}
+        deleteConfirmationOpen={deleteConfirmationOpen}
+        selectedRentalActions={selectedRentalActions}
+        editingRentalActions={editingRentalActions}
+        createWithAnyStatus={permissions.createWithAnyStatus}
+        formTitle={editing?.id ? "Modifier la location" : "Nouvelle location"}
+        detailTitle="Détail de la location"
+        submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}
+        onCloseForm={closeForm}
+        onCloseDetail={closeDetail}
+        onSubmit={handleSubmit}
+        onCreateSubMember={handleCreateSubMember}
+        onEdit={openEdit}
+        onDelete={handleDelete}
+        onStatusChange={handleStatusChange}
+        onTogglePayment={handleTogglePayment}
+        onConfirmDelete={() => {
           void confirmDelete();
         }}
-        onCancel={cancelDelete}
-        loading={deletingRental}
+        onCancelDelete={cancelDelete}
       />
     </div>
   );

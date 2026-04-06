@@ -3,7 +3,6 @@ import { ChevronDown } from "lucide-react";
 import type { UserMenuProps } from "../../types";
 import { UserInfoCard } from "./UserInfoCard";
 import { Avatar } from "./Avatar";
-import { supabase } from "../../services/supabaseClient";
 import { useUserNotifications } from "../../hooks/useUserNotifications";
 
 /**
@@ -11,16 +10,16 @@ import { useUserNotifications } from "../../hooks/useUserNotifications";
  * Version responsive avec affichage simplifié sur mobile.
  * Clic sur l'avatar/nom affiche les détails du compte.
  */
-export const UserMenu = ({ userEmail, onLogout, session, appVersion, className = "", compact = false }: UserMenuProps) => {
+export const UserMenu = ({ userEmail, currentMember, onLogout, session, appVersion, className = "", compact = false }: UserMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [memberLabel, setMemberLabel] = useState<string | null>(null);
-  const [memberFullName, setMemberFullName] = useState<string | null>(null);
   const { unreadCount } = useUserNotifications();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const avatarUrl = session?.user?.user_metadata?.avatar_url || session?.user?.user_metadata?.picture;
   const userName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name;
   const fallbackName = userEmail?.split("@")[0] ?? "";
+  const memberLabel = currentMember?.label?.trim() || null;
+  const memberFullName = currentMember ? `${currentMember.firstName} ${currentMember.lastName}`.trim() || null : null;
   const primaryDisplayName = memberLabel || userName || fallbackName;
   const secondaryDisplayName = memberFullName && memberFullName !== primaryDisplayName ? memberFullName : null;
   const accountNameSource = (memberFullName || userName || primaryDisplayName || "").trim();
@@ -30,47 +29,6 @@ export const UserMenu = ({ userEmail, onLogout, session, appVersion, className =
     lastName: accountNameParts.slice(1).join(" ") || primaryDisplayName || accountNameParts[0] || "Utilisateur",
     avatarUrl,
   };
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const loadMemberName = async (): Promise<void> => {
-      const normalizedEmail = userEmail?.trim().toLowerCase();
-      if (!normalizedEmail) {
-        if (!isCancelled) {
-          setMemberLabel(null);
-          setMemberFullName(null);
-        }
-        return;
-      }
-
-      const { data, error } = await supabase.from("members").select("first_name, last_name, label").ilike("email", normalizedEmail).maybeSingle();
-
-      if (isCancelled || error || !data) {
-        if (!isCancelled) {
-          setMemberLabel(null);
-          setMemberFullName(null);
-        }
-        return;
-      }
-
-      const firstName = (data as { first_name?: string | null }).first_name?.trim() ?? "";
-      const lastName = (data as { last_name?: string | null }).last_name?.trim() ?? "";
-      const fullName = `${firstName} ${lastName}`.trim();
-      const label = (data as { label?: string | null }).label?.trim() ?? "";
-
-      if (!isCancelled) {
-        setMemberLabel(label || null);
-        setMemberFullName(fullName || null);
-      }
-    };
-
-    void loadMemberName();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [userEmail]);
 
   // Fermer le menu si on clique en dehors
   useEffect(() => {
@@ -136,7 +94,7 @@ export const UserMenu = ({ userEmail, onLogout, session, appVersion, className =
       {/* DROPDOWN AVEC INFOS UTILISATEUR */}
       {isOpen && (
         <div className={["absolute w-80 max-w-[90vw] z-[80]", dropdownPositionClass].join(" ")}>
-          <UserInfoCard session={session} onLogout={onLogout} appVersion={appVersion} />
+          <UserInfoCard currentMember={currentMember} session={session} onLogout={onLogout} appVersion={appVersion} />
         </div>
       )}
     </div>
