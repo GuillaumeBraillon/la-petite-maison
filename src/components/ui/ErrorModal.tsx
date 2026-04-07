@@ -1,5 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import type { ErrorModalProps } from "../../types";
+import { ErrorShareButton } from "./ErrorShareButton";
 
 // ------------------------------------------------------------
 // ErrorModal — modal pour erreurs critiques (handlers, mutations)
@@ -33,7 +34,11 @@ export const ErrorModal = ({ error, onClose }: ErrorModalProps) => {
           {error.hint && <p className="text-xs text-amber-700">Indice : {error.hint}</p>}
         </div>
 
-        <button onClick={onClose} className="mt-5 w-full px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors">
+        <div className="mt-5">
+          <ErrorShareButton error={error} />
+        </div>
+
+        <button onClick={onClose} className="mt-3 w-full px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors">
           Fermer
         </button>
       </div>

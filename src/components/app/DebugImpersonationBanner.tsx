@@ -53,7 +53,7 @@ export const DebugImpersonationBanner = ({ actualMember, effectiveMember, member
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end lg:min-w-[420px] lg:max-w-[520px] lg:flex-none">
+        <div className="flex flex-col gap-3 lg:min-w-[420px] lg:max-w-[520px] lg:flex-none">
           <div className="flex-1">
             <Select
               label="Afficher l'application en tant que"
@@ -71,9 +71,11 @@ export const DebugImpersonationBanner = ({ actualMember, effectiveMember, member
             </Select>
           </div>
 
-          <Button type="button" variant="secondary" onClick={() => onChange(null)} disabled={!isImpersonating} className="sm:self-end">
-            Revenir à mon compte
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <Button type="button" variant="secondary" onClick={() => onChange(null)} disabled={!isImpersonating} className="sm:self-end">
+              Revenir à mon compte
+            </Button>
+          </div>
         </div>
       </div>
     </div>

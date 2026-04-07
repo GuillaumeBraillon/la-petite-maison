@@ -5,6 +5,12 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.40] - 7 avril 2026
+
+### Ce qui change pour vous
+
+- **Partage d'erreur** : quand une erreur s'affiche, vous pouvez maintenant la partager directement pour transmettre plus facilement les informations utiles au debug.
+
 ## [0.3.39] - 7 avril 2026
 
 ### Ce qui change pour vous

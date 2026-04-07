@@ -7,6 +7,16 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.40] - 2026-04-07
+
+### Améliorations
+
+- **Erreurs** : un bouton de partage a été ajouté sur les erreurs détaillées pour permettre d'envoyer rapidement les informations utiles via le système de partage du téléphone ou de l'ordinateur
+
+### Technique
+
+- **Partage natif** : ajout d'un composant `ErrorShareButton` branché sur les erreurs inline et modales, avec fallback copie si le partage natif n'est pas disponible
+
 ## [0.3.39] - 2026-04-07
 
 ### Corrections

@@ -1,5 +1,6 @@
 import { X, AlertCircle } from "lucide-react";
 import type { ErrorDisplayProps } from "../../types";
+import { ErrorShareButton } from "./ErrorShareButton";
 
 // ------------------------------------------------------------
 // ErrorDisplay — composant réutilisable d'affichage d'erreur inline
@@ -15,6 +16,9 @@ export const ErrorDisplay = ({ error, onDismiss, className = "" }: ErrorDisplayP
         {error.code && <p className="text-xs text-red-400 mt-0.5 font-mono">Code : {error.code}</p>}
         {error.details && <p className="text-xs text-red-500 mt-0.5 break-words">Détails : {error.details}</p>}
         {error.hint && <p className="text-xs text-red-500 mt-0.5">Indice : {error.hint}</p>}
+        <div className="mt-2">
+          <ErrorShareButton error={error} compact />
+        </div>
       </div>
       {onDismiss && (
         <button onClick={onDismiss} aria-label="Fermer l'erreur" className="text-red-400 hover:text-red-600 transition-colors shrink-0">

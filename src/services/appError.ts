@@ -83,3 +83,18 @@ export const buildToastErrorMessage = (fallbackMessage: string, error: unknown):
 
   return parts.join(" — ");
 };
+
+export const formatAppErrorForShare = (error: AppError): string => {
+  const parts = [
+    "Erreur La Petite Maison",
+    `Date : ${new Date().toLocaleString("fr-FR")}`,
+    `Message : ${error.message}`,
+    error.context ? `Contexte : ${error.context}` : undefined,
+    error.code ? `Code : ${error.code}` : undefined,
+    error.details ? `Détails : ${error.details}` : undefined,
+    error.hint ? `Indice : ${error.hint}` : undefined,
+    typeof window !== "undefined" ? `Page : ${window.location.href}` : undefined,
+  ].filter((value): value is string => Boolean(value));
+
+  return parts.join("\n");
+};
