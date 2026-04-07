@@ -8,6 +8,7 @@ import { TOAST_MESSAGES } from "../services/messageCatalog";
 import { getRentalStatusLabel } from "../services/rentalStatus";
 import { formatDate } from "../utils/rentalUtils";
 import { getPermissions, getRentalActionPermissions } from "../services/permissions";
+import { buildAppError, buildToastErrorMessage } from "../services/appError";
 
 // ------------------------------------------------------------
 // Hook
@@ -143,14 +144,18 @@ export const useRentalModals = ({ currentMember = null, onRefresh }: UseRentalMo
         await onRefresh();
         closeForm();
       } catch (err) {
+        const appError = buildAppError({
+          error: err,
+          context: editing && editing.id ? "Modification de la location" : "Création de la location",
+          currentMember,
+          subjectId: editing?.id,
+        });
         showToast({
           variant: "error",
-          ...TOAST_MESSAGES.rental.saveError,
+          title: TOAST_MESSAGES.rental.saveError.title,
+          message: buildToastErrorMessage(TOAST_MESSAGES.rental.saveError.message, err),
         });
-        setError({
-          message: err instanceof Error ? err.message : "Une erreur est survenue.",
-          context: editing && editing.id ? "Modification de la location" : "Création de la location",
-        });
+        setError(appError);
       }
     },
     [editing, currentMember, onRefresh, closeForm, setError, showToast, denyAction]
@@ -185,14 +190,18 @@ export const useRentalModals = ({ currentMember = null, onRefresh }: UseRentalMo
         ...TOAST_MESSAGES.rental.deleted,
       });
     } catch (err) {
+      const appError = buildAppError({
+        error: err,
+        context: "Suppression de la location",
+        currentMember,
+        subjectId: rentalToDelete?.id,
+      });
       showToast({
         variant: "error",
-        ...TOAST_MESSAGES.rental.deleteError,
+        title: TOAST_MESSAGES.rental.deleteError.title,
+        message: buildToastErrorMessage(TOAST_MESSAGES.rental.deleteError.message, err),
       });
-      setError({
-        message: err instanceof Error ? err.message : "Une erreur est survenue.",
-        context: "Suppression de la location",
-      });
+      setError(appError);
     } finally {
       setDeletingRental(false);
     }
@@ -229,14 +238,18 @@ export const useRentalModals = ({ currentMember = null, onRefresh }: UseRentalMo
           ...statusToast,
         });
       } catch (err) {
+        const appError = buildAppError({
+          error: err,
+          context: "Modification du statut",
+          currentMember,
+          subjectId: rentalId,
+        });
         showToast({
           variant: "error",
-          ...TOAST_MESSAGES.rental.statusError,
+          title: TOAST_MESSAGES.rental.statusError.title,
+          message: buildToastErrorMessage(TOAST_MESSAGES.rental.statusError.message, err),
         });
-        setError({
-          message: err instanceof Error ? err.message : "Une erreur est survenue.",
-          context: "Modification du statut",
-        });
+        setError(appError);
       }
     },
     [selected, editing, rentalToDelete, currentMember, onRefresh, setError, showToast, denyAction]
@@ -261,15 +274,18 @@ export const useRentalModals = ({ currentMember = null, onRefresh }: UseRentalMo
           message: rental.isPaid ? "La location est marquée comme non payée." : "La location est marquée comme payée.",
         });
       } catch (err) {
+        const appError = buildAppError({
+          error: err,
+          context: "Modification du paiement",
+          currentMember,
+          subjectId: rental.id,
+        });
         showToast({
           variant: "error",
-          title: "Erreur",
-          message: "Impossible de modifier l'état du paiement.",
+          title: "Erreur paiement",
+          message: buildToastErrorMessage("Impossible de modifier l'état du paiement.", err),
         });
-        setError({
-          message: err instanceof Error ? err.message : "Une erreur est survenue.",
-          context: "Modification du paiement",
-        });
+        setError(appError);
       }
     },
     [currentMember, onRefresh, setError, showToast, denyAction]

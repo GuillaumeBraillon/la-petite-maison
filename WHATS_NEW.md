@@ -5,6 +5,13 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.39] - 7 avril 2026
+
+### Ce qui change pour vous
+
+- **Paiement corrigé** : les propriétaires validateurs peuvent à nouveau confirmer correctement le paiement des locations.
+- **Messages d'erreur plus utiles** : quand une action échoue, l'application affiche maintenant plus d'informations pour aider à comprendre et signaler le problème.
+
 ## [0.3.38] - 7 avril 2026
 
 ### Ce qui change pour vous

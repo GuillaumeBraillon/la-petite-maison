@@ -122,6 +122,8 @@ export interface AppError {
   message: string;
   code?: string;
   context?: string;
+  details?: string;
+  hint?: string;
 }
 
 // ------------------------------------------------------------

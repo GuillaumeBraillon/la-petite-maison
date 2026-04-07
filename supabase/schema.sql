@@ -582,17 +582,6 @@ on public.rentals
 for insert
 with check (
   public.current_member_is_owner_editor()
-  and owner_id = public.current_member_id()
-  and (
-    sub_member_id is null
-    or exists (
-      select 1
-      from public.members m
-      where m.id = sub_member_id
-      and m.role = 'sub_member'
-      and m.owner_id = public.current_member_id()
-    )
-  )
 );
 
 create policy "rentals_owner_insert_own_scope"
@@ -632,21 +621,9 @@ on public.rentals
 for update
 using (
   public.current_member_is_owner_editor()
-  and owner_id = public.current_member_id()
 )
 with check (
   public.current_member_is_owner_editor()
-  and owner_id = public.current_member_id()
-  and (
-    sub_member_id is null
-    or exists (
-      select 1
-      from public.members m
-      where m.id = sub_member_id
-      and m.role = 'sub_member'
-      and m.owner_id = public.current_member_id()
-    )
-  )
 );
 
 create policy "rentals_owner_update_own_scope"
@@ -686,7 +663,10 @@ for delete
 using (
   public.current_member_is_allowed()
   and public.current_member_role() = 'owner'
-  and owner_id = public.current_member_id()
+  and (
+    public.current_member_is_editor()
+    or owner_id = public.current_member_id()
+  )
 );
 
 create policy "rentals_sub_member_insert_own_scope"

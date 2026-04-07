@@ -13,6 +13,8 @@ export const ErrorDisplay = ({ error, onDismiss, className = "" }: ErrorDisplayP
         <p className="text-sm font-medium text-red-700">{error.message}</p>
         {error.context && <p className="text-xs text-red-500 mt-0.5">{error.context}</p>}
         {error.code && <p className="text-xs text-red-400 mt-0.5 font-mono">Code : {error.code}</p>}
+        {error.details && <p className="text-xs text-red-500 mt-0.5 break-words">Détails : {error.details}</p>}
+        {error.hint && <p className="text-xs text-red-500 mt-0.5">Indice : {error.hint}</p>}
       </div>
       {onDismiss && (
         <button onClick={onDismiss} aria-label="Fermer l'erreur" className="text-red-400 hover:text-red-600 transition-colors shrink-0">

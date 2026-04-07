@@ -7,6 +7,18 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.39] - 2026-04-07
+
+### Corrections
+
+- **Paiement** : correction d'un blocage qui empêchait un propriétaire validateur de confirmer le paiement d'une location hors de son ancien périmètre restreint
+- **Erreurs UI** : les messages d'erreur remontés lors des actions sur les locations affichent maintenant des informations plus détaillées pour faciliter le diagnostic
+
+### Technique
+
+- **Supabase / RLS** : assouplissement des policies `rentals` pour donner aux propriétaires validateurs le périmètre global attendu sur les insertions, modifications et suppressions
+- **Debug erreurs** : ajout d'un helper `appError.ts` pour normaliser les erreurs applicatives et afficher le code, les détails, l'indice éventuel et le contexte utile dans l'interface
+
 ## [0.3.38] - 2026-04-07
 
 ### Corrections

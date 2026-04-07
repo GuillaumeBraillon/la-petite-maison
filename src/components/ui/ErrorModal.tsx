@@ -27,6 +27,10 @@ export const ErrorModal = ({ error, onClose }: ErrorModalProps) => {
           {error.context && <p className="text-xs text-gray-400">{error.context}</p>}
 
           {error.code && <p className="text-xs font-mono text-gray-400">Code : {error.code}</p>}
+
+          {error.details && <p className="text-xs text-gray-500 break-words">Détails : {error.details}</p>}
+
+          {error.hint && <p className="text-xs text-amber-700">Indice : {error.hint}</p>}
         </div>
 
         <button onClick={onClose} className="mt-5 w-full px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors">
