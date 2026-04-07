@@ -21,8 +21,11 @@ import { WhatsNewModal } from "./components/ui/WhatsNewModal";
 import { LoadingScreen } from "./components/ui/LoadingScreen";
 import { AppShellLayout, type AppNavItem, type AppView } from "./components/app/AppShellLayout";
 import { AppViewRouter } from "./components/app/AppViewRouter";
+import { DebugImpersonationBanner } from "./components/app/DebugImpersonationBanner";
 import { useWhatsNew } from "./hooks/useWhatsNew";
 import { usePushNotifications } from "./hooks/usePushNotifications";
+
+const DEBUG_IMPERSONATION_STORAGE_KEY = "debug_impersonation_member_id";
 
 const NAV_ITEMS: AppNavItem[] = [
   {
@@ -52,16 +55,62 @@ const AppShell = ({ session }: AppShellProps) => {
   const [currentMember, setCurrentMember] = useState<Member | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
+  const [debugMemberId, setDebugMemberId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { error, clearError, setError } = useError();
   const { install, isInstallable } = usePWAInstall();
   const { shouldShow: showWhatsNew, entries: whatsNewEntries, dismiss: dismissWhatsNew } = useWhatsNew();
   const { isSupported: pushSupported, isSubscribed: pushSubscribed } = usePushNotifications();
+  const isDebugImpersonationEnabled = import.meta.env.DEV;
+  const canUseDebugImpersonation = isDebugImpersonationEnabled && currentMember?.role === "admin";
+  const impersonatedMember = canUseDebugImpersonation ? (members.find((member) => member.id === debugMemberId) ?? null) : null;
+  const effectiveCurrentMember = impersonatedMember ?? currentMember;
+
+  useEffect(() => {
+    if (!isDebugImpersonationEnabled) return;
+
+    const storedMemberId = window.localStorage.getItem(DEBUG_IMPERSONATION_STORAGE_KEY);
+    if (storedMemberId) {
+      setDebugMemberId(storedMemberId);
+    }
+  }, [isDebugImpersonationEnabled]);
+
+  useEffect(() => {
+    if (!isDebugImpersonationEnabled) return;
+
+    if (!canUseDebugImpersonation) {
+      window.localStorage.removeItem(DEBUG_IMPERSONATION_STORAGE_KEY);
+      if (debugMemberId !== null) {
+        setDebugMemberId(null);
+      }
+      return;
+    }
+
+    if (debugMemberId) {
+      window.localStorage.setItem(DEBUG_IMPERSONATION_STORAGE_KEY, debugMemberId);
+      return;
+    }
+
+    window.localStorage.removeItem(DEBUG_IMPERSONATION_STORAGE_KEY);
+  }, [canUseDebugImpersonation, debugMemberId, isDebugImpersonationEnabled]);
+
+  useEffect(() => {
+    if (!canUseDebugImpersonation) return;
+
+    if (debugMemberId && !members.some((member) => member.id === debugMemberId)) {
+      setDebugMemberId(null);
+      return;
+    }
+
+    if (debugMemberId && currentMember?.id === debugMemberId) {
+      setDebugMemberId(null);
+    }
+  }, [canUseDebugImpersonation, currentMember, debugMemberId, members]);
 
   // Helper pour filtrer les items de nav basés sur le rôle
   const getAvailableNavItems = (): AppNavItem[] => {
-    if (!currentMember) return NAV_ITEMS.filter((item) => !item.requiredRoles);
-    return NAV_ITEMS.filter((item) => !item.requiredRoles || item.requiredRoles.includes(currentMember.role));
+    if (!effectiveCurrentMember) return NAV_ITEMS.filter((item) => !item.requiredRoles);
+    return NAV_ITEMS.filter((item) => !item.requiredRoles || item.requiredRoles.includes(effectiveCurrentMember.role));
   };
 
   // Vérifier si la vue actuelle est accessible
@@ -69,18 +118,18 @@ const AppShell = ({ session }: AppShellProps) => {
     (viewId: AppView): boolean => {
       const navItem = NAV_ITEMS.find((item) => item.id === viewId);
       if (!navItem || !navItem.requiredRoles) return true;
-      if (!currentMember) return false;
-      return navItem.requiredRoles.includes(currentMember.role);
+      if (!effectiveCurrentMember) return false;
+      return navItem.requiredRoles.includes(effectiveCurrentMember.role);
     },
-    [currentMember]
+    [effectiveCurrentMember]
   );
 
   // Rediriger vers Calendar si la vue n'est pas accessible
   useEffect(() => {
-    if (currentMember && !isViewAccessible(view)) {
+    if (effectiveCurrentMember && !isViewAccessible(view)) {
       setView("calendar");
     }
-  }, [isViewAccessible, view, currentMember]);
+  }, [effectiveCurrentMember, isViewAccessible, view]);
 
   const refresh = useCallback(async () => {
     try {
@@ -135,6 +184,10 @@ const AppShell = ({ session }: AppShellProps) => {
     setView(nextView);
   };
 
+  const handleDebugImpersonationChange = (memberId: string | null): void => {
+    setDebugMemberId(memberId);
+  };
+
   return (
     <>
       <AppShellLayout
@@ -152,6 +205,16 @@ const AppShell = ({ session }: AppShellProps) => {
           void install();
         }}
       >
+        {canUseDebugImpersonation && currentMember && effectiveCurrentMember && !loading && (
+          <DebugImpersonationBanner
+            actualMember={currentMember}
+            effectiveMember={effectiveCurrentMember}
+            members={members}
+            sessionEmail={session.user.email ?? null}
+            onChange={handleDebugImpersonationChange}
+          />
+        )}
+
         {loading ? (
           <LoadingScreen />
         ) : (
@@ -159,7 +222,7 @@ const AppShell = ({ session }: AppShellProps) => {
             view={view}
             rentals={rentals}
             members={members}
-            currentMember={currentMember}
+            currentMember={effectiveCurrentMember}
             onRefresh={refresh}
             rentalsStatusFilter={rentalsStatusFilter}
             rentalsOwnerFilter={rentalsOwnerFilter}

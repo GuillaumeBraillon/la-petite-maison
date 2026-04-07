@@ -5,6 +5,12 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.37] - 7 avril 2026
+
+### Ce qui change pour vous
+
+- **Support plus simple** : un outil de test réservé à l'administration a été ajouté en développement pour faciliter les vérifications et le debug des différents profils de l'application.
+
 ## [0.3.36] - 6 avril 2026
 
 ### Ce qui change pour vous

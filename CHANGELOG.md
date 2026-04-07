@@ -7,6 +7,16 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.37] - 2026-04-07
+
+### Améliorations
+
+- **Debug admin** : un mode "afficher l'application en tant que" a été ajouté en développement pour permettre à un administrateur de simuler les vues et permissions d'un autre membre pendant les tests
+
+### Technique
+
+- **Debug impersonation** : ajout d'un bandeau dédié dans l'application avec persistance locale du membre simulé, en conservant la session Supabase réelle et en limitant l'accès à cette fonctionnalité aux seuls admins en environnement de développement
+
 ## [0.3.36] - 2026-04-06
 
 ### Améliorations
