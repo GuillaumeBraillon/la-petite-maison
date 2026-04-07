@@ -7,6 +7,16 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.38] - 2026-04-07
+
+### Corrections
+
+- **Permissions locations** : correction d'un bug qui limitait à tort les propriétaires validateurs à leurs seules locations, alors qu'ils doivent pouvoir modifier l'ensemble des locations dans l'application
+
+### Technique
+
+- **Permissions** : mise à jour de `permissions.ts` pour donner un périmètre global aux owners validateurs sur les actions location, et ajustement du filtre propriétaire par défaut dans `RentalsPage.tsx`
+
 ## [0.3.37] - 2026-04-07
 
 ### Améliorations

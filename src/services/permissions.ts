@@ -34,7 +34,7 @@ export interface RentalActionPermissions {
 /**
  * Récupère les permissions pour un utilisateur donné
  * Admin : tous les droits
- * Owner + isEditor=true : validation / paiement sur son périmètre owner + gestion membres
+ * Owner + isEditor=true : tous les droits sur les locations et les membres
  * Owner + isEditor=false : peut créer des demandes (pending) et agir sur les locations de son périmètre
  * Sub_member : peut créer des demandes, voir les locations globales, et agir uniquement sur ses propres locations
  */
@@ -125,13 +125,14 @@ export const hasPermission = (member: Member | null, permission: keyof Permissio
 /**
  * Détermine si une location est dans le périmètre d'action du membre connecté.
  * - Admin : accès global
- * - Owner : locations rattachées à son `ownerId`
+ * - Owner éditeur : accès global
+ * - Owner non éditeur : locations rattachées à son `ownerId`
  * - Sub_member : locations rattachées à son `subMemberId`
  */
 export const isRentalInMemberScope = (member: Member | null, rental: Rental): boolean => {
   if (!member) return false;
   if (member.role === "admin") return true;
-  if (member.role === "owner") return rental.ownerId === member.id;
+  if (member.role === "owner") return member.isEditor ? true : rental.ownerId === member.id;
   if (member.role === "sub_member") return rental.subMemberId === member.id;
   return false;
 };
@@ -156,7 +157,8 @@ export const getRentalActionPermissions = (member: Member | null, rental: Rental
   }
 
   const inScope = isRentalInMemberScope(member, rental);
-  const canValidateScopedRental = member.role === "owner" && member.isEditor && inScope;
+  const isOwnerEditor = member.role === "owner" && member.isEditor;
+  const canValidateScopedRental = isOwnerEditor && inScope;
 
   return {
     canEdit: inScope,

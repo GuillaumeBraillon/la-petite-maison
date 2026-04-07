@@ -5,6 +5,12 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.38] - 7 avril 2026
+
+### Ce qui change pour vous
+
+- **Correction validateurs** : les propriétaires validateurs peuvent maintenant modifier toutes les locations de l'application, comme prévu.
+
 ## [0.3.37] - 7 avril 2026
 
 ### Ce qui change pour vous

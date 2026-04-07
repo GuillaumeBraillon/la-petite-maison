@@ -72,7 +72,7 @@ export const RentalsPage = ({
 
   const defaultOwnerFilter = (): OwnerFilter => {
     if (!currentMember) return "all";
-    if (currentMember.role === "owner") return currentMember.id;
+    if (currentMember.role === "owner") return currentMember.isEditor ? "all" : currentMember.id;
     if (currentMember.role === "sub_member" && currentMember.ownerId) return currentMember.ownerId;
     return "all";
   };
