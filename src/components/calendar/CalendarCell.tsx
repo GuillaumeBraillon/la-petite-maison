@@ -5,7 +5,7 @@ import { RentalBadge } from "./RentalBadge";
 // Component
 // ------------------------------------------------------------
 
-export const CalendarCell = ({ date, rentals, memberIndex, isToday, isCurrentMonth, onRentalClick, onDayClick }: CalendarCellProps) => {
+export const CalendarCell = ({ date, rentals, memberIndex, isToday, isCurrentMonth, events, onRentalClick, onDayClick }: CalendarCellProps) => {
   const handleCellClick = () => {
     if (onDayClick && isCurrentMonth) {
       onDayClick(date);
@@ -22,15 +22,32 @@ export const CalendarCell = ({ date, rentals, memberIndex, isToday, isCurrentMon
         onDayClick && isCurrentMonth ? "cursor-pointer hover:bg-primary-50 transition-colors" : "",
       ].join(" ")}
     >
-      {/* Numéro du jour */}
-      <span
-        className={[
-          "text-[10px] sm:text-xs font-medium w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full self-end",
-          isToday ? "bg-primary-600 text-white" : isCurrentMonth ? "text-gray-700" : "text-gray-300",
-        ].join(" ")}
-      >
-        {date.getDate()}
-      </span>
+      {/* Ligne numéro du jour + badges événements */}
+      <div className="flex items-center justify-between gap-1 min-w-0">
+        <div className="flex items-center gap-0.5 min-w-0 flex-1 flex-wrap">
+          {events &&
+            events.map((event, i) => (
+              <span
+                key={i}
+                className={[
+                  "text-[9px] leading-tight px-1 py-0.5 rounded font-medium truncate min-w-0",
+                  event.type === "holiday" ? "bg-yellow-200 text-yellow-900" : "bg-cyan-100 text-cyan-900",
+                ].join(" ")}
+                title={event.label}
+              >
+                {event.label}
+              </span>
+            ))}
+        </div>
+        <span
+          className={[
+            "text-[10px] sm:text-xs font-medium w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full shrink-0",
+            isToday ? "bg-primary-600 text-white" : isCurrentMonth ? "text-gray-700" : "text-gray-300",
+          ].join(" ")}
+        >
+          {date.getDate()}
+        </span>
+      </div>
 
       {/* Locations */}
       <div className="flex flex-col gap-0.5" onClick={(e) => e.stopPropagation()}>

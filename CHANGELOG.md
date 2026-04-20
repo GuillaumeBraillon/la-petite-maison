@@ -7,6 +7,26 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.41] - 2026-04-20
+
+### Ajouts
+
+- **Calendrier** : affichage des jours fériés français (calcul algorithmique) et des vacances scolaires Zone A (API data.education.gouv.fr) dans chaque cellule, sur desktop et mobile
+- **Calendrier** : toggles Fériés/Vacances visibles sur mobile (barre de navigation sur deux lignes sur petit écran)
+- **Calendrier** : badges fériés et vacances repositionnés sur la ligne du numéro de jour dans chaque cellule desktop
+- **Calendrier** : légende des codes couleurs affichée sous le calendrier
+- **Accessibilité / daltonisme** : refonte complète de la palette de couleurs des statuts et événements — optimisée pour la deutéranopie, sans toggle, par défaut pour tous
+
+### Technique
+
+- **`frenchPublicHolidays.ts`** : calcul des 11 jours fériés via algorithme de Pâques (Meeus/Jones/Butcher)
+- **`schoolHolidaysService.ts`** : fetch Zone A depuis l'API officielle, pagination, dédoublonnage par jour, cache mémoire session
+- **`useCalendarEvents.ts`** : hook combinant jours fériés + vacances, map `YYYY-MM-DD → CalendarEvent[]`
+- **`CalendarCell`** : badges événements sur la même ligne que le numéro du jour, `flex-1` pour éviter la troncature
+- **`CalendarView`** : couleurs des toggles identiques aux badges cellules et légende
+- **`rentalStatus.ts`** : palette statuts — En attente (gris), Confirmé (bleu), Terminé (vert `green-200`), Rejeté (rouge `red-200`) — cohérente sur toutes les maps (`TEXT_COLOR`, `TEXT_COLOR_SUBTLE`, `BG_COLOR`, `BADGE_COLOR`)
+- **`Badge.tsx`** : variants `warning` / `success` / `danger` / `default` alignés sur la nouvelle palette
+
 ## [0.3.40] - 2026-04-07
 
 ### Améliorations

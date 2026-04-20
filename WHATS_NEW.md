@@ -5,6 +5,15 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.41] - 20 avril 2026
+
+### Ce qui change pour vous
+
+- **Calendrier** : les jours fériés et les vacances scolaires (Zone A) sont maintenant visibles directement dans le calendrier
+- **Calendrier** : boutons pour afficher ou masquer les fériés et les vacances, visibles sur mobile et desktop
+- **Calendrier** : une légende des couleurs s'affiche sous le calendrier pour s'y retrouver facilement
+- **Couleurs repensées** : toutes les couleurs des statuts de location ont été revues pour être bien distinctes, y compris pour les personnes daltoniennes
+
 ## [0.3.40] - 7 avril 2026
 
 ### Ce qui change pour vous

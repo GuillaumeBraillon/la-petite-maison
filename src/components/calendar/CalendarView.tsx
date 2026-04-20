@@ -5,6 +5,8 @@ import { CalendarCell } from "./CalendarCell";
 import { RentalBadge } from "./RentalBadge";
 import { DAYS_OF_WEEK, isSameDay, buildCalendarDays, buildRentalsByDay, formatDayLabel, getDayKey, getISOWeekNumber } from "../../utils/calendarUtils";
 import { Button } from "../ui/Button";
+import { useCalendarEvents } from "../../hooks/useCalendarEvents";
+import { RENTAL_STATUS_LIST, RENTAL_STATUS_LABEL_MAP, RENTAL_STATUS_BADGE_COLOR_MAP } from "../../services/rentalStatus";
 
 // ------------------------------------------------------------
 // Component
@@ -15,8 +17,17 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
 
+  const [showHolidays, setShowHolidays] = useState(true);
+  const [showVacations, setShowVacations] = useState(true);
+
   const days = buildCalendarDays(year, month);
   const rentalsByDay = buildRentalsByDay(days, rentals);
+  const calendarEvents = useCalendarEvents(year);
+
+  const getFilteredEvents = (day: Date) => {
+    const events = calendarEvents.get(getDayKey(day)) ?? [];
+    return events.filter((e) => (e.type === "holiday" ? showHolidays : showVacations));
+  };
   // Group days by week (7 days each) for rendering week numbers
   const weeks: Date[][] = [];
   for (let i = 0; i < days.length; i += 7) {
@@ -47,19 +58,19 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
   return (
     <div className="flex flex-col gap-2">
       {/* Navigation */}
-      <div className="flex items-center justify-between">
-        {/* Navigation mois */}
-        <div className="flex items-center">
-          <Button variant="secondary" size="sm" onClick={prevMonth} aria-label="Mois précédent">
-            <ChevronLeft size={16} />
-          </Button>
-          <h2 className="text-lg font-semibold text-gray-900 capitalize w-36 text-center">{monthLabel}</h2>
-          <Button variant="secondary" size="sm" onClick={nextMonth} aria-label="Mois suivant">
-            <ChevronRight size={16} />
-          </Button>
-        </div>
-        {/* Actions */}
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between sm:justify-start">
+          {/* Navigation mois */}
+          <div className="flex items-center">
+            <Button variant="secondary" size="sm" onClick={prevMonth} aria-label="Mois précédent">
+              <ChevronLeft size={16} />
+            </Button>
+            <h2 className="text-lg font-semibold text-gray-900 capitalize w-36 text-center">{monthLabel}</h2>
+            <Button variant="secondary" size="sm" onClick={nextMonth} aria-label="Mois suivant">
+              <ChevronRight size={16} />
+            </Button>
+          </div>
+          {/* Aujourd'hui — toujours visible */}
           <Button
             variant="secondary"
             size="sm"
@@ -70,6 +81,27 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
           >
             Aujourd&apos;hui
           </Button>
+        </div>
+        {/* Toggles + Nouvelle location */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowHolidays((v) => !v)}
+            className={[
+              "text-xs px-2 py-1 rounded-full border font-medium transition-colors",
+              showHolidays ? "bg-yellow-200 text-yellow-900 border-yellow-300" : "bg-white text-gray-400 border-gray-200 line-through",
+            ].join(" ")}
+          >
+            Fériés
+          </button>
+          <button
+            onClick={() => setShowVacations((v) => !v)}
+            className={[
+              "text-xs px-2 py-1 rounded-full border font-medium transition-colors",
+              showVacations ? "bg-cyan-100 text-cyan-900 border-cyan-200" : "bg-white text-gray-400 border-gray-200 line-through",
+            ].join(" ")}
+          >
+            Vacances
+          </button>
           {onCreateClick && (
             <Button onClick={onCreateClick} className="hidden sm:flex">
               <PlusCircle size={16} /> Nouvelle location
@@ -116,6 +148,18 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-semibold text-gray-900">{formatDayLabel(day)}</p>
                       </div>
+                      {/* Jours fériés et vacances scolaires */}
+                      {getFilteredEvents(day).map((event, i) => (
+                        <span
+                          key={i}
+                          className={[
+                            "text-[10px] leading-tight px-1.5 py-0.5 rounded font-medium self-start",
+                            event.type === "holiday" ? "bg-yellow-200 text-yellow-900" : "bg-cyan-100 text-cyan-900",
+                          ].join(" ")}
+                        >
+                          {event.label}
+                        </span>
+                      ))}
                       {dayRentals.length > 0 ? (
                         <div className="flex flex-col gap-1" onClick={(event) => event.stopPropagation()}>
                           {dayRentals.map((rental) => {
@@ -177,6 +221,7 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
                     memberIndex={memberIndex}
                     isToday={isSameDay(day, today)}
                     isCurrentMonth={day.getMonth() === month}
+                    events={getFilteredEvents(day)}
                     onRentalClick={onRentalClick}
                     onDayClick={onDayClick}
                   />
@@ -185,6 +230,17 @@ export const CalendarView = ({ rentals, members, onRentalClick, onCreateClick, o
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Légende des statuts */}
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        {RENTAL_STATUS_LIST.map((status) => (
+          <span key={status} className={["text-[10px] px-2 py-0.5 rounded border font-medium", RENTAL_STATUS_BADGE_COLOR_MAP[status]].join(" ")}>
+            {RENTAL_STATUS_LABEL_MAP[status]}
+          </span>
+        ))}
+        <span className="text-[10px] px-2 py-0.5 rounded border font-medium bg-yellow-200 text-yellow-900 border-yellow-300">Jour férié</span>
+        <span className="text-[10px] px-2 py-0.5 rounded border font-medium bg-cyan-100 text-cyan-900 border-cyan-200">Vacances scolaires</span>
       </div>
     </div>
   );

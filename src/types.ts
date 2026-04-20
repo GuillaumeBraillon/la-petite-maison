@@ -174,6 +174,11 @@ export interface CreateSubMemberInput {
 // Component props partagées
 // ------------------------------------------------------------
 
+export interface CalendarEvent {
+  type: "holiday" | "vacation";
+  label: string;
+}
+
 export interface CalendarViewProps {
   rentals: Rental[];
   members: Member[];
@@ -188,6 +193,7 @@ export interface CalendarCellProps {
   memberIndex: Map<string, Member>;
   isToday: boolean;
   isCurrentMonth: boolean;
+  events?: CalendarEvent[];
   onRentalClick?: (rental: Rental) => void;
   onDayClick?: (date: Date) => void;
 }

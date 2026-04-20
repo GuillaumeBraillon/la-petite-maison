@@ -21,31 +21,31 @@ export const RENTAL_STATUS_BADGE_VARIANT_MAP: Record<RentalStatus, RentalStatusB
 };
 
 export const RENTAL_STATUS_TEXT_COLOR_MAP: Record<RentalStatus, string> = {
-  pending: "text-amber-700",
-  confirmed: "text-green-700",
-  completed: "text-gray-700",
-  rejected: "text-red-700",
+  pending: "text-gray-700",
+  confirmed: "text-blue-700",
+  completed: "text-green-800",
+  rejected: "text-red-800",
 };
 
 export const RENTAL_STATUS_TEXT_COLOR_SUBTLE_MAP: Record<RentalStatus, string> = {
-  pending: "text-amber-600",
-  confirmed: "text-green-600",
-  completed: "text-gray-600",
-  rejected: "text-red-600",
+  pending: "text-gray-600",
+  confirmed: "text-blue-600",
+  completed: "text-green-700",
+  rejected: "text-red-700",
 };
 
 export const RENTAL_STATUS_BG_COLOR_MAP: Record<RentalStatus, string> = {
-  pending: "bg-amber-100",
-  confirmed: "bg-green-100",
-  completed: "bg-gray-100",
-  rejected: "bg-red-100",
+  pending: "bg-gray-200",
+  confirmed: "bg-blue-100",
+  completed: "bg-green-200",
+  rejected: "bg-red-200",
 };
 
 export const getRentalStatusLabel = (status: RentalStatus): string => RENTAL_STATUS_LABEL_MAP[status];
 
 export const RENTAL_STATUS_BADGE_COLOR_MAP: Record<RentalStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  confirmed: "bg-red-100 text-red-800 border-red-200",
-  rejected: "bg-gray-100 text-gray-700 border-gray-200",
-  completed: "bg-green-100 text-green-800 border-green-200",
+  pending: "bg-gray-200 text-gray-700 border-gray-400",
+  confirmed: "bg-blue-100 text-blue-900 border-blue-300",
+  rejected: "bg-red-200 text-red-900 border-red-400",
+  completed: "bg-green-200 text-green-900 border-green-400",
 };
