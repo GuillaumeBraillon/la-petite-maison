@@ -76,13 +76,18 @@ export const RentalsPage = ({
     if (currentMember.role === "sub_member" && currentMember.ownerId) return currentMember.ownerId;
     return "all";
   };
-  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>(initialOwnerFilter ?? defaultOwnerFilter());
+  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>(
+    initialOwnerFilter !== undefined && initialOwnerFilter !== "all" ? initialOwnerFilter : defaultOwnerFilter()
+  );
 
   useEffect(() => {
-    if (initialOwnerFilter !== undefined) {
+    if (initialOwnerFilter !== undefined && initialOwnerFilter !== "all") {
       setOwnerFilter(initialOwnerFilter);
+    } else {
+      setOwnerFilter(defaultOwnerFilter());
     }
-  }, [initialOwnerFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialOwnerFilter, currentMember]);
 
   const ownerOptions = [{ value: "all", label: "Tous propriétaires" }].concat(
     members

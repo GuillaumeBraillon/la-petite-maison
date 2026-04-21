@@ -19,7 +19,7 @@ import { UserNotificationsSection } from "./userInfo/UserNotificationsSection";
 /**
  * Carte affichant les informations de connexion de l'utilisateur Google.
  */
-export const UserInfoCard = ({ currentMember, session, onLogout, appVersion }: UserInfoCardProps) => {
+export const UserInfoCard = ({ currentMember, session, onLogout, appVersion, onMemberEmailToggled }: UserInfoCardProps) => {
   const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -242,6 +242,8 @@ export const UserInfoCard = ({ currentMember, session, onLogout, appVersion }: U
         appVersion={appVersion}
         pushSupported={pushSupported}
         pushSubscribed={pushSubscribed}
+        currentMember={currentMember}
+        onMemberEmailToggled={onMemberEmailToggled}
         onOpenWhatsNew={handleOpenWhatsNew}
         onLogout={onLogout}
       />

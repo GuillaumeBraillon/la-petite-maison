@@ -10,7 +10,7 @@ import { useUserNotifications } from "../../hooks/useUserNotifications";
  * Version responsive avec affichage simplifié sur mobile.
  * Clic sur l'avatar/nom affiche les détails du compte.
  */
-export const UserMenu = ({ userEmail, currentMember, onLogout, session, appVersion, className = "", compact = false }: UserMenuProps) => {
+export const UserMenu = ({ userEmail, currentMember, onLogout, session, appVersion, className = "", compact = false, onMemberEmailToggled }: UserMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { unreadCount } = useUserNotifications();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -94,7 +94,13 @@ export const UserMenu = ({ userEmail, currentMember, onLogout, session, appVersi
       {/* DROPDOWN AVEC INFOS UTILISATEUR */}
       {isOpen && (
         <div className={["absolute w-80 max-w-[90vw] z-[80]", dropdownPositionClass].join(" ")}>
-          <UserInfoCard currentMember={currentMember} session={session} onLogout={onLogout} appVersion={appVersion} />
+          <UserInfoCard
+            currentMember={currentMember}
+            session={session}
+            onLogout={onLogout}
+            appVersion={appVersion}
+            onMemberEmailToggled={onMemberEmailToggled}
+          />
         </div>
       )}
     </div>

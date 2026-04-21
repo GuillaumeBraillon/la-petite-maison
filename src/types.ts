@@ -47,6 +47,8 @@ export interface Member {
   ownerId?: string;
   /** Pour role="owner" : true = peut valider locations&membres, false = lecture seule */
   isEditor: boolean;
+  /** Préférence : true = recevoir les notifications par email */
+  emailNotificationsEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -437,6 +439,7 @@ export interface UserMenuProps {
   appVersion?: string;
   className?: string;
   compact?: boolean;
+  onMemberEmailToggled?: (newValue: boolean) => void;
 }
 
 export interface ErrorModalProps {
@@ -454,6 +457,7 @@ export interface UserInfoCardProps {
   session: Session | null;
   onLogout: () => void;
   appVersion?: string;
+  onMemberEmailToggled?: (newValue: boolean) => void;
 }
 
 export interface ErrorBoundaryProps {

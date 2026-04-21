@@ -352,6 +352,7 @@ create table public.members (
   address text,
   last_login timestamptz,
   owner_id uuid references public.members(id) on delete set null,
+  email_notifications_enabled boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint members_allow_requires_profile_chk check (

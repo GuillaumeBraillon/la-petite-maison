@@ -8,6 +8,7 @@ import { mapMemberFromDb, mapMemberToDb, mapRentalFromDb, mapRentalToDb, mapPubl
 import type { DbMember, DbRental, DbPublicPage, DbPublicPageImage } from "./dbTypes";
 import type { Member, Rental, RentalStatus, PublicPageContent, PublicPageImage } from "../types";
 import { notifyNewRental, notifyStatusChange, notifyCompleted, notifyDeletedRental } from "./rentalNotifications";
+import { notifyEmailNewRental, notifyEmailStatusChange, notifyEmailCompleted, notifyEmailDeletedRental } from "./emailNotifications";
 
 const isLocalEnv = (): boolean => {
   if (typeof window === "undefined") return false;
@@ -77,7 +78,10 @@ export const createRental = async (rental: Omit<Rental, "id" | "createdAt" | "up
   if (error) throw error;
 
   const created = mapRentalFromDb(data as DbRental);
-  if (!isLocalEnv()) void notifyNewRental(created);
+  if (!isLocalEnv()) {
+    void notifyNewRental(created);
+    void notifyEmailNewRental(created);
+  }
   return created;
 };
 
@@ -95,9 +99,15 @@ export const updateRental = async (
 
   if (updates.status !== undefined) {
     if (updates.status === "completed") {
-      if (!isLocalEnv()) void notifyCompleted(updated);
+      if (!isLocalEnv()) {
+        void notifyCompleted(updated);
+        void notifyEmailCompleted(updated);
+      }
     } else {
-      if (!isLocalEnv()) void notifyStatusChange(updated, previousStatus);
+      if (!isLocalEnv()) {
+        void notifyStatusChange(updated, previousStatus);
+        void notifyEmailStatusChange(updated, previousStatus);
+      }
     }
   }
 
@@ -114,7 +124,10 @@ export const deleteRental = async (id: string): Promise<void> => {
   if (error) throw error;
 
   const deletedRental = mapRentalFromDb(existingData as DbRental);
-  if (!isLocalEnv()) void notifyDeletedRental(deletedRental);
+  if (!isLocalEnv()) {
+    void notifyDeletedRental(deletedRental);
+    void notifyEmailDeletedRental(deletedRental);
+  }
 };
 
 // ------------------------------------------------------------

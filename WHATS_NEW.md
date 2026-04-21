@@ -5,6 +5,15 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.42] - 21 avril 2026
+
+### Ce qui change pour vous
+
+- **Notifications par email** : vous pouvez maintenant recevoir des emails automatiques lors des actions importantes (nouvelle demande, confirmation, refus, clôture de séjour)
+- **Activer les emails** : un nouveau bouton ✉️ apparaît dans votre profil — cliquez dessus pour activer ou désactiver les emails de notification
+- **Emails groupés** : chaque action envoie un seul email bien écrit, personnalisé selon votre rôle (locataire, propriétaire, validateur)
+- **À activer dans votre profil** : les emails sont désactivés par défaut — rendez-vous dans votre profil (icône en haut à droite) et cliquez sur l'icône ✉️ pour commencer à recevoir les notifications par email
+
 ## [0.3.41] - 20 avril 2026
 
 ### Ce qui change pour vous

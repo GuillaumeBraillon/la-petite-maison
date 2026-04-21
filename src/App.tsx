@@ -131,7 +131,7 @@ const AppShell = ({ session }: AppShellProps) => {
     }
   }, [effectiveCurrentMember, isViewAccessible, view]);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<Member | null> => {
     try {
       const [member, loadedMembers, loadedRentals] = await Promise.all([fetchCurrentMember(session), fetchMembers(), fetchRentals()]);
       if (!member) {
@@ -141,19 +141,41 @@ const AppShell = ({ session }: AppShellProps) => {
       setCurrentMember(member);
       setMembers(loadedMembers);
       setRentals(loadedRentals);
+      return member;
     } catch (err) {
       setError({
         message: err instanceof Error ? err.message : "Erreur de chargement.",
         context: "Chargement des données",
       });
+      return null;
     }
   }, [session, setError]);
 
   useEffect(() => {
     void (async () => {
       setLoading(true);
-      await refresh();
+      const member = await refresh();
       setLoading(false);
+
+      // Deep link depuis email : ?view=rentals&status=pending
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get("view");
+      const statusParam = params.get("status") as RentalStatus | null;
+      if (viewParam === "rentals") {
+        if (statusParam) setRentalsStatusFilter(statusParam);
+        // Pré-sélectionner le propriétaire selon le rôle du membre
+        if (member?.role === "owner" && !member.isEditor) {
+          setRentalsOwnerFilter(member.id);
+        } else if (member?.role === "sub_member" && member.ownerId) {
+          setRentalsOwnerFilter(member.ownerId);
+        }
+        setView("rentals");
+      } else if (viewParam === "calendar") {
+        setView("calendar");
+      }
+      if (params.has("view")) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
     })();
   }, [refresh]);
 
@@ -184,6 +206,10 @@ const AppShell = ({ session }: AppShellProps) => {
     setView(nextView);
   };
 
+  const handleMemberEmailToggled = useCallback((newValue: boolean) => {
+    setCurrentMember((prev) => (prev ? { ...prev, emailNotificationsEnabled: newValue } : prev));
+  }, []);
+
   const handleDebugImpersonationChange = (memberId: string | null): void => {
     setDebugMemberId(memberId);
   };
@@ -204,6 +230,7 @@ const AppShell = ({ session }: AppShellProps) => {
         onInstall={() => {
           void install();
         }}
+        onMemberEmailToggled={handleMemberEmailToggled}
       >
         {canUseDebugImpersonation && currentMember && effectiveCurrentMember && !loading && (
           <DebugImpersonationBanner
@@ -223,7 +250,9 @@ const AppShell = ({ session }: AppShellProps) => {
             rentals={rentals}
             members={members}
             currentMember={effectiveCurrentMember}
-            onRefresh={refresh}
+            onRefresh={async () => {
+              await refresh();
+            }}
             rentalsStatusFilter={rentalsStatusFilter}
             rentalsOwnerFilter={rentalsOwnerFilter}
             rentalsPaymentFilter={rentalsPaymentFilter}

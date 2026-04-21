@@ -30,6 +30,7 @@ export const mapMemberFromDb = (db: DbMember): Member => ({
   address: db.address ?? undefined,
   ownerId: db.owner_id ?? undefined,
   isEditor: db.is_editor ?? false,
+  emailNotificationsEnabled: db.email_notifications_enabled ?? false,
   createdAt: db.created_at,
   updatedAt: db.updated_at,
 });
@@ -60,6 +61,10 @@ export const mapMemberToDb = (member: Partial<Omit<Member, "id" | "createdAt" | 
     }),
     ...("ownerId" in member && { owner_id: member.ownerId ?? null }),
   };
+
+  if (member.emailNotificationsEnabled !== undefined) {
+    mapped.email_notifications_enabled = member.emailNotificationsEnabled;
+  }
 
   // isEditor n'existe que pour role = "owner"
   // Si le rôle est fourni et n'est pas "owner", forcer is_editor à false en DB

@@ -27,3 +27,4 @@ dist-ssr
 # Architecture cleanup backups
 backup_*
 backup_manual
+supabase/*

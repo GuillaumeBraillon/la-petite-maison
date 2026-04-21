@@ -20,6 +20,7 @@ const defaultValues: MemberFormValues = {
   email: "",
   address: "",
   ownerId: undefined,
+  emailNotificationsEnabled: false,
 };
 
 // ------------------------------------------------------------

@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { ExternalLink, Sparkles } from "lucide-react";
 import type { Member } from "../../types";
 import { NotificationToggle } from "../ui/NotificationToggle";
+import { UserEmailNotificationsToggle } from "../ui/userInfo/UserEmailNotificationsToggle";
 import { UserMenu } from "../ui/UserMenu";
 
 export type AppView = "dashboard" | "rentals" | "members" | "calendar";
@@ -26,6 +27,7 @@ interface AppShellLayoutProps {
   onViewChange: (view: AppView) => void;
   onLogout: () => void;
   onInstall: () => void;
+  onMemberEmailToggled?: (newValue: boolean) => void;
   children: ReactNode;
 }
 
@@ -36,6 +38,7 @@ const UserMenuCluster = ({
   appVersion,
   pushSupported,
   pushSubscribed,
+  onMemberEmailToggled,
   compact = false,
 }: {
   session: Session;
@@ -44,10 +47,11 @@ const UserMenuCluster = ({
   appVersion: string;
   pushSupported: boolean;
   pushSubscribed: boolean;
+  onMemberEmailToggled?: (newValue: boolean) => void;
   compact?: boolean;
 }) => {
   return (
-    <div className="flex items-center bg-gray-100 rounded-full px-1">
+    <div className="flex items-center bg-gray-100 rounded-full px-1 min-w-0 w-full">
       <UserMenu
         session={session}
         userEmail={session.user.email ?? undefined}
@@ -55,8 +59,17 @@ const UserMenuCluster = ({
         onLogout={onLogout}
         appVersion={appVersion}
         compact={compact}
+        onMemberEmailToggled={onMemberEmailToggled}
+        className="min-w-0 flex-1"
       />
       {pushSupported && !pushSubscribed && <NotificationToggle compact className="text-gray-500 p-1.5" />}
+      <UserEmailNotificationsToggle
+        currentMember={currentMember}
+        showWhen="disabled"
+        compact
+        className="text-gray-500 p-1.5"
+        onToggled={onMemberEmailToggled}
+      />
     </div>
   );
 };
@@ -73,6 +86,7 @@ export const AppShellLayout = ({
   onViewChange,
   onLogout,
   onInstall,
+  onMemberEmailToggled,
   children,
 }: AppShellLayoutProps) => {
   return (
@@ -128,6 +142,7 @@ export const AppShellLayout = ({
             appVersion={appVersion}
             pushSupported={pushSupported}
             pushSubscribed={pushSubscribed}
+            onMemberEmailToggled={onMemberEmailToggled}
           />
         </div>
       </aside>
@@ -153,6 +168,7 @@ export const AppShellLayout = ({
               appVersion={appVersion}
               pushSupported={pushSupported}
               pushSubscribed={pushSubscribed}
+              onMemberEmailToggled={onMemberEmailToggled}
               compact
             />
           </div>

@@ -7,6 +7,28 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.42] - 2026-04-21
+
+### Ajouts
+
+- **Emails transactionnels** : envoi automatique d'emails (via Brevo) lors des actions importantes sur les locations (nouvelle demande, changement de statut, clôture, suppression)
+- **Préférence email** : champ `email_notifications_enabled` ajouté au profil membre (défaut : `false`)
+- **Toggle email** : bouton icône `Mail`/`MailX` dans le header de la carte profil pour activer/désactiver les emails — visible uniquement si un email est renseigné sur le compte
+- **Regroupement destinataires** : un seul appel Brevo par groupe d'audience (validateurs, observateurs) pour éviter les envois multiples
+- **Filtrage côté serveur** : la Edge Function filtre les membres avec `email_notifications_enabled = true` avant chaque envoi — zéro email inutile
+
+### Technique
+
+- **`supabase/functions/send-email/index.ts`** : Edge Function Deno — filtre les destinataires, envoie via l'API Brevo v3, logs structurés, CORS, auth Bearer
+- **`services/emailTemplates.ts`** : templates HTML inline + texte brut pour chaque événement (`newRentalTemplate`, `statusChangeTemplate`, `completedTemplate`, `deletedRentalTemplate`) — messages personnalisés par rôle (owner / sub_member / validator / observer)
+- **`services/emailService.ts`** : wrapper fire-and-forget `invokeEmailSend` sur la Edge Function `send-email`
+- **`services/emailNotifications.ts`** : orchestrateur miroir de `rentalNotifications.ts` — mêmes audiences, mêmes déclencheurs, templates email
+- **`hooks/useEmailNotifications.ts`** : hook gérant le toggle email via `updateMember` avec état local optimiste
+- **`components/ui/userInfo/UserEmailNotificationsToggle.tsx`** : composant bouton Mail/MailX
+- **`components/ui/userInfo/UserInfoHeader.tsx`** : intègre le toggle email aux côtés du toggle push
+- **`services/apiCrud.ts`** : appels `notifyEmailNewRental`, `notifyEmailStatusChange`, `notifyEmailCompleted`, `notifyEmailDeletedRental` ajoutés en parallèle des appels push
+- **`supabase/schema.sql`** : colonne `email_notifications_enabled boolean NOT NULL DEFAULT false` intégrée directement dans la définition de la table `members` (migration correspondante supprimée)
+
 ## [0.3.41] - 2026-04-20
 
 ### Ajouts

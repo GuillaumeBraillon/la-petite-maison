@@ -24,6 +24,7 @@ export const useCreateSubMember = ({ onRefresh }: UseCreateSubMemberOptions) => 
           ownerId: data.ownerId,
           isAllowed: false,
           isEditor: false,
+          emailNotificationsEnabled: false,
         });
 
         await onRefresh();

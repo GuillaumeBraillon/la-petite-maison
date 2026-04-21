@@ -19,6 +19,7 @@ export interface DbMember {
   last_login: string | null;
   owner_id: string | null;
   is_editor: boolean;
+  email_notifications_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
