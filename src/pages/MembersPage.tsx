@@ -13,6 +13,7 @@ import { useError } from "../contexts/ErrorContext";
 import { useToast } from "../contexts/ToastContext";
 import { createMember, updateMember, deleteMember } from "../services/apiCrud";
 import { TOAST_MESSAGES } from "../services/messageCatalog";
+import { notifyEmailMemberAuthorized } from "../services/emailNotifications";
 import { supabase } from "../services/supabaseClient";
 
 // ------------------------------------------------------------
@@ -163,6 +164,14 @@ export const MembersPage = ({ members, currentMember, onRefresh }: MembersPageSh
 
       // Puis l'autoriser
       await updateMember(m.id, { isAllowed: true });
+      const ownerForWelcome = values.ownerId ? members.find((mb) => mb.id === values.ownerId) : undefined;
+      const ownerNameForWelcome = ownerForWelcome ? `${ownerForWelcome.firstName} ${ownerForWelcome.lastName}`.trim() : undefined;
+      void notifyEmailMemberAuthorized({
+        email: m.email,
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+        ownerName: ownerNameForWelcome,
+      });
       await onRefresh();
       closeModal();
       const authorizedToast = TOAST_MESSAGES.member.authorized(`${values.firstName} ${values.lastName}`);
@@ -332,6 +341,16 @@ export const MembersPage = ({ members, currentMember, onRefresh }: MembersPageSh
                       : { isAllowed: false };
 
                     await updateMember(editing.id, authorizationPayload);
+                    if (isAllowed && editing.email) {
+                      const ownerForWelcome = values.ownerId ? members.find((mb) => mb.id === values.ownerId) : undefined;
+                      const ownerNameForWelcome = ownerForWelcome ? `${ownerForWelcome.firstName} ${ownerForWelcome.lastName}`.trim() : undefined;
+                      void notifyEmailMemberAuthorized({
+                        email: editing.email,
+                        firstName: values.firstName.trim(),
+                        lastName: values.lastName.trim(),
+                        ownerName: ownerNameForWelcome,
+                      });
+                    }
                     await onRefresh();
                     closeModal();
                     const authUpdatedToast = TOAST_MESSAGES.member.authUpdated(isAllowed);

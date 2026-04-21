@@ -5,6 +5,14 @@ Rédigé en langage simple, sans jargon technique.
 
 ---
 
+## [0.3.43] - 21 avril 2026
+
+### Ce qui change pour vous
+
+- **Email de bienvenue** : dès qu'un administrateur active l'accès à l'application, le membre recevra automatiquement un email de bienvenue avec un lien pour se connecter
+
+---
+
 ## [0.3.42] - 21 avril 2026
 
 ### Ce qui change pour vous

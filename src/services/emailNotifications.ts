@@ -12,7 +12,7 @@
 
 import { invokeEmailSend } from "./emailService";
 import { getNotificationAudiences, getRentalActors } from "./rentalActorsService";
-import { completedTemplate, deletedRentalTemplate, newRentalTemplate, statusChangeTemplate } from "./emailTemplates";
+import { completedTemplate, deletedRentalTemplate, newRentalTemplate, statusChangeTemplate, welcomeTemplate } from "./emailTemplates";
 import type { EmailTemplate } from "./emailTemplates";
 import { getObserverRecipients } from "../utils/notificationUtils";
 import { formatDate, formatEuro, getDurationDays, pluralize } from "../utils/rentalUtils";
@@ -236,6 +236,29 @@ export const notifyEmailDeletedRental = async (rental: Rental): Promise<void> =>
     sendEmail(validatorRecipients, deletedRentalTemplate({ ownerName, subMemberName, startDate, endDate, guests, recipientRole: "validator" }));
   } catch (err: unknown) {
     logger.error("[emailNotifications] notifyEmailDeletedRental:", err);
+  }
+};
+
+// ------------------------------------------------------------
+// Déclencheur 5 — Accès membre autorisé (bienvenue)
+// ------------------------------------------------------------
+
+/**
+ * Envoie un email de bienvenue à un membre dont l'accès vient d'être autorisé.
+ * Bypass le filtre `email_notifications_enabled` via `directEmails` (le membre
+ * n'a pas encore pu activer les notifs puisqu'il ne s'est pas encore connecté).
+ */
+export const notifyEmailMemberAuthorized = (member: { email?: string | null; firstName: string; lastName: string; ownerName?: string }): void => {
+  if (!member.email) return;
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (import.meta.env.DEV || host === "localhost" || host === "127.0.0.1") return;
+  }
+  try {
+    const template = welcomeTemplate({ firstName: member.firstName, lastName: member.lastName, ownerName: member.ownerName, email: member.email ?? undefined });
+    invokeEmailSend({ memberEmails: [], directEmails: [member.email], ...template });
+  } catch (err: unknown) {
+    logger.error("[emailNotifications] notifyEmailMemberAuthorized:", err);
   }
 };
 

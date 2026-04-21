@@ -10,6 +10,8 @@ import type { EmailTemplate } from "./emailTemplates";
 
 export interface InvokeEmailParams extends EmailTemplate {
   memberEmails: string[];
+  /** Emails envoyés directement sans filtre email_notifications_enabled (ex: bienvenue) */
+  directEmails?: string[];
 }
 
 /**
@@ -17,7 +19,8 @@ export interface InvokeEmailParams extends EmailTemplate {
  * Ne lève jamais d'exception — les erreurs sont loggées via `logger`.
  */
 export const invokeEmailSend = (params: InvokeEmailParams): void => {
-  if (params.memberEmails.length === 0) return;
+  const hasRecipients = params.memberEmails.length > 0 || (params.directEmails?.length ?? 0) > 0;
+  if (!hasRecipients) return;
 
   logger.debug("emailService", "Dispatch send-email", {
     recipientCount: params.memberEmails.length,
@@ -28,6 +31,7 @@ export const invokeEmailSend = (params: InvokeEmailParams): void => {
     .invoke("send-email", {
       body: {
         memberEmails: params.memberEmails,
+        ...(params.directEmails && params.directEmails.length > 0 ? { directEmails: params.directEmails } : {}),
         subject: params.subject,
         htmlContent: params.htmlContent,
         textContent: params.textContent,

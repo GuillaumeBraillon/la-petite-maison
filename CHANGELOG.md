@@ -7,6 +7,25 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 
 ---
 
+## [0.3.43] - 2026-04-21
+
+### Ajouts
+
+- **Email de bienvenue** : un email est automatiquement envoyé à un membre lors de l'activation de son accès — le membre reçoit un email de bienvenue avec un lien pour se connecter, même si le membre n'a pas encore activé les notifications email
+- **Détection Gmail** : le message de connexion dans l'email de bienvenue est adapté selon l'adresse (Google pour `@gmail.com`, email/mot de passe sinon)
+- **Lien owner** : si le membre est rattaché à un propriétaire (`sub_member`), son nom est mentionné dans l'email de bienvenue
+
+### Technique
+
+- **`emailTemplates.ts`** : ajout de `welcomeTemplate` avec paramètres `firstName`, `lastName`, `ownerName?`, `email?`
+- **`emailNotifications.ts`** : ajout de `notifyEmailMemberAuthorized` — fire-and-forget, protégé en mode dev/localhost, utilise `directEmails` (bypass du filtre `email_notifications_enabled`)
+- **`supabase/functions/send-email/index.ts`** : nouveau champ `directEmails?` dans le payload — envoi direct sans filtre `email_notifications_enabled`, avec résolution du nom en base si disponible
+- **`emailService.ts`** : `invokeEmailSend` supporte `directEmails`, garde corrigée pour ne pas bloquer les envois purement directs
+- **`MembersPage.tsx`** : appel à `notifyEmailMemberAuthorized` dans `handleAuthorizeFromForm` et `onToggleAuthorization` (case à cocher)
+- **`DebugImpersonationBanner.tsx`** : ajout du type «Bienvenue — accès activé» dans le sélecteur de test email admin
+
+---
+
 ## [0.3.42] - 2026-04-21
 
 ### Ajouts

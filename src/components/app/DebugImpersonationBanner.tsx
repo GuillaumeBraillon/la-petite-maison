@@ -3,9 +3,9 @@ import type { Member } from "../../types";
 import { Button } from "../ui/Button";
 import { Select } from "../ui/Select";
 import { invokeEmailSend } from "../../services/emailService";
-import { newRentalTemplate, statusChangeTemplate, completedTemplate, deletedRentalTemplate } from "../../services/emailTemplates";
+import { newRentalTemplate, statusChangeTemplate, completedTemplate, deletedRentalTemplate, welcomeTemplate } from "../../services/emailTemplates";
 
-type TestEmailType = "new_rental" | "confirmed" | "rejected" | "completed" | "deleted";
+type TestEmailType = "new_rental" | "confirmed" | "rejected" | "completed" | "deleted" | "welcome";
 
 const TEST_EMAIL_OPTIONS: Array<{ value: TestEmailType; label: string }> = [
   { value: "new_rental", label: "Nouvelle demande (validateur)" },
@@ -13,6 +13,7 @@ const TEST_EMAIL_OPTIONS: Array<{ value: TestEmailType; label: string }> = [
   { value: "rejected", label: "Location refusée (owner)" },
   { value: "completed", label: "Location clôturée (owner)" },
   { value: "deleted", label: "Location supprimée (owner)" },
+  { value: "welcome", label: "Bienvenue — accès activé" },
 ];
 
 const buildTestTemplate = (type: TestEmailType) => {
@@ -44,6 +45,8 @@ const buildTestTemplate = (type: TestEmailType) => {
       });
     case "deleted":
       return deletedRentalTemplate({ ...base, recipientRole: "owner" });
+    case "welcome":
+      return welcomeTemplate({ firstName: "Guillaume", lastName: "Braillon" });
   }
 };
 

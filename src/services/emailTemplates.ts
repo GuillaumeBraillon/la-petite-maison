@@ -379,3 +379,42 @@ export const deletedRentalTemplate = ({ ownerName, subMemberName, startDate, end
 
   return { subject, htmlContent: wrapHtml(subject, bodyHtml), textContent };
 };
+
+// ------------------------------------------------------------
+// Template : Bienvenue — accès autorisé
+// ------------------------------------------------------------
+
+export type WelcomeParams = {
+  firstName: string;
+  lastName: string;
+  ownerName?: string;
+  email?: string;
+};
+
+export const welcomeTemplate = ({ firstName, lastName: _lastName, ownerName, email }: WelcomeParams): EmailTemplate => {
+  const isGmail = email?.toLowerCase().endsWith("@gmail.com") ?? false;
+  const loginText = isGmail
+    ? `Connectez-vous avec votre compte Google pour accéder à l'application.`
+    : `Connectez-vous avec votre email et mot de passe pour accéder à l'application.`;
+  const subject = "Votre accès est activé — La Petite Maison";
+
+  const bodyHtml = `
+    ${h1(`Bienvenue ${firstName} ! 🏡`)}
+    ${paragraph(`Votre accès à <strong>${BRAND_NAME}</strong> vient d'être activé. Vous pouvez dès maintenant vous connecter pour consulter le calendrier, faire des demandes de location et suivre vos séjours.`)}
+    ${ownerName ? paragraph(`Vous êtes rattaché(e) au compte de <strong>${ownerName}</strong>.`) : ""}
+    ${paragraph(loginText)}
+    ${ctaButton("Accéder à l'application", APP_URL)}
+  `;
+
+  const textContent = [
+    `Bienvenue ${firstName} !`,
+    "",
+    `Votre accès à ${BRAND_NAME} vient d'être activé.`,
+    ...(ownerName ? [`Vous êtes rattaché(e) au compte de ${ownerName}.`] : []),
+    `Connectez-vous pour consulter le calendrier, faire des demandes de location et suivre vos séjours.`,
+    "",
+    `Accéder à l'application : ${APP_URL}`,
+  ].join("\n");
+
+  return { subject, htmlContent: wrapHtml(subject, bodyHtml), textContent };
+};
