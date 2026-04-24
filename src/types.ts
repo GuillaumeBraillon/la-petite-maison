@@ -390,6 +390,11 @@ export interface BadgeProps {
 export interface NotificationToggleProps {
   className?: string;
   compact?: boolean;
+  /** Contexte d'affichage :
+   * - `"subscribed"` → visible uniquement quand souscrit (pour se désabonner)
+   * - `"unsubscribed"` → visible uniquement quand non souscrit (pour s'abonner)
+   */
+  showWhen?: "subscribed" | "unsubscribed";
 }
 
 export type ModalSize = "sm" | "md" | "lg";

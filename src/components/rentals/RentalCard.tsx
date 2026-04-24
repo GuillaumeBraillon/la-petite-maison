@@ -1,4 +1,4 @@
-import { CalendarDays, Users, Euro, Pencil, Trash2, Zap, FileText } from "lucide-react";
+import { CalendarDays, Users, Euro, Pencil, Trash2, Zap, FileText, CalendarPlus } from "lucide-react";
 import type { RentalCardProps } from "../../types";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
@@ -6,6 +6,7 @@ import { Button } from "../ui/Button";
 import { RENTAL_STATUS_BADGE_VARIANT_MAP, getRentalStatusLabel } from "../../services/rentalStatus";
 import { getDurationDays, formatDateShort, getActualDateDiffCompactLabel } from "../../utils/rentalUtils";
 import { Avatar } from "../ui/Avatar";
+import { buildRentalGoogleCalendarLink, buildRentalIcsDataUrl, buildRentalIcsFilename } from "../../services/calendarEvent";
 
 // ------------------------------------------------------------
 // Component
@@ -28,6 +29,21 @@ export const RentalCard = ({
   const datesChanged = hasActualDates && (rental.actualStartDate !== rental.startDate || rental.actualEndDate !== rental.endDate);
   const actualDurationDays = hasActualDates ? getDurationDays(rental.actualStartDate ?? rental.startDate, rental.actualEndDate ?? rental.endDate) : null;
   const actualDateDiffCompact = getActualDateDiffCompactLabel(rental);
+  const addToCalendarUrl = buildRentalGoogleCalendarLink({
+    rental,
+    owner,
+    subMember,
+  });
+  const addToOtherCalendarsUrl = buildRentalIcsDataUrl({
+    rental,
+    owner,
+    subMember,
+  });
+  const icsFilename = buildRentalIcsFilename({
+    rental,
+    owner,
+    subMember,
+  });
 
   return (
     <Card hover={!!onClick} onClick={() => onClick?.(rental)} padding="sm" className="flex flex-col gap-2 h-full">
@@ -154,36 +170,59 @@ export const RentalCard = ({
         </div>
       </div>
       {/* Actions */}
-      {(onEdit ?? onDelete) && (
-        <div className="flex justify-end gap-1 pt-1 border-t border-gray-100">
-          {onEdit && canEdit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Modifier"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(rental);
-              }}
-            >
-              <Pencil size={13} />
-            </Button>
-          )}
-          {onDelete && canDelete && (
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Supprimer"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(rental);
-              }}
-            >
-              <Trash2 size={13} className="text-red-500" />
-            </Button>
-          )}
+      <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium">
+          <a
+            href={addToCalendarUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 text-primary-700 hover:text-primary-800"
+          >
+            <CalendarPlus size={13} />
+            Google
+          </a>
+          <a
+            href={addToOtherCalendarsUrl}
+            download={icsFilename}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 text-primary-700 hover:text-primary-800"
+          >
+            <CalendarPlus size={13} />
+            Autres agendas
+          </a>
         </div>
-      )}
+        {(onEdit ?? onDelete) && (
+          <div className="flex justify-end gap-1">
+            {onEdit && canEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Modifier"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(rental);
+                }}
+              >
+                <Pencil size={13} />
+              </Button>
+            )}
+            {onDelete && canDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Supprimer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(rental);
+                }}
+              >
+                <Trash2 size={13} className="text-red-500" />
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
     </Card>
   );
 };

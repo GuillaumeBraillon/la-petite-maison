@@ -5,6 +5,31 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.44] - 2026-04-24
+
+### Ajouts
+
+- **Ajout à l'agenda depuis les cards** : chaque carte de réservation propose désormais deux actions distinctes : `Google` et `Autres agendas`
+- **Support multi-agendas** : génération de fichier `.ics` pour Apple Calendar / Outlook / Thunderbird via un lien dédié
+- **Emails de confirmation enrichis** : les emails de statut `confirmed` incluent les liens `Google Agenda` et `Autres agendas (.ics)`
+
+### Corrections
+
+- **Cloche notifications push** : la cloche (activer/désactiver) disparaît et réapparaît immédiatement dans la barre de navigation sans refresh de page, en cohérence avec le bouton enveloppe des notifications email
+- **Synchronisation multi-instances** : toutes les instances de `usePushNotifications` se synchronisent via un `CustomEvent` (`push-subscription-changed`) — même principe que `useEffect` sur `currentMember.emailNotificationsEnabled`
+- **Mobile** : le cluster `UserMenuCluster` utilise `w-auto` en mode compact pour ne pas déborder sur mobile
+- **`NotificationToggle`** : ajout de la prop `showWhen` (`"subscribed"` | `"unsubscribed"`) alignée sur le pattern de `UserEmailNotificationsToggle`
+- **Localisation d'événement** : l'adresse du séjour est maintenant `235 Rte Patrick Zedda, 83500 La Seyne-sur-Mer` (au lieu d'un lien app)
+- **Statut en français dans l'événement** : le champ statut s'appuie sur `RENTAL_STATUS_LABEL_MAP` (ex: `Confirmé`)
+- **Lien app de l'événement** : le lien "Voir dans l'application" pointe vers `?view=rentals&status=...` pour éviter l'ouverture d'un mois calendrier non pertinent
+
+### Technique
+
+- **`services/calendarEvent.ts`** : nouveau service central réutilisable (payload événement, lien Google, contenu ICS, URL publique ICS)
+- **Invités d'événement** : en sous-location, le propriétaire est ajouté en `attendee` quand son email est disponible
+- **`supabase/functions/calendar-ics/index.ts`** : nouvelle Edge Function publique (`--no-verify-jwt`) qui sert un `.ics` via URL HTTPS pour compatibilité clients mail (notamment Apple Mail)
+- **`components/app/DebugImpersonationBanner.tsx`** : le test email `Location confirmée` utilise le même pipeline agenda que le flux métier
+
 ---
 
 ## [0.3.43] - 2026-04-21

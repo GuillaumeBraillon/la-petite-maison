@@ -3,6 +3,14 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.44] - 24 avril 2026
+
+### Ce qui change pour vous
+
+- **Ajouter à l'agenda depuis une réservation** : depuis chaque carte de location, vous pouvez désormais ajouter le séjour directement à votre agenda
+- **Deux options disponibles** : `Google` ou `Autres agendas (.ics)` pour Apple Calendar, Outlook et autres applications compatibles
+- **Emails de confirmation améliorés** : les emails de séjour confirmé contiennent maintenant les liens d'ajout à l'agenda
+
 ---
 
 ## [0.3.43] - 21 avril 2026

@@ -3,7 +3,7 @@ import type { NotificationToggleProps } from "../../types";
 import { Button } from "./Button";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 
-export const NotificationToggle = ({ className = "", compact = false }: NotificationToggleProps) => {
+export const NotificationToggle = ({ className = "", compact = false, showWhen }: NotificationToggleProps) => {
   const { isSupported, isSubscribed, permission, subscribe, unsubscribe, loading, error } = usePushNotifications();
 
   const isDisabled = loading || !isSupported;
@@ -26,6 +26,10 @@ export const NotificationToggle = ({ className = "", compact = false }: Notifica
     }
     await subscribe();
   };
+
+  if (!isSupported) return null;
+  if (showWhen === "subscribed" && !isSubscribed) return null;
+  if (showWhen === "unsubscribed" && isSubscribed) return null;
 
   if (compact) {
     return (

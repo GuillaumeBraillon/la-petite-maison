@@ -13,19 +13,11 @@ interface UserInfoHeaderProps {
   onLogout: () => void;
 }
 
-export const UserInfoHeader = ({
-  appVersion,
-  pushSupported,
-  pushSubscribed,
-  currentMember,
-  onMemberEmailToggled,
-  onOpenWhatsNew,
-  onLogout,
-}: UserInfoHeaderProps) => {
+export const UserInfoHeader = ({ appVersion, pushSupported, currentMember, onMemberEmailToggled, onOpenWhatsNew, onLogout }: UserInfoHeaderProps) => {
   return (
     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
       <div className="flex items-center gap-1.5">
-        {pushSupported && pushSubscribed && <NotificationToggle compact className="text-gray-500 p-1.5" />}
+        {pushSupported && <NotificationToggle compact showWhen="subscribed" className="text-gray-500 p-1.5" />}
         <UserEmailNotificationsToggle currentMember={currentMember} showWhen="enabled" compact className="p-1.5" onToggled={onMemberEmailToggled} />
       </div>
       {appVersion ? (

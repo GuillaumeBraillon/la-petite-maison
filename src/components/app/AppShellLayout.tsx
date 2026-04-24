@@ -37,7 +37,6 @@ const UserMenuCluster = ({
   onLogout,
   appVersion,
   pushSupported,
-  pushSubscribed,
   onMemberEmailToggled,
   compact = false,
 }: {
@@ -49,9 +48,10 @@ const UserMenuCluster = ({
   pushSubscribed: boolean;
   onMemberEmailToggled?: (newValue: boolean) => void;
   compact?: boolean;
+  className?: string;
 }) => {
   return (
-    <div className="flex items-center bg-gray-100 rounded-full px-1 min-w-0 w-full">
+    <div className={["flex items-center bg-gray-100 rounded-full px-1 min-w-0", compact ? "w-auto" : "w-full"].join(" ")}>
       <UserMenu
         session={session}
         userEmail={session.user.email ?? undefined}
@@ -62,7 +62,7 @@ const UserMenuCluster = ({
         onMemberEmailToggled={onMemberEmailToggled}
         className="min-w-0 flex-1"
       />
-      {pushSupported && !pushSubscribed && <NotificationToggle compact className="text-gray-500 p-1.5" />}
+      {pushSupported && <NotificationToggle compact showWhen="unsubscribed" className="text-gray-500 p-1.5" />}
       <UserEmailNotificationsToggle
         currentMember={currentMember}
         showWhen="disabled"

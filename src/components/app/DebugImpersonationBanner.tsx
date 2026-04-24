@@ -1,9 +1,10 @@
 import { useState } from "react";
-import type { Member } from "../../types";
+import type { Member, Rental } from "../../types";
 import { Button } from "../ui/Button";
 import { Select } from "../ui/Select";
 import { invokeEmailSend } from "../../services/emailService";
 import { newRentalTemplate, statusChangeTemplate, completedTemplate, deletedRentalTemplate, welcomeTemplate } from "../../services/emailTemplates";
+import { buildRentalGoogleCalendarLink, buildRentalIcsDataUrl, buildRentalIcsPublicUrl } from "../../services/calendarEvent";
 
 type TestEmailType = "new_rental" | "confirmed" | "rejected" | "completed" | "deleted" | "welcome";
 
@@ -15,6 +16,21 @@ const TEST_EMAIL_OPTIONS: Array<{ value: TestEmailType; label: string }> = [
   { value: "deleted", label: "Location supprimée (owner)" },
   { value: "welcome", label: "Bienvenue — accès activé" },
 ];
+
+const TEST_RENTAL: Rental = {
+  id: "test-rental-1",
+  startDate: "2025-06-01T12:00:00.000Z",
+  endDate: "2025-06-08T12:00:00.000Z",
+  ownerId: "test-owner",
+  subMemberId: "test-sub-member",
+  guestCount: 4,
+  price: 350,
+  status: "confirmed",
+  notes: "Ceci est un email de test.",
+  isPaid: false,
+  createdAt: "2025-01-01T00:00:00.000Z",
+  updatedAt: "2025-01-01T00:00:00.000Z",
+};
 
 const buildTestTemplate = (type: TestEmailType) => {
   const base = {
@@ -28,7 +44,27 @@ const buildTestTemplate = (type: TestEmailType) => {
     case "new_rental":
       return newRentalTemplate({ ...base, recipientRole: "validator" });
     case "confirmed":
-      return statusChangeTemplate({ ...base, status: "confirmed", recipientRole: "owner" });
+      return statusChangeTemplate({
+        ...base,
+        status: "confirmed",
+        recipientRole: "owner",
+        googleCalendarUrl: buildRentalGoogleCalendarLink({
+          rental: TEST_RENTAL,
+          owner: { firstName: "Guillaume", lastName: "Braillon", email: "guillaume@example.com" },
+          subMember: { label: "Julie Braillon" },
+        }),
+        otherCalendarsUrl:
+          buildRentalIcsPublicUrl({
+            rental: TEST_RENTAL,
+            owner: { firstName: "Guillaume", lastName: "Braillon", email: "guillaume@example.com" },
+            subMember: { label: "Julie Braillon" },
+          }) ??
+          buildRentalIcsDataUrl({
+            rental: TEST_RENTAL,
+            owner: { firstName: "Guillaume", lastName: "Braillon", email: "guillaume@example.com" },
+            subMember: { label: "Julie Braillon" },
+          }),
+      });
     case "rejected":
       return statusChangeTemplate({ ...base, status: "rejected", recipientRole: "owner" });
     case "completed":

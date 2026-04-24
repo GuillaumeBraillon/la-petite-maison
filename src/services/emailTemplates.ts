@@ -169,6 +169,8 @@ export type StatusChangeParams = {
   guests: number;
   status: "confirmed" | "rejected" | "pending";
   recipientRole: "owner" | "sub_member" | "validator" | "observer";
+  googleCalendarUrl?: string;
+  otherCalendarsUrl?: string;
 };
 
 const STATUS_LABELS: Record<StatusChangeParams["status"], string> = {
@@ -183,7 +185,17 @@ const STATUS_SUBJECTS: Record<StatusChangeParams["status"], string> = {
   pending: "Demande remise en attente — La Petite Maison",
 };
 
-export const statusChangeTemplate = ({ ownerName, subMemberName, startDate, endDate, guests, status, recipientRole }: StatusChangeParams): EmailTemplate => {
+export const statusChangeTemplate = ({
+  ownerName,
+  subMemberName,
+  startDate,
+  endDate,
+  guests,
+  status,
+  recipientRole,
+  googleCalendarUrl,
+  otherCalendarsUrl,
+}: StatusChangeParams): EmailTemplate => {
   const guestLabel = `${guests} personne${guests > 1 ? "s" : ""}`;
   const who = subMemberName ? `${subMemberName} (via ${ownerName})` : ownerName;
   const statusLabel = STATUS_LABELS[status];
@@ -234,10 +246,21 @@ export const statusChangeTemplate = ({ ownerName, subMemberName, startDate, endD
     infoRows.unshift({ label: "Concernant", value: who });
   }
 
+  const agendaLinksHtml =
+    status === "confirmed" && (googleCalendarUrl || otherCalendarsUrl)
+      ? `
+    <div style="margin-top:12px;">
+      ${paragraph("Ajoutez ce sejour a votre agenda :")}
+      ${googleCalendarUrl ? ctaButton("Google Agenda", googleCalendarUrl) : ""}
+      ${otherCalendarsUrl ? `<a href="${otherCalendarsUrl}" style="display:inline-block;margin-top:8px;margin-left:8px;padding:10px 20px;background-color:#ffffff;color:${BRAND_COLOR};font-size:14px;font-weight:600;border-radius:8px;text-decoration:none;border:1px solid #d1d5db;">Autres agendas (.ics)</a>` : ""}
+    </div>`
+      : "";
+
   const bodyHtml = `
     ${h1(headlineText)}
     ${paragraph(introText)}
     ${infoBox(infoRows)}
+    ${agendaLinksHtml}
     ${ctaButton("Voir dans l'application", `${APP_URL}?view=rentals&status=${status}`)}
   `;
 
@@ -250,6 +273,8 @@ export const statusChangeTemplate = ({ ownerName, subMemberName, startDate, endD
     `Du : ${startDate}`,
     `Au : ${endDate}`,
     `Personnes : ${guestLabel}`,
+    ...(status === "confirmed" && googleCalendarUrl ? [`Google Agenda : ${googleCalendarUrl}`] : []),
+    ...(status === "confirmed" && otherCalendarsUrl ? [`Autres agendas (.ics) : ${otherCalendarsUrl}`] : []),
     "",
     `Voir dans l'application : ${APP_URL}?view=rentals&status=${status}`,
   ]

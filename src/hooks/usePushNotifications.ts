@@ -85,6 +85,15 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
     void refreshStatus();
   }, [refreshStatus]);
 
+  useEffect(() => {
+    const handleExternalChange = (e: Event) => {
+      const detail = (e as CustomEvent<{ isSubscribed: boolean }>).detail;
+      setIsSubscribedState(detail.isSubscribed);
+    };
+    window.addEventListener("push-subscription-changed", handleExternalChange);
+    return () => window.removeEventListener("push-subscription-changed", handleExternalChange);
+  }, []);
+
   const subscribe = useCallback(async (): Promise<void> => {
     if (!isSupported) {
       setError("Notifications non supportées sur ce navigateur.");
@@ -109,6 +118,7 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
 
       await subscribeToPush(userId);
       setIsSubscribedState(true);
+      window.dispatchEvent(new CustomEvent("push-subscription-changed", { detail: { isSubscribed: true } }));
     } catch (err: unknown) {
       setError(getErrorMessage(err));
       setIsSubscribedState(false);
@@ -129,6 +139,7 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
     try {
       await unsubscribeFromPush(userId);
       setIsSubscribedState(false);
+      window.dispatchEvent(new CustomEvent("push-subscription-changed", { detail: { isSubscribed: false } }));
       if (typeof window !== "undefined" && "Notification" in window) {
         setPermission(Notification.permission);
       }

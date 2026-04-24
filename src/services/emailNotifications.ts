@@ -18,6 +18,7 @@ import { getObserverRecipients } from "../utils/notificationUtils";
 import { formatDate, formatEuro, getDurationDays, pluralize } from "../utils/rentalUtils";
 import { logger } from "./logger";
 import type { Rental, RentalStatus } from "../types";
+import { buildRentalGoogleCalendarLink, buildRentalIcsDataUrl, buildRentalIcsPublicUrl } from "./calendarEvent";
 
 // ------------------------------------------------------------
 // Helper interne
@@ -87,15 +88,49 @@ export const notifyEmailStatusChange = async (rental: Rental, previousStatus?: R
     const endDate = formatDate(rental.endDate);
     const guests = rental.guestCount;
 
+    const agendaLinkInput = {
+      rental,
+      owner: ownerName
+        ? {
+            firstName: ownerName.split(" ")[0] ?? ownerName,
+            lastName: ownerName.split(" ").slice(1).join(" "),
+            email: ownerEmail ?? undefined,
+          }
+        : undefined,
+      subMember: subMemberName
+        ? {
+            label: subMemberName,
+          }
+        : undefined,
+    };
+    const googleCalendarUrl = status === "confirmed" ? buildRentalGoogleCalendarLink(agendaLinkInput) : undefined;
+    const otherCalendarsUrl = status === "confirmed" ? (buildRentalIcsPublicUrl(agendaLinkInput) ?? buildRentalIcsDataUrl(agendaLinkInput)) : undefined;
+
     const sentEmails = new Set<string>();
 
     if (ownerEmail) {
-      sendEmail([ownerEmail], statusChangeTemplate({ ownerName, subMemberName, startDate, endDate, guests, status, recipientRole: "owner" }));
+      sendEmail(
+        [ownerEmail],
+        statusChangeTemplate({ ownerName, subMemberName, startDate, endDate, guests, status, recipientRole: "owner", googleCalendarUrl, otherCalendarsUrl })
+      );
       sentEmails.add(ownerEmail);
     }
 
     if (subMemberEmail && !sentEmails.has(subMemberEmail)) {
-      sendEmail([subMemberEmail], statusChangeTemplate({ ownerName, subMemberName, startDate, endDate, guests, status, recipientRole: "sub_member" }));
+      sendEmail(
+        [subMemberEmail],
+        statusChangeTemplate({
+          ownerName,
+          subMemberName,
+          startDate,
+          endDate,
+          guests,
+          status,
+          recipientRole: "sub_member",
+          googleCalendarUrl,
+          otherCalendarsUrl,
+        })
+      );
       sentEmails.add(subMemberEmail);
     }
 
@@ -107,8 +142,14 @@ export const notifyEmailStatusChange = async (rental: Rental, previousStatus?: R
         excludedEmails: sentEmails,
       });
 
-      sendEmail(ownerObserverRecipients, statusChangeTemplate({ ownerName, subMemberName, startDate, endDate, guests, status, recipientRole: "observer" }));
-      sendEmail(validatorRecipients, statusChangeTemplate({ ownerName, subMemberName, startDate, endDate, guests, status, recipientRole: "validator" }));
+      sendEmail(
+        ownerObserverRecipients,
+        statusChangeTemplate({ ownerName, subMemberName, startDate, endDate, guests, status, recipientRole: "observer", googleCalendarUrl, otherCalendarsUrl })
+      );
+      sendEmail(
+        validatorRecipients,
+        statusChangeTemplate({ ownerName, subMemberName, startDate, endDate, guests, status, recipientRole: "validator", googleCalendarUrl, otherCalendarsUrl })
+      );
     }
   } catch (err: unknown) {
     logger.error("[emailNotifications] notifyEmailStatusChange:", err);
