@@ -5,6 +5,24 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.45] - 2026-06-02
+
+### Améliorations
+
+- **Formulaire location (création de membre)** : la création de membre est désormais déclenchée par un bouton explicite **"Ajouter un membre"** au lieu du lien implicite dans la liste de recherche
+- **Parcours guidé** : les champs **Famille & Amis** et **Ajouter un membre** ne s'affichent qu'après sélection d'un propriétaire, pour un usage plus simple en étapes
+- **Aide utilisateur** : ajout d'un encart d'explication quand un propriétaire est choisi pour mieux comprendre quand sélectionner un membre existant ou en créer un nouveau
+- **Soumission de demande** : le bouton **Envoyer la demande** est désactivé tant qu'aucun propriétaire n'est sélectionné
+
+### Corrections
+
+- **Permissions formulaire location** : correction d'un blocage qui grisait à tort la section **Famille & Amis** pour certains propriétaires lors de la création/édition
+
+### Technique
+
+- **`RentalDialogs`** : `canEdit` du formulaire est maintenant basé sur le vrai droit d'édition de la location (`canEdit`) et non sur le droit de changement de statut
+- **Nettoyage props** : suppression de la prop `createWithAnyStatus` devenue inutile dans `RentalDialogs` et ses appels (`RentalsPage`, `CalendarPage`)
+
 ## [0.3.44] - 2026-04-24
 
 ### Ajouts

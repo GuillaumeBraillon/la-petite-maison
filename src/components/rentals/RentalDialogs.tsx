@@ -27,7 +27,6 @@ interface RentalDialogsProps {
     canEditStatus: boolean;
     canTogglePayment: boolean;
   } | null;
-  createWithAnyStatus: boolean;
   formTitle: string;
   detailTitle: string;
   submitLabel: string;
@@ -65,7 +64,6 @@ export const RentalDialogs = ({
   deleteConfirmationOpen,
   selectedRentalActions,
   editingRentalActions,
-  createWithAnyStatus,
   formTitle,
   detailTitle,
   submitLabel,
@@ -106,7 +104,7 @@ export const RentalDialogs = ({
         <RentalForm
           initialValues={editing ?? undefined}
           members={members}
-          canEdit={editing?.id ? Boolean(editingRentalActions?.canEditStatus) : createWithAnyStatus}
+          canEdit={editing?.id ? Boolean(editingRentalActions?.canEdit) : true}
           isEditing={Boolean(editing?.id)}
           currentMember={currentMember}
           onSubmit={onSubmit}

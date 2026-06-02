@@ -3,6 +3,15 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.45] - 2 juin 2026
+
+### Ce qui change pour vous
+
+- **Création de membre simplifiée** : dans le formulaire de location, vous utilisez maintenant un bouton clair **Ajouter un membre**
+- **Parcours plus naturel** : la section **Famille & Amis** apparaît seulement après avoir choisi un propriétaire
+- **Demande sécurisée** : le bouton **Envoyer la demande** reste grisé tant que le propriétaire n'est pas sélectionné
+- **Explications plus claires** : un message d'aide vous guide pour savoir quand sélectionner un membre existant ou en créer un nouveau
+
 ## [0.3.44] - 24 avril 2026
 
 ### Ce qui change pour vous

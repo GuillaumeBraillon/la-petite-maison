@@ -89,7 +89,6 @@ export const CalendarPage = ({ rentals, members, currentMember, onRefresh }: Ren
           deleteConfirmationOpen={deleteConfirmationOpen}
           selectedRentalActions={selectedRentalActions}
           editingRentalActions={editingRentalActions}
-          createWithAnyStatus={permissions.createWithAnyStatus}
           formTitle={editing?.id ? "Modifier la location" : "Nouvelle demande de location"}
           detailTitle="Détail de la location"
           submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}

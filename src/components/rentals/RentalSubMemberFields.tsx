@@ -18,7 +18,7 @@ export const RentalSubMemberFields = ({ state, onChange, onCancel, onConfirm }: 
         <Input label="Nom" value={state.lastName} onChange={(e) => onChange({ lastName: e.target.value })} required />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Input label="Libellé" placeholder="ex : Ami de Paul" value={state.label} onChange={(e) => onChange({ label: e.target.value })} required />
+        <Input label="Libellé" placeholder="ex : Ami de Pierre" value={state.label} onChange={(e) => onChange({ label: e.target.value })} required />
       </div>
       {state.error && <p className="text-xs text-red-500">{state.error}</p>}
       <div className="flex gap-2 justify-end">

@@ -190,7 +190,6 @@ export const RentalsPage = ({
         deleteConfirmationOpen={deleteConfirmationOpen}
         selectedRentalActions={selectedRentalActions}
         editingRentalActions={editingRentalActions}
-        createWithAnyStatus={permissions.createWithAnyStatus}
         formTitle={editing?.id ? "Modifier la location" : "Nouvelle location"}
         detailTitle="Détail de la location"
         submitLabel={editing?.id ? "Enregistrer" : "Envoyer la demande"}

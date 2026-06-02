@@ -81,6 +81,12 @@ export const RentalForm = ({
     setPriceInputValue(String(values.price));
   }, [values.price]);
 
+  useEffect(() => {
+    if (!values.ownerId) {
+      setNewMember((prev) => (prev.active ? createSubMemberDraftState() : prev));
+    }
+  }, [values.ownerId]);
+
   // État du mini-formulaire de création de membre
   const [newMember, setNewMember] = useState<RentalSubMemberDraftState>(() => createSubMemberDraftState());
 
@@ -153,10 +159,11 @@ export const RentalForm = ({
     sublabel: m.label,
   }));
   const canCreateSubMemberFromRequest = !!onCreateSubMember && !isCurrentMemberSubMember;
-  const isSubMemberFieldDisabled = !canEdit || isCurrentMemberSubMember;
+  const isSubMemberFieldDisabled = !canEdit || isCurrentMemberSubMember || !values.ownerId;
+  const isCreateSubMemberDisabled = !canEdit || !values.ownerId || !!values.subMemberId;
 
-  const handleCreateSubMemberTrigger = (searchText: string) => {
-    setNewMember(createSubMemberDraftState({ active: true, label: searchText }));
+  const handleCreateSubMemberTrigger = () => {
+    setNewMember(createSubMemberDraftState({ active: true }));
   };
 
   const handleCreateSubMemberConfirm = async () => {
@@ -195,6 +202,7 @@ export const RentalForm = ({
   const computedTotalPrice = values.price + (values.electricityCost ?? 0);
   // Le statut n'est modifiable que par un admin ou un owner éditeur
   const canEditStatus = canEdit && (!currentMember || currentMember.role === "admin" || (currentMember.role === "owner" && !!currentMember.isEditor));
+  const isSubmitDisabled = loading || !values.ownerId;
 
   const resetAutomaticPrice = () => {
     setIsPriceLocked(false);
@@ -266,19 +274,41 @@ export const RentalForm = ({
         ))}
       </Select>
 
-      {/* Famille & Amis */}
-      <Combobox
-        label="Famille & Amis"
-        value={values.subMemberId ?? ""}
-        options={subMemberOptions}
-        onChange={(id) => {
-          set("subMemberId", id || undefined);
-          if (id) updateNewMember({ active: false });
-        }}
-        onCreate={canCreateSubMemberFromRequest ? handleCreateSubMemberTrigger : undefined}
-        placeholder={isCurrentMemberSubMember ? "—" : "Rechercher ou créer un membre…"}
-        disabled={isSubMemberFieldDisabled}
-      />
+      {canCreateSubMemberFromRequest && values.ownerId && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+          ℹ️ Si cette location n&apos;est pas pour vous, sélectionnez la personne concernée dans la liste <span className="font-semibold">Famille & Amis</span>.
+          Si elle n&apos;existe pas encore, utilisez le bouton <span className="font-semibold">« Ajouter un membre »</span> pour la créer.
+        </div>
+      )}
+      {(isCurrentMemberSubMember || values.ownerId) && (
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <Combobox
+              label="Famille & Amis"
+              value={values.subMemberId ?? ""}
+              options={subMemberOptions}
+              onChange={(id) => {
+                set("subMemberId", id || undefined);
+                if (id) updateNewMember({ active: false });
+              }}
+              placeholder={isCurrentMemberSubMember ? "—" : "Rechercher un membre…"}
+              disabled={isSubMemberFieldDisabled}
+            />
+          </div>
+          {canCreateSubMemberFromRequest && (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleCreateSubMemberTrigger}
+              disabled={isCreateSubMemberDisabled}
+              className="mb-0.5 whitespace-nowrap"
+            >
+              Ajouter un membre
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Mini-formulaire de création de membre */}
       {newMember.active && canCreateSubMemberFromRequest && (
@@ -378,7 +408,7 @@ export const RentalForm = ({
         <Button type="button" variant="secondary" onClick={onCancel} disabled={loading} className="w-full sm:w-auto">
           Annuler
         </Button>
-        <Button type="submit" loading={loading} className="w-full sm:w-auto">
+        <Button type="submit" loading={loading} disabled={isSubmitDisabled} className="w-full sm:w-auto">
           {submitLabel}
         </Button>
       </div>
