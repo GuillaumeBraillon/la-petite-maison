@@ -3,6 +3,14 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.46] - 2 juin 2026
+
+### Ce qui change pour vous
+
+- **Relance en cas d'inactivité** : si vous ne vous connectez pas pendant un certain temps, vous pouvez recevoir un email de rappel
+- **Retour rapide dans l'app** : l'email contient un lien direct pour vous reconnecter
+- **Mot de passe oublié** : pour les comptes avec connexion par email, l'email de rappel peut aussi proposer un lien de réinitialisation du mot de passe
+
 ## [0.3.45] - 2 juin 2026
 
 ### Ce qui change pour vous

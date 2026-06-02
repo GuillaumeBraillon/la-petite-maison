@@ -1,0 +1,72 @@
+name: Inactive Login Reminder
+
+on:
+  schedule:
+    # Tous les jours a 08:00 UTC
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: "Execute en mode dry-run (sans envoi d'email)"
+        required: false
+        default: "true"
+      inactiveDays:
+        description: "Seuil d'inactivite en jours"
+        required: false
+        default: "30"
+      reminderCooldownDays:
+        description: "Delai minimum entre deux relances (jours)"
+        required: false
+        default: "7"
+      limit:
+        description: "Nombre max de membres a analyser"
+        required: false
+        default: "300"
+
+jobs:
+  send-inactive-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build payload
+        id: payload
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_DRY_RUN: ${{ github.event.inputs.dryRun }}
+          INPUT_INACTIVE_DAYS: ${{ github.event.inputs.inactiveDays }}
+          INPUT_REMINDER_COOLDOWN_DAYS: ${{ github.event.inputs.reminderCooldownDays }}
+          INPUT_LIMIT: ${{ github.event.inputs.limit }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            DRY_RUN="${INPUT_DRY_RUN:-true}"
+            INACTIVE_DAYS="${INPUT_INACTIVE_DAYS:-30}"
+            COOLDOWN_DAYS="${INPUT_REMINDER_COOLDOWN_DAYS:-7}"
+            LIMIT="${INPUT_LIMIT:-300}"
+          else
+            DRY_RUN="false"
+            INACTIVE_DAYS="30"
+            COOLDOWN_DAYS="7"
+            LIMIT="300"
+          fi
+
+          echo "json={\"dryRun\":${DRY_RUN},\"inactiveDays\":${INACTIVE_DAYS},\"reminderCooldownDays\":${COOLDOWN_DAYS},\"limit\":${LIMIT}}" >> "$GITHUB_OUTPUT"
+
+      - name: Invoke inactive-login-reminder
+        env:
+          SUPABASE_FUNCTIONS_URL: ${{ secrets.SUPABASE_FUNCTIONS_URL }}
+          INACTIVE_REMINDER_CRON_SECRET: ${{ secrets.INACTIVE_REMINDER_CRON_SECRET }}
+          PAYLOAD: ${{ steps.payload.outputs.json }}
+        run: |
+          if [ -z "$SUPABASE_FUNCTIONS_URL" ]; then
+            echo "Missing secret SUPABASE_FUNCTIONS_URL"
+            exit 1
+          fi
+
+          if [ -z "$INACTIVE_REMINDER_CRON_SECRET" ]; then
+            echo "Missing secret INACTIVE_REMINDER_CRON_SECRET"
+            exit 1
+          fi
+
+          curl -sS -X POST "${SUPABASE_FUNCTIONS_URL}/inactive-login-reminder" \
+            -H "Content-Type: application/json" \
+            -H "x-cron-secret: ${INACTIVE_REMINDER_CRON_SECRET}" \
+            -d "$PAYLOAD"

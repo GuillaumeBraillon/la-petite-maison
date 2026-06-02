@@ -17,6 +17,7 @@ export interface DbMember {
   avatar_url: string | null;
   address: string | null;
   last_login: string | null;
+  last_inactive_reminder_at: string | null;
   owner_id: string | null;
   is_editor: boolean;
   email_notifications_enabled: boolean;

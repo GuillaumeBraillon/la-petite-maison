@@ -5,6 +5,20 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.46] - 2026-06-02
+
+### Ajouts
+
+- **Relance des membres inactifs** : mise en place d'un envoi automatique d'email pour les membres qui ne se sont pas connectés depuis X jours (configurable)
+- **Lien adapté au type de compte** : l'email inclut un lien de connexion pour tous, et ajoute un lien de réinitialisation du mot de passe pour les comptes email/mot de passe
+
+### Technique
+
+- **Edge Function** : ajout de `supabase/functions/inactive-login-reminder` avec paramètres `inactiveDays`, `reminderCooldownDays`, `limit` et mode `dryRun`
+- **Anti-spam** : ajout du champ `members.last_inactive_reminder_at` + index pour éviter les relances trop fréquentes
+- **Migration SQL** : ajout de `supabase/migrations/20260602_add_last_inactive_reminder_at.sql`
+- **Automatisation** : ajout du workflow GitHub `.github/workflows/inactive-login-reminder.yml` (cron quotidien + déclenchement manuel)
+
 ## [0.3.45] - 2026-06-02
 
 ### Améliorations

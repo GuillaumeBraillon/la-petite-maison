@@ -351,6 +351,7 @@ create table public.members (
   avatar_url text,
   address text,
   last_login timestamptz,
+  last_inactive_reminder_at timestamptz,
   owner_id uuid references public.members(id) on delete set null,
   email_notifications_enabled boolean not null default false,
   created_at timestamptz not null default now(),
@@ -369,6 +370,7 @@ create index members_last_name_idx on public.members(last_name);
 create index members_role_idx on public.members(role);
 create index members_owner_id_idx on public.members(owner_id);
 create index members_is_allowed_idx on public.members(is_allowed);
+create index members_last_inactive_reminder_at_idx on public.members(last_inactive_reminder_at);
 create unique index members_auth_user_id_unique_idx on public.members(auth_user_id) where auth_user_id is not null;
 create unique index members_email_unique_idx on public.members(lower(email)) where email is not null;
 
