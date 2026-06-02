@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.47] - 2026-06-02
+
+### Corrections
+
+- **Carte membre** : la ligne d'information "Relance inactivité" n'est plus affichée pour les membres sans adresse email, afin d'éviter une information inutile
+
 ## [0.3.46] - 2026-06-02
 
 ### Ajouts

@@ -27,6 +27,7 @@ export const mapMemberFromDb = (db: DbMember): Member => ({
   authProvider: db.auth_provider ?? undefined,
   avatarUrl: db.avatar_url ?? undefined,
   lastLogin: db.last_login ?? undefined,
+  lastInactiveReminderAt: db.last_inactive_reminder_at ?? undefined,
   address: db.address ?? undefined,
   ownerId: db.owner_id ?? undefined,
   isEditor: db.is_editor ?? false,

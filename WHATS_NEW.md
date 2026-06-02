@@ -3,6 +3,12 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.47] - 2 juin 2026
+
+### Ce qui change pour vous
+
+- **Carte membre plus claire** : l'information de relance d'inactivité n'est plus affichée quand un membre n'a pas d'adresse email
+
 ## [0.3.46] - 2 juin 2026
 
 ### Ce qui change pour vous

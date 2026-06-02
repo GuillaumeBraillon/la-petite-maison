@@ -6,6 +6,24 @@ import { Button } from "../ui/Button";
 import { MEMBER_ROLE_BADGE_VARIANT_MAP, MEMBER_ROLE_LABEL_MAP } from "../../services/memberStatus";
 import { Avatar } from "../ui/Avatar";
 
+const INACTIVE_REMINDER_INTERVAL_DAYS = 30;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const getNextReminderLabel = (lastLogin: string | undefined, createdAt: string): string => {
+  const baseTimestamp = Date.parse(lastLogin ?? createdAt);
+  if (Number.isNaN(baseTimestamp)) return "Date inconnue";
+
+  const nextReminderTimestamp = baseTimestamp + INACTIVE_REMINDER_INTERVAL_DAYS * MS_PER_DAY;
+  const remainingMs = nextReminderTimestamp - Date.now();
+
+  if (remainingMs <= 0) {
+    return "aujourd'hui";
+  }
+
+  const remainingDays = Math.ceil(remainingMs / MS_PER_DAY);
+  return `dans ${remainingDays} jour${remainingDays > 1 ? "s" : ""}`;
+};
+
 // ------------------------------------------------------------
 // Component
 // ------------------------------------------------------------
@@ -80,6 +98,19 @@ export const MemberCard = ({
           {member.lastLogin && (
             <p className="text-xs text-gray-400 mt-0.5">
               Dernière connexion : <span className="font-medium text-gray-600">{new Date(member.lastLogin).toLocaleString()}</span>
+            </p>
+          )}
+          {member.email && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              {member.lastInactiveReminderAt ? (
+                <>
+                  Dernière relance inactivité : <span className="font-medium text-gray-600">{new Date(member.lastInactiveReminderAt).toLocaleString()}</span>
+                </>
+              ) : (
+                <>
+                  Prochaine relance inactivité : <span className="font-medium text-gray-600">{getNextReminderLabel(member.lastLogin, member.createdAt)}</span>
+                </>
+              )}
             </p>
           )}
         </div>

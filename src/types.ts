@@ -41,6 +41,8 @@ export interface Member {
   avatarUrl?: string;
   /** Date ISO de la dernière connexion — optionnel */
   lastLogin?: string;
+  /** Date ISO de la dernière relance d'inactivité envoyée — optionnel */
+  lastInactiveReminderAt?: string;
   /** Adresse postale — optionnelle */
   address?: string;
   /** Lien vers le propriétaire parent (pour sub_member) */
