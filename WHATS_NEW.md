@@ -3,6 +3,12 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.48] - 16 juin 2026
+
+### Corrections
+
+- **Dates réelles du séjour** : correction d'un bug où des dates incorrectes (correspondant à la date de création de la location) apparaissaient dans les champs "Début réel" et "Fin réelle" lors du passage au statut **Terminé**
+
 ## [0.3.47] - 2 juin 2026
 
 ### Ce qui change pour vous

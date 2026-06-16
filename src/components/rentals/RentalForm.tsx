@@ -87,6 +87,18 @@ export const RentalForm = ({
     }
   }, [values.ownerId]);
 
+  // Initialisation des dates réelles lors du passage en statut "Terminé"
+  useEffect(() => {
+    if (values.status !== "completed") return;
+    if (values.actualStartDate || values.actualEndDate) return;
+
+    setValues((prev) => ({
+      ...prev,
+      actualStartDate: prev.actualStartDate ?? prev.startDate,
+      actualEndDate: prev.actualEndDate ?? prev.endDate,
+    }));
+  }, [values.status, values.actualStartDate, values.actualEndDate]);
+
   // État du mini-formulaire de création de membre
   const [newMember, setNewMember] = useState<RentalSubMemberDraftState>(() => createSubMemberDraftState());
 

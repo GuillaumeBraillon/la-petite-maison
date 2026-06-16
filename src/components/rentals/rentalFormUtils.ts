@@ -62,11 +62,10 @@ export const buildInitialRentalFormValues = (
     base.status = "pending";
   }
 
-  if (!base.actualStartDate) {
-    base.actualStartDate = base.startDate;
-  }
-  if (!base.actualEndDate) {
-    base.actualEndDate = base.endDate;
+  // Effacer les dates réelles pour les locations non terminées (évite les valeurs stales en base)
+  if (base.status !== "completed") {
+    base.actualStartDate = undefined;
+    base.actualEndDate = undefined;
   }
 
   if (!initialValues?.price) {

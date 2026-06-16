@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.48] - 2026-06-16
+
+### Corrections
+
+- **Dates réelles du séjour** : correction d'un bug où `actual_start_date` et `actual_end_date` étaient sauvegardées en base avec les dates par défaut du formulaire (prochain dimanche au moment de la création), indépendamment des dates réelles saisies — les dates réelles ne sont plus pré-remplies à la création et s'initialisent uniquement au moment du passage en statut `Terminé`
+
 ## [0.3.47] - 2026-06-02
 
 ### Corrections
