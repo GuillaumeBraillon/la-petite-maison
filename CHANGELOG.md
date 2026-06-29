@@ -5,6 +5,12 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.49] - 2026-06-29
+
+### Corrigé
+
+- **Notifications & Emails** : Correction d'un bug envoyant des notifications push ("Séjour terminé — Récapitulatif") et des emails ("Séjour clôturé") en doublon/triplon lors de la modification par un administrateur d'un séjour déjà au statut `completed`. Ajout d'une condition stricte de changement d'état (`updates.status !== previousStatus`) dans `updateRental`.
+
 ## [0.3.48] - 2026-06-16
 
 ### Corrections

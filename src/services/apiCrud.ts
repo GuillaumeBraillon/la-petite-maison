@@ -97,7 +97,8 @@ export const updateRental = async (
 
   const updated = mapRentalFromDb(data as DbRental);
 
-  if (updates.status !== undefined) {
+  // Vérification stricte : le statut doit être fourni ET différent du statut précédent
+  if (updates.status !== undefined && updates.status !== previousStatus) {
     if (updates.status === "completed") {
       if (!isLocalEnv()) {
         void notifyCompleted(updated);

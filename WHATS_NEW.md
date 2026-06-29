@@ -3,6 +3,12 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.49] - 29 juin 2026
+
+### Corrections
+
+- **Fin des emails et notifications en doublon** : Correction d'un problème qui déclenchait le renvoi multiple des notifications et e-mails de fin de séjour lorsqu'un administrateur mettait à jour ou corrigeait une location déjà clôturée. Désormais, le récapitulatif n'est envoyé qu'une seule fois au moment du passage au statut "Terminé".
+
 ## [0.3.48] - 16 juin 2026
 
 ### Corrections
