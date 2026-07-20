@@ -5,6 +5,19 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.50] - 2026-07-20
+
+### Corrections
+
+- **Demandes de location (owner non-validateur / membre)** : sécurisation du payload de création pour respecter strictement les contraintes RLS Supabase (`pending`, prix auto, champs post-séjour vides), afin d'éviter les rejets `42501` intermittents.
+- **Diagnostics d'erreur** : enrichissement des erreurs affichées et partagées avec des métadonnées techniques utiles (référence opération, timestamp, page, statut quand disponible) pour faciliter le support.
+
+### Technique
+
+- **`useRentalModals.ts`** : normalisation serveur-friendly du payload `createRental` pour les profils restreints avant envoi à Supabase.
+- **`appError.ts` / `types.ts`** : extension du modèle d'erreur (`status`, `operationId`, `timestamp`, `page`) et enrichissement du format de partage.
+- **`ErrorDisplay.tsx` / `ErrorModal.tsx`** : affichage des diagnostics supplémentaires sans ajouter de nouveaux boutons.
+
 ## [0.3.49] - 2026-06-29
 
 ### Corrigé

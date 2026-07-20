@@ -125,9 +125,13 @@ export interface UserNotification {
 export interface AppError {
   message: string;
   code?: string;
+  status?: number;
   context?: string;
   details?: string;
   hint?: string;
+  operationId?: string;
+  timestamp?: string;
+  page?: string;
 }
 
 // ------------------------------------------------------------

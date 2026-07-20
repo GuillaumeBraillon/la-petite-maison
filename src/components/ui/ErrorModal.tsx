@@ -29,9 +29,19 @@ export const ErrorModal = ({ error, onClose }: ErrorModalProps) => {
 
           {error.code && <p className="text-xs font-mono text-gray-400">Code : {error.code}</p>}
 
+          {typeof error.status === "number" && <p className="text-xs font-mono text-gray-400">Statut : {error.status}</p>}
+
           {error.details && <p className="text-xs text-gray-500 break-words">Détails : {error.details}</p>}
 
           {error.hint && <p className="text-xs text-amber-700">Indice : {error.hint}</p>}
+
+          {(error.operationId || error.timestamp || error.page) && (
+            <p className="text-[11px] text-gray-400 break-all">
+              {error.operationId ? `Réf: ${error.operationId}` : ""}
+              {error.timestamp ? `${error.operationId ? " · " : ""}${new Date(error.timestamp).toLocaleString("fr-FR")}` : ""}
+              {error.page ? ` · ${error.page}` : ""}
+            </p>
+          )}
         </div>
 
         <div className="mt-5">

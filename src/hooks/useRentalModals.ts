@@ -7,6 +7,7 @@ import { notifyPaymentToggled } from "../services/rentalNotifications";
 import { TOAST_MESSAGES } from "../services/messageCatalog";
 import { getRentalStatusLabel } from "../services/rentalStatus";
 import { formatDate } from "../utils/rentalUtils";
+import { getAutoRentalPrice } from "../utils/rentalUtils";
 import { getPermissions, getRentalActionPermissions } from "../services/permissions";
 import { buildAppError, buildToastErrorMessage } from "../services/appError";
 
@@ -126,16 +127,23 @@ export const useRentalModals = ({ currentMember = null, onRefresh }: UseRentalMo
             denyAction("Création de la location", "Vous n'avez pas les droits pour créer une location.");
             return;
           }
-          if (!permissions.createWithAnyStatus && values.status !== "pending") {
-            denyAction("Création de la location", "Vous ne pouvez créer que des demandes en attente.");
-            return;
-          }
-          if (!permissions.togglePayment && values.isPaid) {
-            denyAction("Création de la location", "Vous ne pouvez pas enregistrer une location comme payée.");
-            return;
-          }
 
-          await createRental(values);
+          // Les profils restreints (owner non éditeur, sub_member) doivent respecter
+          // strictement les contraintes RLS côté insert.
+          const createPayload = permissions.createWithAnyStatus
+            ? values
+            : {
+                ...values,
+                status: "pending" as const,
+                isPaid: false,
+                price: getAutoRentalPrice(values.startDate, values.endDate, values.guestCount),
+                electricityCost: undefined,
+                totalPrice: undefined,
+                actualStartDate: undefined,
+                actualEndDate: undefined,
+              };
+
+          await createRental(createPayload);
           showToast({
             variant: "success",
             ...TOAST_MESSAGES.rental.created,

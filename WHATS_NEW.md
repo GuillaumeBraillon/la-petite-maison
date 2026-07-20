@@ -3,6 +3,13 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.50] - 20 juillet 2026
+
+### Corrections
+
+- **Demandes de réservation plus fiables** : correction d'un cas où certaines demandes pouvaient être refusées avec un message technique, notamment pour les profils non validateurs.
+- **Messages d'erreur plus utiles** : les erreurs affichent maintenant une référence et plus de contexte pour aider le support à diagnostiquer plus rapidement, sans ajouter de nouveaux boutons.
+
 ## [0.3.49] - 29 juin 2026
 
 ### Corrections
