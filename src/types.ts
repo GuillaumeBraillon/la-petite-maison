@@ -20,6 +20,7 @@ export type NotificationType =
   | "request_pending"
   | "app_updated";
 
+export type SuggestionCategory = "equipment" | "rentals" | "deals" | "other";
 // ------------------------------------------------------------
 // Member
 // ------------------------------------------------------------
@@ -538,4 +539,33 @@ export interface PublicPageImageGridProps {
   uploading?: boolean;
   onAdd?: (file: File) => Promise<void>;
   onDelete?: (image: PublicPageImage) => Promise<void>;
+}
+
+// ------------------------------------------------------------
+// Suggestion (forum de suggestions)
+// ------------------------------------------------------------
+
+export interface SuggestionMessage {
+  id: string;
+  /** undefined si l'auteur a été supprimé (author_id NULL en DB) */
+  authorId?: string;
+  category: SuggestionCategory;
+  body: string;
+  /** undefined = message racine, sinon id du message parent (un seul niveau) */
+  parentId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SuggestionVote {
+  id: string;
+  messageId: string;
+  memberId: string;
+  value: 1 | -1;
+  createdAt: string;
+}
+
+export interface SuggestionsPageProps {
+  currentMember?: Member;
+  members: Member[];
 }

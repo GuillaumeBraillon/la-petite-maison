@@ -4,9 +4,19 @@
 // ============================================================
 
 import { supabase } from "./supabaseClient";
-import { mapMemberFromDb, mapMemberToDb, mapRentalFromDb, mapRentalToDb, mapPublicPageFromDb, mapPublicPageImageFromDb } from "./apiMappers";
-import type { DbMember, DbRental, DbPublicPage, DbPublicPageImage } from "./dbTypes";
-import type { Member, Rental, RentalStatus, PublicPageContent, PublicPageImage } from "../types";
+import {
+  mapMemberFromDb,
+  mapMemberToDb,
+  mapRentalFromDb,
+  mapRentalToDb,
+  mapPublicPageFromDb,
+  mapPublicPageImageFromDb,
+  mapSuggestionMessageFromDb,
+  mapSuggestionMessageToDb,
+  mapSuggestionVoteFromDb,
+} from "./apiMappers";
+import type { DbMember, DbRental, DbPublicPage, DbPublicPageImage, DbFeedbackMessage, DbFeedbackVote } from "./dbTypes";
+import type { Member, Rental, RentalStatus, PublicPageContent, PublicPageImage, SuggestionMessage, SuggestionVote } from "../types";
 import { notifyNewRental, notifyStatusChange, notifyCompleted, notifyDeletedRental } from "./rentalNotifications";
 import { notifyEmailNewRental, notifyEmailStatusChange, notifyEmailCompleted, notifyEmailDeletedRental } from "./emailNotifications";
 
@@ -190,4 +200,64 @@ export const deletePublicPageImage = async (image: PublicPageImage): Promise<voi
   if (storageError) {
     console.error("Échec suppression image du storage:", storageError);
   }
+};
+
+// ------------------------------------------------------------
+// Suggestion CRUD
+// ------------------------------------------------------------
+
+export const createSuggestionMessage = async (message: Omit<SuggestionMessage, "id" | "createdAt" | "updatedAt">): Promise<SuggestionMessage> => {
+  const dbPayload = mapSuggestionMessageToDb(message);
+  const { data, error } = await supabase.from("feedback_messages").insert(dbPayload).select().single();
+
+  if (error) throw error;
+  return mapSuggestionMessageFromDb(data as DbFeedbackMessage);
+};
+
+export const updateSuggestionMessage = async (id: string, body: string): Promise<SuggestionMessage> => {
+  const { data, error } = await supabase.from("feedback_messages").update({ body }).eq("id", id).select().single();
+
+  if (error) throw error;
+  return mapSuggestionMessageFromDb(data as DbFeedbackMessage);
+};
+
+export const deleteSuggestionMessage = async (id: string): Promise<void> => {
+  const { error } = await supabase.from("feedback_messages").delete().eq("id", id);
+
+  if (error) throw error;
+};
+
+/**
+ * Vote sur un message ou une réponse.
+ * - Pas de vote existant → insertion
+ * - Vote existant avec la même valeur → suppression (on retire le vote)
+ * - Vote existant avec une valeur différente → mise à jour
+ */
+export const setSuggestionVote = async (messageId: string, memberId: string, value: 1 | -1): Promise<SuggestionVote | null> => {
+  const { data: existing, error: fetchError } = await supabase
+    .from("feedback_votes")
+    .select("*")
+    .eq("message_id", messageId)
+    .eq("member_id", memberId)
+    .maybeSingle();
+
+  if (fetchError) throw fetchError;
+
+  if (!existing) {
+    const { data, error } = await supabase.from("feedback_votes").insert({ message_id: messageId, member_id: memberId, value }).select().single();
+
+    if (error) throw error;
+    return mapSuggestionVoteFromDb(data as DbFeedbackVote);
+  }
+
+  if (existing.value === value) {
+    const { error } = await supabase.from("feedback_votes").delete().eq("id", existing.id);
+    if (error) throw error;
+    return null;
+  }
+
+  const { data, error } = await supabase.from("feedback_votes").update({ value }).eq("id", existing.id).select().single();
+
+  if (error) throw error;
+  return mapSuggestionVoteFromDb(data as DbFeedbackVote);
 };

@@ -3,8 +3,20 @@
 // C'est LE SEUL endroit autorisé pour ces conversions.
 // ============================================================
 
-import type { Member, Rental, MemberRole, RentalStatus, PushSubscriptionRecord, UserNotification, PublicPageContent, PublicPageImage } from "../types";
-import type { DbMember, DbRental, DbPushSubscription, DbUserNotification, DbPublicPage, DbPublicPageImage } from "./dbTypes";
+import type {
+  Member,
+  Rental,
+  MemberRole,
+  RentalStatus,
+  PushSubscriptionRecord,
+  UserNotification,
+  PublicPageContent,
+  PublicPageImage,
+  SuggestionCategory,
+  SuggestionMessage,
+  SuggestionVote,
+} from "../types";
+import type { DbMember, DbRental, DbPushSubscription, DbUserNotification, DbPublicPage, DbPublicPageImage, DbFeedbackMessage, DbFeedbackVote } from "./dbTypes";
 
 const normalizeOptionalTextToNull = (value: string | undefined): string | null => {
   if (value === undefined) return null;
@@ -171,5 +183,36 @@ export const mapPublicPageImageFromDb = (db: DbPublicPageImage, publicUrl: strin
   publicUrl,
   caption: db.caption ?? undefined,
   position: db.position,
+  createdAt: db.created_at,
+});
+
+// ------------------------------------------------------------
+// Suggestion mappers
+// ------------------------------------------------------------
+
+export const mapSuggestionMessageFromDb = (db: DbFeedbackMessage): SuggestionMessage => ({
+  id: db.id,
+  authorId: db.author_id ?? undefined,
+  category: db.category as SuggestionCategory,
+  body: db.body,
+  parentId: db.parent_id ?? undefined,
+  createdAt: db.created_at,
+  updatedAt: db.updated_at,
+});
+
+export const mapSuggestionMessageToDb = (
+  message: Partial<Omit<SuggestionMessage, "id" | "createdAt" | "updatedAt">>
+): Partial<Omit<DbFeedbackMessage, "id" | "author_id" | "created_at" | "updated_at">> & { author_id?: string } => ({
+  ...(message.authorId !== undefined && { author_id: message.authorId }),
+  ...(message.category !== undefined && { category: message.category }),
+  ...(message.body !== undefined && { body: message.body }),
+  ...("parentId" in message && { parent_id: message.parentId ?? null }),
+});
+
+export const mapSuggestionVoteFromDb = (db: DbFeedbackVote): SuggestionVote => ({
+  id: db.id,
+  messageId: db.message_id,
+  memberId: db.member_id,
+  value: db.value as 1 | -1,
   createdAt: db.created_at,
 });

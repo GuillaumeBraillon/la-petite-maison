@@ -80,3 +80,21 @@ export interface DbPublicPageImage {
   position: number;
   created_at: string;
 }
+
+export interface DbFeedbackMessage {
+  id: string;
+  author_id: string | null;
+  category: string;
+  body: string;
+  parent_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbFeedbackVote {
+  id: string;
+  message_id: string;
+  member_id: string;
+  value: number;
+  created_at: string;
+}

@@ -5,6 +5,23 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.51] - 2026-09-01
+
+### Ajouté
+
+- **Page Suggestions** : nouvel espace permettant aux membres de publier des messages classés par catégorie (Équipement de la maison, Gestion des locations, Bons plans, Autre), de répondre à un message existant, de voter (+1/-1) et de modifier/supprimer leurs propres messages.
+- **Permissions** : règles d'édition/suppression des suggestions ajoutées à `services/permissions.ts`.
+
+### Technique
+
+- **`types.ts` / `dbTypes.ts`** : ajout des types `SuggestionCategory`, `SuggestionMessage`, `SuggestionVote` (app et DB).
+- **`services/api.ts` / `apiCrud.ts` / `apiMappers.ts`** : ajout de `fetchSuggestionMessages`, `fetchSuggestionVotes`, `createSuggestionMessage`, `updateSuggestionMessage`, `deleteSuggestionMessage`, `setSuggestionVote` avec mappers dédiés.
+- **`services/suggestionCategories.ts`** : référentiel des catégories de suggestions (liste + libellés).
+- **`services/messageCatalog.ts`** : ajout des textes de toasts pour les actions sur les suggestions.
+- **`components/suggestions/`** : nouveaux composants `SuggestionMessageForm`, `SuggestionMessageList`, `SuggestionMessageCard`.
+- **`pages/SuggestionsPage.tsx`** : nouvelle page intégrée au routing (`App.tsx`, `AppShellLayout.tsx`, `AppViewRouter.tsx`).
+- **`supabase/schema.sql`** : nouvelles tables pour les messages et votes de suggestions.
+
 ## [0.3.50] - 2026-07-20
 
 ### Corrections

@@ -5,9 +5,16 @@
 
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
-import { mapMemberFromDb, mapRentalFromDb, mapPublicPageFromDb, mapPublicPageImageFromDb } from "./apiMappers";
-import type { DbMember, DbRental, DbPublicPage, DbPublicPageImage } from "./dbTypes";
-import type { Member, Rental, PublicPageData } from "../types";
+import {
+  mapMemberFromDb,
+  mapRentalFromDb,
+  mapPublicPageFromDb,
+  mapPublicPageImageFromDb,
+  mapSuggestionMessageFromDb,
+  mapSuggestionVoteFromDb,
+} from "./apiMappers";
+import type { DbMember, DbRental, DbPublicPage, DbPublicPageImage, DbFeedbackMessage, DbFeedbackVote } from "./dbTypes";
+import type { Member, Rental, PublicPageData, SuggestionMessage, SuggestionVote } from "../types";
 
 export const fetchMembers = async (): Promise<Member[]> => {
   const { data, error } = await supabase.from("members").select("*").order("last_name", { ascending: true });
@@ -58,4 +65,18 @@ export const fetchPublicPage = async (): Promise<PublicPageData> => {
     content: mapPublicPageFromDb(pageResult.data as DbPublicPage),
     images,
   };
+};
+
+export const fetchSuggestionMessages = async (): Promise<SuggestionMessage[]> => {
+  const { data, error } = await supabase.from("feedback_messages").select("*").order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return ((data as DbFeedbackMessage[]) ?? []).map(mapSuggestionMessageFromDb);
+};
+
+export const fetchSuggestionVotes = async (): Promise<SuggestionVote[]> => {
+  const { data, error } = await supabase.from("feedback_votes").select("*");
+
+  if (error) throw error;
+  return ((data as DbFeedbackVote[]) ?? []).map(mapSuggestionVoteFromDb);
 };

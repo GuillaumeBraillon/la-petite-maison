@@ -6,7 +6,7 @@ import { NotificationToggle } from "../ui/NotificationToggle";
 import { UserEmailNotificationsToggle } from "../ui/userInfo/UserEmailNotificationsToggle";
 import { UserMenu } from "../ui/UserMenu";
 
-export type AppView = "dashboard" | "rentals" | "members" | "calendar";
+export type AppView = "dashboard" | "rentals" | "members" | "calendar" | "suggestions";
 
 export interface AppNavItem {
   id: AppView;

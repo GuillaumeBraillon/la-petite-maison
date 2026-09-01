@@ -3,6 +3,14 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.51] - 1 septembre 2026
+
+### Ce qui change pour vous
+
+- **Nouvelle page Suggestions** : les propriétaires peuvent proposer des idées, remarques et bons plans, classés par catégorie (équipement, locations, bons plans, autre)
+- **Tout le monde peut voter** : chaque membre peut voter (+1/-1) sur les suggestions publiées
+- **Gérez vos messages** : les propriétaires peuvent modifier ou supprimer leurs propres suggestions à tout moment
+
 ## [0.3.50] - 20 juillet 2026
 
 ### Corrections

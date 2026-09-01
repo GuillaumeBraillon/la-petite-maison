@@ -414,6 +414,65 @@ before update on public.rentals
 for each row
 execute function public.set_updated_at();
 
+
+-- ------------------------------------------------------------
+-- Table: feedback_messages
+-- ------------------------------------------------------------
+create table public.feedback_messages (
+  id uuid primary key default gen_random_uuid(),
+  author_id uuid references public.members(id) on delete set null,
+  category text not null check (category in ('equipment', 'rentals', 'deals', 'other')),
+  body text not null check (length(trim(body)) > 0),
+  parent_id uuid references public.feedback_messages(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index feedback_messages_category_idx on public.feedback_messages(category);
+create index feedback_messages_author_id_idx on public.feedback_messages(author_id);
+create index feedback_messages_parent_id_idx on public.feedback_messages(parent_id);
+create index feedback_messages_created_at_idx on public.feedback_messages(created_at);
+
+create trigger trg_feedback_messages_set_updated_at
+before update on public.feedback_messages
+for each row
+execute function public.set_updated_at();
+
+create or replace function public.feedback_message_parent_is_top_level()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.parent_id is not null then
+    if exists (
+      select 1 from public.feedback_messages p
+      where p.id = new.parent_id
+      and p.parent_id is not null
+    ) then
+      raise exception 'Une réponse ne peut pas avoir de parent qui est lui-même une réponse';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_feedback_messages_parent_top_level
+before insert or update on public.feedback_messages
+for each row
+execute function public.feedback_message_parent_is_top_level();
+
+create table public.feedback_votes (
+  id uuid primary key default gen_random_uuid(),
+  message_id uuid not null references public.feedback_messages(id) on delete cascade,
+  member_id uuid not null references public.members(id) on delete cascade,
+  value smallint not null check (value in (-1, 1)),
+  created_at timestamptz not null default now(),
+  unique (message_id, member_id)
+);
+
+create index feedback_votes_message_id_idx on public.feedback_votes(message_id);
+create index feedback_votes_member_id_idx on public.feedback_votes(member_id);
+
 -- ------------------------------------------------------------
 -- Table: push_subscriptions
 -- ------------------------------------------------------------
@@ -459,6 +518,8 @@ alter table public.members enable row level security;
 alter table public.rentals enable row level security;
 alter table public.push_subscriptions enable row level security;
 alter table public.user_notifications enable row level security;
+alter table public.feedback_messages enable row level security;
+alter table public.feedback_votes enable row level security;
 
 create policy "members_select_allowed_users"
 on public.members

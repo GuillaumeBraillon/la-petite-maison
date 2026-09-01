@@ -22,6 +22,9 @@ export interface Permissions {
   authorizeUsers: boolean;
   /** true = peut marquer une location comme payée (validateur uniquement) */
   togglePayment: boolean;
+  viewSuggestions: boolean;
+  /** true = peut publier un message ou répondre (admin/owner) */
+  createSuggestions: boolean;
 }
 
 export interface RentalActionPermissions {
@@ -55,6 +58,8 @@ export const getPermissions = (member: Member | null): Permissions => {
       viewCalendarDetails: false,
       authorizeUsers: false,
       togglePayment: false,
+      viewSuggestions: false,
+      createSuggestions: false,
     };
   }
 
@@ -74,6 +79,8 @@ export const getPermissions = (member: Member | null): Permissions => {
       viewCalendarDetails: true,
       authorizeUsers: true,
       togglePayment: true,
+      viewSuggestions: true,
+      createSuggestions: true,
     };
   }
 
@@ -94,6 +101,8 @@ export const getPermissions = (member: Member | null): Permissions => {
       viewCalendarDetails: true,
       authorizeUsers: false,
       togglePayment: isEditor,
+      viewSuggestions: true,
+      createSuggestions: true,
     };
   }
   // Sub_member : peut voir le calendrier + ses locations, et créer des demandes
@@ -111,6 +120,8 @@ export const getPermissions = (member: Member | null): Permissions => {
     viewCalendarDetails: true,
     authorizeUsers: false,
     togglePayment: false,
+    viewSuggestions: true,
+    createSuggestions: false,
   };
 };
 

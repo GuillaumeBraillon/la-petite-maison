@@ -121,6 +121,32 @@ export const TOAST_MESSAGES = {
       message: "Impossible de supprimer les notifications lues affichées.",
     },
   },
+  suggestion: {
+    created: {
+      title: "Message publié",
+      message: "Votre message a été publié.",
+    },
+    updated: {
+      title: "Message modifié",
+      message: "Le message a été mis à jour.",
+    },
+    deleted: {
+      title: "Message supprimé",
+      message: "Le message a été supprimé.",
+    },
+    saveError: {
+      title: "Erreur",
+      message: "Impossible d'enregistrer le message.",
+    },
+    deleteError: {
+      title: "Erreur",
+      message: "Impossible de supprimer le message.",
+    },
+    voteError: {
+      title: "Erreur",
+      message: "Impossible d'enregistrer votre vote.",
+    },
+  },
 } as const;
 
 export const PUSH_MESSAGES = {

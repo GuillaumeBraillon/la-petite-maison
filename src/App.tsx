@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { LayoutDashboard, Users, CalendarDays, List } from "lucide-react";
+import { LayoutDashboard, Users, CalendarDays, List, MessageSquare } from "lucide-react";
 import type { Member, Rental, RentalStatus, RentalStatusFilter, RentalPaymentFilter, AppShellProps } from "./types";
 import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
@@ -45,6 +45,11 @@ const NAV_ITEMS: AppNavItem[] = [
     icon: <Users size={18} />,
     requiredRoles: ["admin", "owner"],
   },
+  {
+    id: "suggestions",
+    label: "Suggestions",
+    icon: <MessageSquare size={18} />,
+  },
 ];
 
 const AppShell = ({ session }: AppShellProps) => {
@@ -57,6 +62,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [debugMemberId, setDebugMemberId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasLoadedOnceRef = useRef(false);
   const { error, clearError, setError } = useError();
   const { install, isInstallable } = usePWAInstall();
   const { shouldShow: showWhatsNew, entries: whatsNewEntries, dismiss: dismissWhatsNew } = useWhatsNew();
@@ -153,9 +159,16 @@ const AppShell = ({ session }: AppShellProps) => {
 
   useEffect(() => {
     void (async () => {
-      setLoading(true);
+      // Le loading plein écran ne doit s'afficher qu'au tout premier chargement.
+      // Sans ce garde, un rafraîchissement de session en arrière-plan (ex: retour
+      // sur l'onglet après un token refresh Supabase) redéclenche cet effet
+      // (via l'identité de `refresh`) et démonte/remonte AppViewRouter, ce qui
+      // fait perdre l'état local des pages (formulaires en cours de saisie, filtres...).
+      const isInitialLoad = !hasLoadedOnceRef.current;
+      if (isInitialLoad) setLoading(true);
       const member = await refresh();
-      setLoading(false);
+      hasLoadedOnceRef.current = true;
+      if (isInitialLoad) setLoading(false);
 
       // Deep link depuis email : ?view=rentals&status=pending
       const params = new URLSearchParams(window.location.search);
