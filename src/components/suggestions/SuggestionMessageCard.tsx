@@ -1,7 +1,51 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { ArrowBigUp, ArrowBigDown, Pencil, Trash2 } from "lucide-react";
 import type { Member, SuggestionMessage } from "../../types";
 import { Button } from "../ui/Button";
+import { Badge } from "../ui/Badge";
+import { SUGGESTION_CATEGORY_BADGE_VARIANT_MAP, SUGGESTION_CATEGORY_LABEL_MAP } from "../../services/suggestionCategories";
+
+const URL_PATTERN = /https?:\/\/[^\s<]+/g;
+
+const renderLinkedMessage = (body: string): ReactNode[] => {
+  const parts: ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = URL_PATTERN.exec(body)) !== null) {
+    const url = match[0].replace(/[),.!?;:]+$/, "");
+
+    if (match.index > lastIndex) {
+      parts.push(body.slice(lastIndex, match.index));
+    }
+
+    parts.push(
+      <a
+        key={`${match.index}-${url}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="break-all text-primary-700 underline hover:text-primary-900"
+      >
+        {url}
+      </a>
+    );
+
+    const trailingText = match[0].slice(url.length);
+    if (trailingText) {
+      parts.push(trailingText);
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < body.length) {
+    parts.push(body.slice(lastIndex));
+  }
+
+  return parts;
+};
 
 interface SuggestionMessageCardProps {
   message: SuggestionMessage;
@@ -12,6 +56,7 @@ interface SuggestionMessageCardProps {
   canEdit: boolean;
   canDelete: boolean;
   isReply?: boolean;
+  showCategory?: boolean;
   onVote: (value: 1 | -1) => void;
   onSaveEdit: (body: string) => Promise<void>;
   onDelete: () => void;
@@ -26,6 +71,7 @@ export const SuggestionMessageCard = ({
   canEdit,
   canDelete,
   isReply = false,
+  showCategory = false,
   onVote,
   onSaveEdit,
   onDelete,
@@ -102,6 +148,7 @@ export const SuggestionMessageCard = ({
             <span className="font-medium text-gray-700">{authorLabel}</span>
             <span>·</span>
             <span>{formattedDate}</span>
+            {showCategory && <Badge variant={SUGGESTION_CATEGORY_BADGE_VARIANT_MAP[message.category]}>{SUGGESTION_CATEGORY_LABEL_MAP[message.category]}</Badge>}
           </div>
           {(canEdit || canDelete) && !isEditing && (
             <div className="flex items-center gap-1 shrink-0">
@@ -137,7 +184,7 @@ export const SuggestionMessageCard = ({
             </div>
           </div>
         ) : (
-          <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">{message.body}</p>
+          <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">{renderLinkedMessage(message.body)}</p>
         )}
       </div>
     </div>

@@ -5,6 +5,18 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.52] - 2026-09-01
+
+### Ajouté
+
+- **Catégories visibles** : un badge de catégorie est affiché sur chaque message lorsque toutes les suggestions sont consultées.
+- **Liens dans les suggestions** : les adresses web incluses dans un message sont désormais cliquables et s'ouvrent dans un nouvel onglet.
+
+### Technique
+
+- **`services/suggestionCategories.ts`** : ajout du mapping de variantes des badges de catégories.
+- **`SuggestionMessageCard.tsx`** : affichage conditionnel du badge de catégorie et rendu des URL sous forme de liens sécurisés.
+
 ## [0.3.51] - 2026-09-01
 
 ### Ajouté

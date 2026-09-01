@@ -3,6 +3,13 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.52] - 1 septembre 2026
+
+### Ce qui change pour vous
+
+- **Catégories plus lisibles** : lorsque vous consultez toutes les suggestions, chaque message indique sa catégorie.
+- **Liens cliquables** : les adresses web ajoutées dans un message sont maintenant directement accessibles.
+
 ## [0.3.51] - 1 septembre 2026
 
 ### Ce qui change pour vous

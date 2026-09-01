@@ -11,6 +11,7 @@ interface SuggestionMessageListProps {
   canVote: boolean;
   canPost: boolean;
   isAdmin: boolean;
+  showCategory: boolean;
   onVote: (messageId: string, value: 1 | -1) => void;
   onSaveEdit: (messageId: string, body: string) => Promise<void>;
   onDelete: (message: SuggestionMessage) => void;
@@ -87,6 +88,7 @@ export const SuggestionMessageList = ({
   canVote,
   canPost,
   isAdmin,
+  showCategory,
   onVote,
   onSaveEdit,
   onDelete,
@@ -117,6 +119,7 @@ export const SuggestionMessageList = ({
             canVote={canVote}
             canEdit={canEditMessage(root)}
             canDelete={canEditMessage(root)}
+            showCategory={showCategory}
             onVote={(value) => onVote(root.id, value)}
             onSaveEdit={(body) => onSaveEdit(root.id, body)}
             onDelete={() => onDelete(root)}
@@ -133,6 +136,7 @@ export const SuggestionMessageList = ({
               canEdit={canEditMessage(reply)}
               canDelete={canEditMessage(reply)}
               isReply
+              showCategory={showCategory}
               onVote={(value) => onVote(reply.id, value)}
               onSaveEdit={(body) => onSaveEdit(reply.id, body)}
               onDelete={() => onDelete(reply)}

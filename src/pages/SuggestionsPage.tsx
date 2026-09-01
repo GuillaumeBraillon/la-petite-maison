@@ -183,6 +183,7 @@ export const SuggestionsPage = ({ members, currentMember }: SuggestionsPageProps
           canVote={permissions.viewSuggestions}
           canPost={permissions.createSuggestions}
           isAdmin={currentMember?.role === "admin"}
+          showCategory={categoryFilter === "all"}
           onVote={(messageId, value) => void handleVote(messageId, value)}
           onSaveEdit={handleSaveEdit}
           onDelete={setMessageToDelete}
