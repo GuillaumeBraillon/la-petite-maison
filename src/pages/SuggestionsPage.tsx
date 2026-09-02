@@ -221,7 +221,7 @@ export const SuggestionsPage = ({ members, currentMember }: SuggestionsPageProps
 
       {loading ? (
         <p className="text-sm text-gray-500 text-center py-8">Chargement...</p>
-      ) : filteredMessages.length === 0 && categoryFilter !== "all" ? (
+      ) : filteredMessages.length === 0 && categoryFilter !== "all" && permissions.createSuggestions ? (
         <p className="text-sm text-gray-500">Soyez le premier à laisser un message.</p>
       ) : (
         <SuggestionMessageList
