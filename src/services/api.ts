@@ -74,6 +74,13 @@ export const fetchSuggestionMessages = async (): Promise<SuggestionMessage[]> =>
   return ((data as DbFeedbackMessage[]) ?? []).map(mapSuggestionMessageFromDb);
 };
 
+export const fetchSuggestionMessageCount = async (): Promise<number> => {
+  const { count, error } = await supabase.from("feedback_messages").select("id", { count: "exact", head: true });
+
+  if (error) throw error;
+  return count ?? 0;
+};
+
 export const fetchSuggestionVotes = async (): Promise<SuggestionVote[]> => {
   const { data, error } = await supabase.from("feedback_votes").select("*");
 

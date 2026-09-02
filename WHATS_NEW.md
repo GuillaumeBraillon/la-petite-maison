@@ -3,6 +3,15 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.53] - 2 septembre 2026
+
+### Ce qui change pour vous
+
+- **Suggestions plus simples à consulter** : les catégories sont mieux organisées et affichent le nombre de messages disponibles.
+- **Accès depuis le tableau de bord** : une nouvelle carte permet d'ouvrir rapidement les suggestions et indique combien de messages sont publiés.
+- **Messages plus agréables à rédiger** : vous pouvez mettre du texte en gras, en italique ou utiliser des listes à puces dans les nouveaux sujets, les réponses et les modifications.
+- **Soutien par cœur** : cliquez sur le cœur pour soutenir une suggestion. Le nombre de soutiens est affiché à côté.
+
 ## [0.3.52] - 1 septembre 2026
 
 ### Ce qui change pour vous

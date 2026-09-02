@@ -20,7 +20,7 @@ export type NotificationType =
   | "request_pending"
   | "app_updated";
 
-export type SuggestionCategory = "equipment" | "rentals" | "deals" | "other";
+export type SuggestionCategory = "equipment" | "rentals" | "local" | "rules" | "other";
 // ------------------------------------------------------------
 // Member
 // ------------------------------------------------------------
@@ -156,6 +156,7 @@ export interface RentalsMembersPageSharedProps extends BasePageProps {
 export interface DashboardPageProps extends RentalsMembersPageSharedProps {
   onOpenRentalsWithStatus?: (status: RentalStatus, ownerId?: string) => void;
   onOpenRentalsWithPayment?: (payment: RentalPaymentFilter) => void;
+  onOpenSuggestions?: () => void;
 }
 
 export interface RentalsPageProps extends RentalsMembersPageSharedProps {

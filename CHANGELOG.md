@@ -5,6 +5,19 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.53] - 2026-09-02
+
+### Ajouté
+
+- **Suggestions** : ajout de catégories resserrées et de descriptions contextuelles, avec compteurs de messages et tri par activité.
+- **Tableau de bord** : ajout d'un accès direct à la page Suggestions avec le nombre global de messages.
+- **Saisie enrichie** : réutilisation de l'éditeur Markdown de la page Présentation pour les nouveaux sujets, les réponses et les modifications.
+- **Votes** : remplacement du vote positif/négatif par un soutien binaire représenté par un cœur, avec compteur de soutiens.
+
+### Amélioré
+
+- **Suggestions** : affichage par défaut de la catégorie `local`, formulaire de nouveau sujet repliable lorsque la catégorie contient déjà des messages et défilement automatique vers les formulaires ouverts.
+
 ## [0.3.52] - 2026-09-01
 
 ### Ajouté

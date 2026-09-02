@@ -421,7 +421,7 @@ execute function public.set_updated_at();
 create table public.feedback_messages (
   id uuid primary key default gen_random_uuid(),
   author_id uuid references public.members(id) on delete set null,
-  category text not null check (category in ('equipment', 'rentals', 'deals', 'other')),
+  category text not null check (category in ('equipment', 'rentals', 'local', 'rules', 'other')),
   body text not null check (length(trim(body)) > 0),
   parent_id uuid references public.feedback_messages(id) on delete cascade,
   created_at timestamptz not null default now(),

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 interface RichTextAreaProps {
   id: string;
@@ -6,12 +6,25 @@ interface RichTextAreaProps {
   onChange: (value: string) => void;
   rows?: number;
   placeholder?: string;
+  compact?: boolean;
+  autoFocus?: boolean;
 }
 
 type FormatType = "bold" | "italic" | "heading" | "list";
 
-export const RichTextArea = ({ id, value, onChange, rows = 6, placeholder }: RichTextAreaProps) => {
+export const RichTextArea = ({ id, value, onChange, rows = 6, placeholder, compact = false, autoFocus = false }: RichTextAreaProps) => {
   const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!autoFocus || !ref.current) return;
+
+    const animationFrame = requestAnimationFrame(() => {
+      ref.current?.focus({ preventScroll: true });
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [autoFocus]);
 
   const applyFormatting = (type: FormatType) => {
     const el = ref.current;
@@ -83,18 +96,22 @@ export const RichTextArea = ({ id, value, onChange, rows = 6, placeholder }: Ric
       {/* Toolbar */}
       <div className="flex items-center gap-1 px-2 py-1.5 bg-gray-50 border-b border-gray-200">
         <span className="ml-2 text-xs text-gray-400 hidden sm:inline">Sélectionnez du texte, puis cliquez pour ajouter la mise en forme :</span>
-        <button
-          type="button"
-          title="Titre de section — place le curseur sur la ligne à transformer"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            applyFormatting("heading");
-          }}
-          className="flex items-center justify-center px-2 h-7 rounded text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors select-none"
-        >
-          Titre
-        </button>
-        <div className="w-px h-4 bg-gray-300 mx-0.5" />
+        {!compact && (
+          <>
+            <button
+              type="button"
+              title="Titre de section — place le curseur sur la ligne à transformer"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                applyFormatting("heading");
+              }}
+              className="flex items-center justify-center px-2 h-7 rounded text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors select-none"
+            >
+              Titre
+            </button>
+            <div className="w-px h-4 bg-gray-300 mx-0.5" />
+          </>
+        )}
         <button
           type="button"
           title="Liste à puces — sélectionnez plusieurs lignes ou placez le curseur"
@@ -140,6 +157,7 @@ export const RichTextArea = ({ id, value, onChange, rows = 6, placeholder }: Ric
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
         placeholder={placeholder}
+        autoFocus={autoFocus}
         className="block w-full px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none resize-y bg-white"
       />
     </div>

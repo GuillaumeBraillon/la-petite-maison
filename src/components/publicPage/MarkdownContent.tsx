@@ -8,7 +8,7 @@ interface MarkdownContentProps {
 // Parses **gras** and *italique* within a single line
 const parseInline = (text: string, lineKey: number): React.ReactNode => {
   const parts: React.ReactNode[] = [];
-  const regex = /\*\*([^*\n]+)\*\*|\*([^*\n]+)\*/g;
+  const regex = /\*\*([^*\n]+)\*\*|\*([^*\n]+)\*|(https?:\/\/[^\s<]+)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let i = 0;
@@ -23,8 +23,25 @@ const parseInline = (text: string, lineKey: number): React.ReactNode => {
           {match[1]}
         </strong>
       );
-    } else {
+    } else if (match[2] !== undefined) {
       parts.push(<em key={`${lineKey}-i${i++}`}>{match[2]}</em>);
+    } else {
+      const url = match[3].replace(/[),.!?;:]+$/, "");
+      parts.push(
+        <a
+          key={`${lineKey}-u${i++}`}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="break-all text-primary-700 underline hover:text-primary-900"
+        >
+          {url}
+        </a>
+      );
+      const trailingText = match[3].slice(url.length);
+      if (trailingText) {
+        parts.push(trailingText);
+      }
     }
     lastIndex = regex.lastIndex;
   }

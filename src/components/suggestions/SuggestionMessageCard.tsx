@@ -1,63 +1,24 @@
 import { useState } from "react";
-import type { ReactNode } from "react";
-import { ArrowBigUp, ArrowBigDown, Pencil, Trash2 } from "lucide-react";
+import { Heart, Pencil, Trash2 } from "lucide-react";
 import type { Member, SuggestionMessage } from "../../types";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
+import { RichTextArea } from "../publicPage/RichTextArea";
+import { MarkdownContent } from "../publicPage/MarkdownContent";
 import { SUGGESTION_CATEGORY_BADGE_VARIANT_MAP, SUGGESTION_CATEGORY_LABEL_MAP } from "../../services/suggestionCategories";
-
-const URL_PATTERN = /https?:\/\/[^\s<]+/g;
-
-const renderLinkedMessage = (body: string): ReactNode[] => {
-  const parts: ReactNode[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = URL_PATTERN.exec(body)) !== null) {
-    const url = match[0].replace(/[),.!?;:]+$/, "");
-
-    if (match.index > lastIndex) {
-      parts.push(body.slice(lastIndex, match.index));
-    }
-
-    parts.push(
-      <a
-        key={`${match.index}-${url}`}
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="break-all text-primary-700 underline hover:text-primary-900"
-      >
-        {url}
-      </a>
-    );
-
-    const trailingText = match[0].slice(url.length);
-    if (trailingText) {
-      parts.push(trailingText);
-    }
-
-    lastIndex = match.index + match[0].length;
-  }
-
-  if (lastIndex < body.length) {
-    parts.push(body.slice(lastIndex));
-  }
-
-  return parts;
-};
 
 interface SuggestionMessageCardProps {
   message: SuggestionMessage;
   author?: Member;
-  score: number;
-  currentUserVote?: 1 | -1;
+  voteCount: number;
+  hasCurrentUserVoted: boolean;
   canVote: boolean;
   canEdit: boolean;
   canDelete: boolean;
   isReply?: boolean;
   showCategory?: boolean;
-  onVote: (value: 1 | -1) => void;
+  onVote: () => void;
+  onEditingChange: (isEditing: boolean) => void;
   onSaveEdit: (body: string) => Promise<void>;
   onDelete: () => void;
 }
@@ -65,14 +26,15 @@ interface SuggestionMessageCardProps {
 export const SuggestionMessageCard = ({
   message,
   author,
-  score,
-  currentUserVote,
+  voteCount,
+  hasCurrentUserVoted,
   canVote,
   canEdit,
   canDelete,
   isReply = false,
   showCategory = false,
   onVote,
+  onEditingChange,
   onSaveEdit,
   onDelete,
 }: SuggestionMessageCardProps) => {
@@ -90,11 +52,13 @@ export const SuggestionMessageCard = ({
   const startEdit = () => {
     setDraft(message.body);
     setIsEditing(true);
+    onEditingChange(true);
   };
 
   const cancelEdit = () => {
     setIsEditing(false);
     setDraft(message.body);
+    onEditingChange(false);
   };
 
   const saveEdit = async () => {
@@ -103,6 +67,7 @@ export const SuggestionMessageCard = ({
       setSaving(true);
       await onSaveEdit(draft.trim());
       setIsEditing(false);
+      onEditingChange(false);
     } finally {
       setSaving(false);
     }
@@ -111,34 +76,23 @@ export const SuggestionMessageCard = ({
   return (
     <div className={["flex gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-4", isReply ? "ml-6 sm:ml-10" : ""].join(" ")}>
       {/* Votes */}
-      <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
+      <div className="flex shrink-0 items-center gap-1 pt-1">
         <button
           type="button"
           disabled={!canVote}
-          onClick={() => onVote(1)}
-          aria-label="Voter pour"
+          onClick={onVote}
+          aria-label={hasCurrentUserVoted ? "Retirer mon soutien" : "Soutenir cette idée"}
+          aria-pressed={hasCurrentUserVoted}
+          title={hasCurrentUserVoted ? "Retirer mon soutien" : "Soutenir cette idée"}
           className={[
-            "p-1 rounded-md transition-colors",
-            currentUserVote === 1 ? "text-primary-600 bg-primary-50" : "text-gray-400 hover:bg-gray-100",
+            "rounded-md p-1.5 transition-colors",
+            hasCurrentUserVoted ? "text-red-600 bg-red-50" : "text-gray-500 hover:bg-gray-100",
             !canVote ? "cursor-not-allowed opacity-50" : "",
           ].join(" ")}
         >
-          <ArrowBigUp size={20} />
+          <Heart size={18} fill={hasCurrentUserVoted ? "currentColor" : "none"} />
         </button>
-        <span className="text-sm font-semibold text-gray-700">{score}</span>
-        <button
-          type="button"
-          disabled={!canVote}
-          onClick={() => onVote(-1)}
-          aria-label="Voter contre"
-          className={[
-            "p-1 rounded-md transition-colors",
-            currentUserVote === -1 ? "text-red-600 bg-red-50" : "text-gray-400 hover:bg-gray-100",
-            !canVote ? "cursor-not-allowed opacity-50" : "",
-          ].join(" ")}
-        >
-          <ArrowBigDown size={20} />
-        </button>
+        <span className="min-w-4 text-center text-xs font-medium text-gray-500">{voteCount}</span>
       </div>
 
       {/* Content */}
@@ -168,12 +122,7 @@ export const SuggestionMessageCard = ({
 
         {isEditing ? (
           <div className="mt-2 flex flex-col gap-2">
-            <textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              rows={3}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+            <RichTextArea id={`suggestion-edit-${message.id}`} value={draft} onChange={setDraft} rows={15} compact autoFocus />
             <div className="flex justify-end gap-2">
               <Button type="button" variant="secondary" size="sm" onClick={cancelEdit} disabled={saving}>
                 Annuler
@@ -184,7 +133,7 @@ export const SuggestionMessageCard = ({
             </div>
           </div>
         ) : (
-          <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">{renderLinkedMessage(message.body)}</p>
+          <MarkdownContent text={message.body} className="mt-1 text-sm" />
         )}
       </div>
     </div>

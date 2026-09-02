@@ -271,6 +271,7 @@ const AppShell = ({ session }: AppShellProps) => {
             rentalsPaymentFilter={rentalsPaymentFilter}
             onOpenRentalsWithStatus={handleOpenRentalsWithStatus}
             onOpenRentalsWithPayment={handleOpenRentalsWithPayment}
+            onOpenSuggestions={() => handleViewChange("suggestions")}
           />
         )}
       </AppShellLayout>

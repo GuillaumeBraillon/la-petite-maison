@@ -17,6 +17,7 @@ interface AppViewRouterProps {
   rentalsPaymentFilter: RentalPaymentFilter;
   onOpenRentalsWithStatus: (status: RentalStatus, ownerId?: string) => void;
   onOpenRentalsWithPayment: (payment: RentalPaymentFilter) => void;
+  onOpenSuggestions: () => void;
 }
 
 export const AppViewRouter = ({
@@ -30,6 +31,7 @@ export const AppViewRouter = ({
   rentalsPaymentFilter,
   onOpenRentalsWithStatus,
   onOpenRentalsWithPayment,
+  onOpenSuggestions,
 }: AppViewRouterProps) => {
   /**
    * Renders the appropriate page component based on the current view.
@@ -44,6 +46,7 @@ export const AppViewRouter = ({
         onRefresh={onRefresh}
         onOpenRentalsWithStatus={onOpenRentalsWithStatus}
         onOpenRentalsWithPayment={onOpenRentalsWithPayment}
+        onOpenSuggestions={onOpenSuggestions}
       />
     );
   }

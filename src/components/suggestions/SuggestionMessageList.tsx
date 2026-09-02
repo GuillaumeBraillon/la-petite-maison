@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Member, SuggestionMessage, SuggestionVote } from "../../types";
 import { SuggestionMessageCard } from "./SuggestionMessageCard";
 import { Button } from "../ui/Button";
+import { RichTextArea } from "../publicPage/RichTextArea";
 
 interface SuggestionMessageListProps {
   messages: SuggestionMessage[];
@@ -12,20 +13,20 @@ interface SuggestionMessageListProps {
   canPost: boolean;
   isAdmin: boolean;
   showCategory: boolean;
-  onVote: (messageId: string, value: 1 | -1) => void;
+  onEditingChange: (isEditing: boolean) => void;
+  onVote: (messageId: string) => void;
   onSaveEdit: (messageId: string, body: string) => Promise<void>;
   onDelete: (message: SuggestionMessage) => void;
   onReply: (parentId: string, body: string) => Promise<void>;
 }
 
-const scoreFor = (votes: SuggestionVote[], messageId: string): number => votes.filter((v) => v.messageId === messageId).reduce((sum, v) => sum + v.value, 0);
-
-const currentVoteFor = (votes: SuggestionVote[], messageId: string, memberId?: string): 1 | -1 | undefined => {
-  if (!memberId) return undefined;
-  return votes.find((v) => v.messageId === messageId && v.memberId === memberId)?.value;
+const hasCurrentUserVoted = (votes: SuggestionVote[], messageId: string, memberId?: string): boolean => {
+  return memberId ? votes.some((v) => v.messageId === messageId && v.memberId === memberId) : false;
 };
 
-const ReplyComposer = ({ onSubmit }: { onSubmit: (body: string) => Promise<void> }) => {
+const voteCountFor = (votes: SuggestionVote[], messageId: string): number => votes.filter((v) => v.messageId === messageId && v.value === 1).length;
+
+const ReplyComposer = ({ id, onSubmit }: { id: string; onSubmit: (body: string) => Promise<void> }) => {
   const [open, setOpen] = useState(false);
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -52,13 +53,7 @@ const ReplyComposer = ({ onSubmit }: { onSubmit: (body: string) => Promise<void>
 
   return (
     <div className="ml-6 sm:ml-10 flex flex-col gap-2">
-      <textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        rows={2}
-        placeholder="Votre réponse..."
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-      />
+      <RichTextArea id={id} value={body} onChange={setBody} rows={6} placeholder="Votre réponse..." compact autoFocus />
       <div className="flex justify-end gap-2">
         <Button
           type="button"
@@ -89,6 +84,7 @@ export const SuggestionMessageList = ({
   canPost,
   isAdmin,
   showCategory,
+  onEditingChange,
   onVote,
   onSaveEdit,
   onDelete,
@@ -104,7 +100,7 @@ export const SuggestionMessageList = ({
   const canEditMessage = (message: SuggestionMessage) => isAdmin || (!!currentMember && message.authorId === currentMember.id);
 
   if (rootMessages.length === 0) {
-    return <p className="text-sm text-gray-500 text-center py-8">Aucun message pour l&apos;instant.</p>;
+    return <p className="text-sm text-gray-500 text-center">Aucun message pour l&apos;instant.</p>;
   }
 
   return (
@@ -114,13 +110,14 @@ export const SuggestionMessageList = ({
           <SuggestionMessageCard
             message={root}
             author={authorFor(root.authorId)}
-            score={scoreFor(votes, root.id)}
-            currentUserVote={currentVoteFor(votes, root.id, currentMember?.id)}
+            voteCount={voteCountFor(votes, root.id)}
+            hasCurrentUserVoted={hasCurrentUserVoted(votes, root.id, currentMember?.id)}
             canVote={canVote}
             canEdit={canEditMessage(root)}
             canDelete={canEditMessage(root)}
             showCategory={showCategory}
-            onVote={(value) => onVote(root.id, value)}
+            onVote={() => onVote(root.id)}
+            onEditingChange={onEditingChange}
             onSaveEdit={(body) => onSaveEdit(root.id, body)}
             onDelete={() => onDelete(root)}
           />
@@ -130,20 +127,21 @@ export const SuggestionMessageList = ({
               key={reply.id}
               message={reply}
               author={authorFor(reply.authorId)}
-              score={scoreFor(votes, reply.id)}
-              currentUserVote={currentVoteFor(votes, reply.id, currentMember?.id)}
+              voteCount={voteCountFor(votes, reply.id)}
+              hasCurrentUserVoted={hasCurrentUserVoted(votes, reply.id, currentMember?.id)}
               canVote={canVote}
               canEdit={canEditMessage(reply)}
               canDelete={canEditMessage(reply)}
               isReply
               showCategory={showCategory}
-              onVote={(value) => onVote(reply.id, value)}
+              onVote={() => onVote(reply.id)}
+              onEditingChange={onEditingChange}
               onSaveEdit={(body) => onSaveEdit(reply.id, body)}
               onDelete={() => onDelete(reply)}
             />
           ))}
 
-          {canPost && <ReplyComposer onSubmit={(body) => onReply(root.id, body)} />}
+          {canPost && <ReplyComposer id={`suggestion-reply-${root.id}`} onSubmit={(body) => onReply(root.id, body)} />}
         </div>
       ))}
     </div>
