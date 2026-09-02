@@ -3,6 +3,15 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.54] - 2 septembre 2026
+
+### Ce qui change pour vous
+
+- **Auteurs identifiables** : les suggestions affichent maintenant le prénom et le nom complets de leur auteur.
+- **Suggestions sur mobile** : les catégories sont accessibles dans une liste compacte plus facile à utiliser.
+- **Affichage adapté à vos droits** : le message invitant à publier n’apparaît que si vous êtes autorisé à créer une suggestion.
+- **Nouveautés dans le bon ordre** : les mises à jour sont présentées de la plus ancienne à la plus récente pour faciliter la lecture.
+
 ## [0.3.53] - 2 septembre 2026
 
 ### Ce qui change pour vous

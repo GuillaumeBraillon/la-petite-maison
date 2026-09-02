@@ -5,6 +5,19 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.54] - 2026-09-02
+
+### Amélioré
+
+- **SuggestionMessageCard** : affichage du prénom et du nom complets de l’auteur.
+- **Suggestions sur mobile** : ajout d’une liste de sélection des catégories, plus compacte que les badges.
+- **État vide des suggestions** : affichage de l’invitation à publier uniquement pour les membres autorisés à créer un message.
+- **Nouveautés** : affichage des versions dans l’ordre chronologique, de la plus ancienne à la plus récente.
+
+### Technique
+
+- **CI** : l’appel à l’Edge Function `notify-deploy` est maintenant limité aux commits qui changent la version de `package.json`.
+
 ## [0.3.53] - 2026-09-02
 
 ### Ajouté

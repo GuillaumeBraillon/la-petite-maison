@@ -31,6 +31,7 @@ const renderMarkdownInline = (text: string): ReactNode[] => {
 
 export const WhatsNewModal = ({ entries, onDismiss }: WhatsNewModalProps) => {
   const title = entries.length === 1 ? `🎉 Nouveautés — v${entries[0].version}` : `🎉 Nouveautés`;
+  const orderedEntries = [...entries].reverse();
 
   return (
     <Modal
@@ -47,7 +48,7 @@ export const WhatsNewModal = ({ entries, onDismiss }: WhatsNewModalProps) => {
       }
     >
       <div className="flex flex-col gap-6">
-        {entries.map((entry, entryIdx) => (
+        {orderedEntries.map((entry, entryIdx) => (
           <div key={entry.version} className="flex flex-col gap-4">
             {/* Séparateur + en-tête version si plusieurs entrées */}
             {entries.length > 1 && (
