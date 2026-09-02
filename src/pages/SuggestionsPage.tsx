@@ -9,6 +9,7 @@ import { SuggestionMessageForm } from "../components/suggestions/SuggestionMessa
 import { SuggestionMessageList } from "../components/suggestions/SuggestionMessageList";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { ErrorDisplay } from "../components/ui/ErrorDisplay";
+import { Select } from "../components/ui/Select";
 import { useError } from "../contexts/ErrorContext";
 import { useToast } from "../contexts/ToastContext";
 
@@ -156,34 +157,51 @@ export const SuggestionsPage = ({ members, currentMember }: SuggestionsPageProps
 
       {error && <ErrorDisplay error={error} onDismiss={clearError} />}
 
-      <div className="flex flex-wrap gap-2">
-        {orderedCategories.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setCategoryFilter(c)}
-            className={[
-              "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
-              categoryFilter === c ? "bg-primary-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200",
-            ].join(" ")}
+      <div className="flex flex-col gap-2">
+        <div className="md:hidden">
+          <Select
+            id="suggestion-category-mobile"
+            label="Catégorie"
+            value={categoryFilter}
+            onChange={(event) => setCategoryFilter(event.target.value as SuggestionCategory | "all")}
           >
-            {SUGGESTION_CATEGORY_LABEL_MAP[c]}
-            <span
+            <option value="all">Toutes les suggestions</option>
+            {orderedCategories.map((category) => (
+              <option key={category} value={category}>
+                {SUGGESTION_CATEGORY_LABEL_MAP[category]} ({messageCountFor(messages, category)})
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="hidden flex-wrap gap-2 md:flex">
+          {orderedCategories.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCategoryFilter(c)}
               className={[
-                "ml-1 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px]",
-                categoryFilter === c ? "bg-white/20 text-white" : "bg-white text-gray-500",
+                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+                categoryFilter === c ? "bg-primary-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200",
               ].join(" ")}
             >
-              {messageCountFor(messages, c)}
-            </span>
-          </button>
-        ))}
+              {SUGGESTION_CATEGORY_LABEL_MAP[c]}
+              <span
+                className={[
+                  "ml-1 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px]",
+                  categoryFilter === c ? "bg-white/20 text-white" : "bg-white text-gray-500",
+                ].join(" ")}
+              >
+                {messageCountFor(messages, c)}
+              </span>
+            </button>
+          ))}
+        </div>
+
         <button
           type="button"
           onClick={() => setCategoryFilter("all")}
-          className={["px-3 py-1.5 rounded-full text-xs font-medium transition-colors", "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"].join(
-            " "
-          )}
+          className="hidden self-start rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:block"
         >
           Voir toutes les suggestions
         </button>
