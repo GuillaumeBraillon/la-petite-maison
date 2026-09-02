@@ -42,7 +42,7 @@ export const SuggestionMessageCard = ({
   const [draft, setDraft] = useState(message.body);
   const [saving, setSaving] = useState(false);
 
-  const authorLabel = author ? author.label : "Membre supprimé";
+  const authorName = author ? `${author.firstName} ${author.lastName}`.trim() : "Membre supprimé";
   const formattedDate = new Date(message.createdAt).toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "short",
@@ -99,7 +99,7 @@ export const SuggestionMessageCard = ({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span className="font-medium text-gray-700">{authorLabel}</span>
+            <span className="font-medium text-gray-700">{authorName}</span>
             <span>·</span>
             <span>{formattedDate}</span>
             {showCategory && <Badge variant={SUGGESTION_CATEGORY_BADGE_VARIANT_MAP[message.category]}>{SUGGESTION_CATEGORY_LABEL_MAP[message.category]}</Badge>}
