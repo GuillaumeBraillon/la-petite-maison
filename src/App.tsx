@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { LayoutDashboard, Users, CalendarDays, List, MessageSquare } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 import type { Member, Rental, RentalStatus, RentalStatusFilter, RentalPaymentFilter, AppShellProps } from "./types";
 import packageJson from "../package.json";
 import { supabase } from "./services/supabaseClient";
@@ -433,6 +434,7 @@ const App = () => {
         <ToastProvider>
           {isPublicPath ? <PublicPage /> : <AppRoot />}
           <ToastViewport />
+          <Analytics />
         </ToastProvider>
       </ErrorProvider>
     </ErrorBoundary>
