@@ -6,8 +6,15 @@
 import type {
   Member,
   Rental,
+  FinancialCategory,
+  FinancialTransaction,
+  OwnerContributionSchedule,
   MemberRole,
   RentalStatus,
+  FinancialTransactionType,
+  FinancialTransactionSource,
+  RentalFinancialComponent,
+  ContributionFrequency,
   PushSubscriptionRecord,
   UserNotification,
   PublicPageContent,
@@ -16,7 +23,19 @@ import type {
   SuggestionMessage,
   SuggestionVote,
 } from "../types";
-import type { DbMember, DbRental, DbPushSubscription, DbUserNotification, DbPublicPage, DbPublicPageImage, DbFeedbackMessage, DbFeedbackVote } from "./dbTypes";
+import type {
+  DbMember,
+  DbRental,
+  DbFinancialCategory,
+  DbFinancialTransaction,
+  DbOwnerContributionSchedule,
+  DbPushSubscription,
+  DbUserNotification,
+  DbPublicPage,
+  DbPublicPageImage,
+  DbFeedbackMessage,
+  DbFeedbackVote,
+} from "./dbTypes";
 
 const normalizeOptionalTextToNull = (value: string | undefined): string | null => {
   if (value === undefined) return null;
@@ -139,6 +158,87 @@ export const mapRentalToDb = (
     actual_end_date: rental.actualEndDate ?? null,
   }),
   ...(rental.isPaid !== undefined && { is_paid: rental.isPaid }),
+});
+
+// ------------------------------------------------------------
+// Financial mappers
+// ------------------------------------------------------------
+
+export const mapFinancialCategoryFromDb = (db: DbFinancialCategory): FinancialCategory => ({
+  id: db.id,
+  type: db.transaction_type as FinancialTransactionType,
+  name: db.name,
+  isSystem: db.is_system,
+  isActive: db.is_active,
+  createdByMemberId: db.created_by_member_id ?? undefined,
+  createdAt: db.created_at,
+  updatedAt: db.updated_at,
+});
+
+export const mapFinancialTransactionFromDb = (db: DbFinancialTransaction): FinancialTransaction => ({
+  id: db.id,
+  type: db.transaction_type as FinancialTransactionType,
+  amount: db.amount,
+  transactionDate: db.transaction_date,
+  categoryId: db.category_id,
+  description: db.description,
+  source: db.source as FinancialTransactionSource,
+  ownerId: db.owner_id ?? undefined,
+  rentalId: db.rental_id ?? undefined,
+  rentalComponent: (db.rental_component ?? undefined) as RentalFinancialComponent | undefined,
+  contributionScheduleId: db.contribution_schedule_id ?? undefined,
+  contributionDueDate: db.contribution_due_date ?? undefined,
+  recordedByMemberId: db.recorded_by_member_id ?? undefined,
+  voidedAt: db.voided_at ?? undefined,
+  createdAt: db.created_at,
+  updatedAt: db.updated_at,
+});
+
+export const mapFinancialTransactionToDb = (
+  transaction: Partial<Omit<FinancialTransaction, "id" | "createdAt" | "updatedAt">>
+): Partial<Omit<DbFinancialTransaction, "id" | "created_at" | "updated_at">> => ({
+  ...(transaction.type !== undefined && { transaction_type: transaction.type }),
+  ...(transaction.amount !== undefined && { amount: transaction.amount }),
+  ...("transactionDate" in transaction && { transaction_date: transaction.transactionDate ?? null }),
+  ...(transaction.categoryId !== undefined && { category_id: transaction.categoryId }),
+  ...(transaction.description !== undefined && { description: transaction.description }),
+  ...(transaction.source !== undefined && { source: transaction.source }),
+  ...("ownerId" in transaction && { owner_id: transaction.ownerId ?? null }),
+  ...("rentalId" in transaction && { rental_id: transaction.rentalId ?? null }),
+  ...("rentalComponent" in transaction && { rental_component: transaction.rentalComponent ?? null }),
+  ...("contributionScheduleId" in transaction && { contribution_schedule_id: transaction.contributionScheduleId ?? null }),
+  ...("contributionDueDate" in transaction && { contribution_due_date: transaction.contributionDueDate ?? null }),
+  ...("recordedByMemberId" in transaction && { recorded_by_member_id: transaction.recordedByMemberId ?? null }),
+  ...("voidedAt" in transaction && { voided_at: transaction.voidedAt ?? null }),
+});
+
+export const mapOwnerContributionScheduleFromDb = (db: DbOwnerContributionSchedule): OwnerContributionSchedule => ({
+  id: db.id,
+  ownerId: db.owner_id,
+  amount: db.amount,
+  frequency: db.frequency as ContributionFrequency,
+  startDate: db.start_date,
+  endDate: db.end_date,
+  paymentDay: db.payment_day,
+  isActive: db.is_active,
+  deactivatedAt: db.deactivated_at ?? undefined,
+  createdByMemberId: db.created_by_member_id ?? undefined,
+  createdAt: db.created_at,
+  updatedAt: db.updated_at,
+});
+
+export const mapOwnerContributionScheduleToDb = (
+  schedule: Partial<Omit<OwnerContributionSchedule, "id" | "createdAt" | "updatedAt">>
+): Partial<Omit<DbOwnerContributionSchedule, "id" | "created_at" | "updated_at">> => ({
+  ...(schedule.ownerId !== undefined && { owner_id: schedule.ownerId }),
+  ...(schedule.amount !== undefined && { amount: schedule.amount }),
+  ...(schedule.frequency !== undefined && { frequency: schedule.frequency }),
+  ...(schedule.startDate !== undefined && { start_date: schedule.startDate }),
+  ...(schedule.endDate !== undefined && { end_date: schedule.endDate }),
+  ...(schedule.paymentDay !== undefined && { payment_day: schedule.paymentDay }),
+  ...(schedule.isActive !== undefined && { is_active: schedule.isActive }),
+  ...("deactivatedAt" in schedule && { deactivated_at: schedule.deactivatedAt ?? null }),
+  ...("createdByMemberId" in schedule && { created_by_member_id: schedule.createdByMemberId ?? null }),
 });
 
 // ------------------------------------------------------------

@@ -25,6 +25,8 @@ export interface Permissions {
   viewSuggestions: boolean;
   /** true = peut publier un message ou répondre (admin/owner) */
   createSuggestions: boolean;
+  viewFinances: boolean;
+  manageFinances: boolean;
 }
 
 export interface RentalActionPermissions {
@@ -60,6 +62,8 @@ export const getPermissions = (member: Member | null): Permissions => {
       togglePayment: false,
       viewSuggestions: false,
       createSuggestions: false,
+      viewFinances: false,
+      manageFinances: false,
     };
   }
 
@@ -81,6 +85,8 @@ export const getPermissions = (member: Member | null): Permissions => {
       togglePayment: true,
       viewSuggestions: true,
       createSuggestions: true,
+      viewFinances: true,
+      manageFinances: true,
     };
   }
 
@@ -103,6 +109,8 @@ export const getPermissions = (member: Member | null): Permissions => {
       togglePayment: isEditor,
       viewSuggestions: true,
       createSuggestions: true,
+      viewFinances: true,
+      manageFinances: isEditor,
     };
   }
   // Sub_member : peut voir le calendrier + ses locations, et créer des demandes
@@ -122,6 +130,8 @@ export const getPermissions = (member: Member | null): Permissions => {
     togglePayment: false,
     viewSuggestions: true,
     createSuggestions: false,
+    viewFinances: false,
+    manageFinances: false,
   };
 };
 

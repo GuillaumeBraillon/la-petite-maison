@@ -5,6 +5,28 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.55] - 2026-10-26
+
+### Ajouté
+
+- **Gestion des finances** : nouvelle page avec synthèse annuelle ou mensuelle, revenus encaissés, dépenses, soldes, prévisions locatives et suivi des versements des propriétaires.
+- **Mouvements financiers** : création, modification et archivage des revenus et dépenses, avec catégorie, date, description facultative et association facultative à un propriétaire.
+- **Versements récurrents** : configuration par propriétaire, montant, fréquence et période; les échéances sont calculées sans créer automatiquement d’encaissement. L’enregistrement d’un versement reçu crée un mouvement associé au propriétaire et à son échéance.
+- **Catégories financières** : catégories par défaut et personnalisées; les éditeurs peuvent ajouter, renommer, désactiver et réactiver les catégories. Les catégories automatiques « Locations » et « Versements des propriétaires » restent protégées.
+- **Détail des virements locatifs** : chaque paiement est présenté comme un virement groupé avec ses parts « Location » et « Électricité ». La somme conserve exactement `total_price`; les écarts d’arrondi restent inclus dans la part location.
+- **Accès à la location** : le lien d’un virement locatif ouvre la location correspondante.
+
+### Sécurité
+
+- **RLS financière** : lecture financière réservée aux propriétaires et administrateurs; écritures et configurations réservées aux propriétaires éditeurs et administrateurs.
+- **Lien propriétaire** : validation en base du propriétaire associé aux mouvements, avec rattachement automatique pour les locations et versements récurrents.
+
+### Technique
+
+- **Migrations Supabase** : ajout des tables de catégories, mouvements financiers et configurations de versements; migration des paiements locatifs existants, ventilation location/électricité et association des mouvements à leurs propriétaires.
+- **Calculs financiers** : centralisation des soldes et totaux en centimes; les revenus prévisionnels et les échéances attendues restent distincts des montants encaissés.
+- **Interface** : page financière organisée en onglets « Synthèse », « Mouvements », « Versements » et « Catégories »; échéances regroupées par mois avec détail dépliable.
+
 ## [0.3.54] - 2026-09-02
 
 ### Amélioré

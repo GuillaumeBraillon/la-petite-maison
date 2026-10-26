@@ -9,14 +9,43 @@ import {
   mapMemberToDb,
   mapRentalFromDb,
   mapRentalToDb,
+  mapFinancialTransactionFromDb,
+  mapFinancialTransactionToDb,
+  mapFinancialCategoryFromDb,
+  mapOwnerContributionScheduleFromDb,
+  mapOwnerContributionScheduleToDb,
   mapPublicPageFromDb,
   mapPublicPageImageFromDb,
   mapSuggestionMessageFromDb,
   mapSuggestionMessageToDb,
   mapSuggestionVoteFromDb,
 } from "./apiMappers";
-import type { DbMember, DbRental, DbPublicPage, DbPublicPageImage, DbFeedbackMessage, DbFeedbackVote } from "./dbTypes";
-import type { Member, Rental, RentalStatus, PublicPageContent, PublicPageImage, SuggestionMessage, SuggestionVote } from "../types";
+import type {
+  DbMember,
+  DbRental,
+  DbFinancialTransaction,
+  DbFinancialCategory,
+  DbOwnerContributionSchedule,
+  DbPublicPage,
+  DbPublicPageImage,
+  DbFeedbackMessage,
+  DbFeedbackVote,
+} from "./dbTypes";
+import type {
+  Member,
+  Rental,
+  RentalStatus,
+  FinancialCategory,
+  FinancialTransaction,
+  FinancialTransactionInput,
+  FinancialTransactionType,
+  OwnerContributionSchedule,
+  OwnerContributionScheduleInput,
+  PublicPageContent,
+  PublicPageImage,
+  SuggestionMessage,
+  SuggestionVote,
+} from "../types";
 import { notifyNewRental, notifyStatusChange, notifyCompleted, notifyDeletedRental } from "./rentalNotifications";
 import { notifyEmailNewRental, notifyEmailStatusChange, notifyEmailCompleted, notifyEmailDeletedRental } from "./emailNotifications";
 
@@ -139,6 +168,101 @@ export const deleteRental = async (id: string): Promise<void> => {
     void notifyDeletedRental(deletedRental);
     void notifyEmailDeletedRental(deletedRental);
   }
+};
+
+// ------------------------------------------------------------
+// Financial CRUD
+// ------------------------------------------------------------
+
+export const createFinancialTransaction = async (input: FinancialTransactionInput): Promise<FinancialTransaction> => {
+  const dbPayload = mapFinancialTransactionToDb({
+    ...input,
+    source: "manual",
+  });
+  const { data, error } = await supabase.from("financial_transactions").insert(dbPayload).select().single();
+
+  if (error) throw error;
+  return mapFinancialTransactionFromDb(data as DbFinancialTransaction);
+};
+
+export const updateFinancialTransaction = async (
+  id: string,
+  updates: Partial<Omit<FinancialTransactionInput, "recordedByMemberId">>
+): Promise<FinancialTransaction> => {
+  const dbPayload = mapFinancialTransactionToDb(updates);
+  const { data, error } = await supabase
+    .from("financial_transactions")
+    .update(dbPayload)
+    .eq("id", id)
+    .eq("source", "manual")
+    .is("rental_id", null)
+    .is("voided_at", null)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return mapFinancialTransactionFromDb(data as DbFinancialTransaction);
+};
+
+export const archiveFinancialTransaction = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from("financial_transactions")
+    .update({ voided_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("source", "manual")
+    .is("rental_id", null)
+    .is("voided_at", null)
+    .select("id")
+    .single();
+
+  if (error) throw error;
+};
+
+export const createFinancialCategory = async (type: FinancialTransactionType, name: string, createdByMemberId: string): Promise<FinancialCategory> => {
+  const { data, error } = await supabase
+    .from("financial_categories")
+    .insert({
+      transaction_type: type,
+      name: name.trim(),
+      created_by_member_id: createdByMemberId,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return mapFinancialCategoryFromDb(data as DbFinancialCategory);
+};
+
+export const updateFinancialCategory = async (id: string, name: string): Promise<FinancialCategory> => {
+  const { data, error } = await supabase.from("financial_categories").update({ name: name.trim() }).eq("id", id).select().single();
+
+  if (error) throw error;
+  return mapFinancialCategoryFromDb(data as DbFinancialCategory);
+};
+
+export const setFinancialCategoryActive = async (id: string, isActive: boolean): Promise<FinancialCategory> => {
+  const { data, error } = await supabase.from("financial_categories").update({ is_active: isActive }).eq("id", id).select().single();
+
+  if (error) throw error;
+  return mapFinancialCategoryFromDb(data as DbFinancialCategory);
+};
+
+export const createOwnerContributionSchedule = async (input: OwnerContributionScheduleInput): Promise<OwnerContributionSchedule> => {
+  const dbPayload = mapOwnerContributionScheduleToDb({
+    ...input,
+    isActive: true,
+  });
+  const { data, error } = await supabase.from("owner_contribution_schedules").insert(dbPayload).select().single();
+
+  if (error) throw error;
+  return mapOwnerContributionScheduleFromDb(data as DbOwnerContributionSchedule);
+};
+
+export const setOwnerContributionScheduleActive = async (id: string, isActive: boolean): Promise<OwnerContributionSchedule> => {
+  const { data, error } = await supabase.from("owner_contribution_schedules").update({ is_active: isActive }).eq("id", id).select().single();
+
+  if (error) throw error;
+  return mapOwnerContributionScheduleFromDb(data as DbOwnerContributionSchedule);
 };
 
 // ------------------------------------------------------------

@@ -6,12 +6,13 @@ import { NotificationToggle } from "../ui/NotificationToggle";
 import { UserEmailNotificationsToggle } from "../ui/userInfo/UserEmailNotificationsToggle";
 import { UserMenu } from "../ui/UserMenu";
 
-export type AppView = "dashboard" | "rentals" | "members" | "calendar" | "suggestions";
+export type AppView = "dashboard" | "rentals" | "members" | "calendar" | "suggestions" | "finances";
 
 export interface AppNavItem {
   id: AppView;
   label: string;
   icon: ReactNode;
+  mobileLabel?: string;
   requiredRoles?: Member["role"][];
 }
 
@@ -183,13 +184,14 @@ export const AppShellLayout = ({
             <button
               key={item.id}
               onClick={() => onViewChange(item.id)}
+              aria-label={item.label}
               className={[
-                "flex flex-col items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors",
+                "flex min-w-0 flex-col items-center gap-0.5 px-0.5 py-1 rounded-lg text-[9px] font-medium transition-colors",
                 view === item.id ? "text-primary-700" : "text-gray-600",
               ].join(" ")}
             >
               {item.icon}
-              <span>{item.label}</span>
+              <span className="max-w-full truncate">{item.mobileLabel ?? item.label}</span>
             </button>
           ))}
         </div>

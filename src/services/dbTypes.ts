@@ -44,6 +44,51 @@ export interface DbRental {
   updated_at: string;
 }
 
+export interface DbFinancialCategory {
+  id: string;
+  transaction_type: string;
+  name: string;
+  is_system: boolean;
+  is_active: boolean;
+  created_by_member_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbFinancialTransaction {
+  id: string;
+  transaction_type: string;
+  amount: number;
+  transaction_date: string | null;
+  category_id: string;
+  description: string;
+  source: string;
+  owner_id: string | null;
+  rental_id: string | null;
+  rental_component: string | null;
+  contribution_schedule_id: string | null;
+  contribution_due_date: string | null;
+  recorded_by_member_id: string | null;
+  voided_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbOwnerContributionSchedule {
+  id: string;
+  owner_id: string;
+  amount: number;
+  frequency: string;
+  start_date: string;
+  end_date: string;
+  payment_day: number;
+  is_active: boolean;
+  deactivated_at: string | null;
+  created_by_member_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DbPushSubscription {
   id: string;
   user_id: string;

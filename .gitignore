@@ -28,3 +28,6 @@ dist-ssr
 backup_*
 backup_manual
 supabase/*
+!supabase/migrations/
+supabase/migrations/*
+!supabase/migrations/*.sql

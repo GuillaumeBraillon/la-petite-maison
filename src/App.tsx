@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { LayoutDashboard, Users, CalendarDays, List, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Users, CalendarDays, List, MessageSquare, Wallet } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import type { Member, Rental, RentalStatus, RentalStatusFilter, RentalPaymentFilter, AppShellProps } from "./types";
@@ -33,24 +33,35 @@ const NAV_ITEMS: AppNavItem[] = [
   {
     id: "dashboard",
     label: "Tableau de bord",
+    mobileLabel: "Accueil",
     icon: <LayoutDashboard size={18} />,
   },
-  { id: "calendar", label: "Calendrier", icon: <CalendarDays size={18} /> },
+  { id: "calendar", label: "Calendrier", mobileLabel: "Calend.", icon: <CalendarDays size={18} /> },
   {
     id: "rentals",
     label: "Locations",
+    mobileLabel: "Locations",
     icon: <List size={18} />,
   },
   {
     id: "members",
     label: "Membres",
+    mobileLabel: "Membres",
     icon: <Users size={18} />,
     requiredRoles: ["admin", "owner"],
   },
   {
     id: "suggestions",
     label: "Suggestions",
+    mobileLabel: "Idées",
     icon: <MessageSquare size={18} />,
+  },
+  {
+    id: "finances",
+    label: "Finances",
+    mobileLabel: "Finances",
+    icon: <Wallet size={18} />,
+    requiredRoles: ["admin", "owner"],
   },
 ];
 
@@ -59,6 +70,7 @@ const AppShell = ({ session }: AppShellProps) => {
   const [rentalsStatusFilter, setRentalsStatusFilter] = useState<RentalStatusFilter>("all");
   const [rentalsOwnerFilter, setRentalsOwnerFilter] = useState<string | "all">("all");
   const [rentalsPaymentFilter, setRentalsPaymentFilter] = useState<RentalPaymentFilter>("all");
+  const [rentalToOpenId, setRentalToOpenId] = useState<string | null>(null);
   const [currentMember, setCurrentMember] = useState<Member | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
@@ -199,6 +211,7 @@ const AppShell = ({ session }: AppShellProps) => {
   };
 
   const handleOpenRentalsWithStatus = (status: RentalStatus, ownerId?: string): void => {
+    setRentalToOpenId(null);
     setRentalsStatusFilter(status);
     setRentalsOwnerFilter(ownerId ?? "all");
     setRentalsPaymentFilter("all");
@@ -206,13 +219,27 @@ const AppShell = ({ session }: AppShellProps) => {
   };
 
   const handleOpenRentalsWithPayment = (payment: RentalPaymentFilter): void => {
+    setRentalToOpenId(null);
     setRentalsStatusFilter("all");
     setRentalsOwnerFilter("all");
     setRentalsPaymentFilter(payment);
     setView("rentals");
   };
 
+  const handleOpenRental = (rentalId: string): void => {
+    setRentalToOpenId(rentalId);
+    setRentalsStatusFilter("all");
+    setRentalsOwnerFilter("all");
+    setRentalsPaymentFilter("all");
+    setView("rentals");
+  };
+
+  const handleInitialRentalOpenHandled = useCallback((rentalId: string): void => {
+    setRentalToOpenId((currentId) => (currentId === rentalId ? null : currentId));
+  }, []);
+
   const handleViewChange = (nextView: AppView): void => {
+    setRentalToOpenId(null);
     if (nextView === "rentals") {
       setRentalsStatusFilter("all");
       setRentalsOwnerFilter("all");
@@ -271,9 +298,12 @@ const AppShell = ({ session }: AppShellProps) => {
             rentalsStatusFilter={rentalsStatusFilter}
             rentalsOwnerFilter={rentalsOwnerFilter}
             rentalsPaymentFilter={rentalsPaymentFilter}
+            rentalToOpenId={rentalToOpenId}
             onOpenRentalsWithStatus={handleOpenRentalsWithStatus}
             onOpenRentalsWithPayment={handleOpenRentalsWithPayment}
             onOpenSuggestions={() => handleViewChange("suggestions")}
+            onOpenRental={handleOpenRental}
+            onInitialRentalOpenHandled={handleInitialRentalOpenHandled}
           />
         )}
       </AppShellLayout>

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import type { Member, Rental, RentalPaymentFilter, RentalStatus, RentalStatusFilter } from "../../types";
 import { CalendarPage } from "../../pages/CalendarPage";
 import { DashboardPage } from "../../pages/DashboardPage";
@@ -5,6 +6,12 @@ import { MembersPage } from "../../pages/MembersPage";
 import { RentalsPage } from "../../pages/RentalsPage";
 import type { AppView } from "./AppShellLayout";
 import { SuggestionsPage } from "../../pages/SuggestionsPage";
+import { LoadingScreen } from "../ui/LoadingScreen";
+
+const FinancialsPage = lazy(async () => {
+  const module = await import("../../pages/FinancialsPage");
+  return { default: module.FinancialsPage };
+});
 
 interface AppViewRouterProps {
   view: AppView;
@@ -15,9 +22,12 @@ interface AppViewRouterProps {
   rentalsStatusFilter: RentalStatusFilter;
   rentalsOwnerFilter: string | "all";
   rentalsPaymentFilter: RentalPaymentFilter;
+  rentalToOpenId: string | null;
   onOpenRentalsWithStatus: (status: RentalStatus, ownerId?: string) => void;
   onOpenRentalsWithPayment: (payment: RentalPaymentFilter) => void;
   onOpenSuggestions: () => void;
+  onOpenRental: (rentalId: string) => void;
+  onInitialRentalOpenHandled: (rentalId: string) => void;
 }
 
 export const AppViewRouter = ({
@@ -29,9 +39,12 @@ export const AppViewRouter = ({
   rentalsStatusFilter,
   rentalsOwnerFilter,
   rentalsPaymentFilter,
+  rentalToOpenId,
   onOpenRentalsWithStatus,
   onOpenRentalsWithPayment,
   onOpenSuggestions,
+  onOpenRental,
+  onInitialRentalOpenHandled,
 }: AppViewRouterProps) => {
   /**
    * Renders the appropriate page component based on the current view.
@@ -62,6 +75,8 @@ export const AppViewRouter = ({
         initialStatusFilter={rentalsStatusFilter}
         initialOwnerFilter={rentalsOwnerFilter}
         initialPaymentFilter={rentalsPaymentFilter}
+        initialRentalIdToOpen={rentalToOpenId}
+        onInitialRentalOpenHandled={onInitialRentalOpenHandled}
       />
     );
   }
@@ -74,6 +89,14 @@ export const AppViewRouter = ({
   // Render the suggestions page if the view is "suggestions"
   if (view === "suggestions") {
     return <SuggestionsPage members={members} currentMember={currentMember ?? undefined} />;
+  }
+
+  if (view === "finances") {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <FinancialsPage rentals={rentals} members={members} currentMember={currentMember} onOpenRental={onOpenRental} />
+      </Suspense>
+    );
   }
 
   // Render the members page by default if no other view matches

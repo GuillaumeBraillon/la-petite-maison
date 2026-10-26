@@ -8,13 +8,35 @@ import { supabase } from "./supabaseClient";
 import {
   mapMemberFromDb,
   mapRentalFromDb,
+  mapFinancialCategoryFromDb,
+  mapFinancialTransactionFromDb,
+  mapOwnerContributionScheduleFromDb,
   mapPublicPageFromDb,
   mapPublicPageImageFromDb,
   mapSuggestionMessageFromDb,
   mapSuggestionVoteFromDb,
 } from "./apiMappers";
-import type { DbMember, DbRental, DbPublicPage, DbPublicPageImage, DbFeedbackMessage, DbFeedbackVote } from "./dbTypes";
-import type { Member, Rental, PublicPageData, SuggestionMessage, SuggestionVote } from "../types";
+import type {
+  DbMember,
+  DbRental,
+  DbFinancialCategory,
+  DbFinancialTransaction,
+  DbOwnerContributionSchedule,
+  DbPublicPage,
+  DbPublicPageImage,
+  DbFeedbackMessage,
+  DbFeedbackVote,
+} from "./dbTypes";
+import type {
+  Member,
+  Rental,
+  FinancialCategory,
+  FinancialTransaction,
+  OwnerContributionSchedule,
+  PublicPageData,
+  SuggestionMessage,
+  SuggestionVote,
+} from "../types";
 
 export const fetchMembers = async (): Promise<Member[]> => {
   const { data, error } = await supabase.from("members").select("*").order("last_name", { ascending: true });
@@ -45,6 +67,31 @@ export const fetchRentals = async (): Promise<Rental[]> => {
 
   if (error) throw error;
   return ((data as DbRental[]) ?? []).map(mapRentalFromDb);
+};
+
+export const fetchFinancialCategories = async (): Promise<FinancialCategory[]> => {
+  const { data, error } = await supabase.from("financial_categories").select("*").order("transaction_type").order("name");
+
+  if (error) throw error;
+  return ((data as DbFinancialCategory[]) ?? []).map(mapFinancialCategoryFromDb);
+};
+
+export const fetchFinancialTransactions = async (): Promise<FinancialTransaction[]> => {
+  const { data, error } = await supabase
+    .from("financial_transactions")
+    .select("*")
+    .order("transaction_date", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return ((data as DbFinancialTransaction[]) ?? []).map(mapFinancialTransactionFromDb);
+};
+
+export const fetchOwnerContributionSchedules = async (): Promise<OwnerContributionSchedule[]> => {
+  const { data, error } = await supabase.from("owner_contribution_schedules").select("*").order("start_date", { ascending: false });
+
+  if (error) throw error;
+  return ((data as DbOwnerContributionSchedule[]) ?? []).map(mapOwnerContributionScheduleFromDb);
 };
 
 export const fetchPublicPage = async (): Promise<PublicPageData> => {

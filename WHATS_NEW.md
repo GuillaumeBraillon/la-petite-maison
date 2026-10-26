@@ -3,6 +3,17 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.55] - 26 octobre 2026
+
+### Ce qui change pour vous
+
+- **Les finances de la maison en un seul endroit** : consultez les revenus, les dépenses et le solde de l’année ou d’un mois, dans des rubriques séparées pour mieux vous repérer.
+- **Des prévisions plus claires** : les locations à venir et les versements attendus sont affichés séparément de l’argent réellement reçu.
+- **Des mouvements faciles à suivre** : les éditeurs peuvent ajouter ou corriger un revenu ou une dépense et préciser le propriétaire concerné.
+- **Locations détaillées sans doublon** : un virement de location apparaît avec ses parts « Location » et « Électricité », puis son total. Le montant total reste celui du virement, arrondis compris. Le lien permet d’ouvrir la location correspondante.
+- **Versements récurrents mieux présentés** : les échéances sont regroupées par mois. Vous pouvez ouvrir le détail pour voir le montant attendu et l’état de chaque propriétaire. Un versement exceptionnel s’ajoute depuis « Ajouter un mouvement ».
+- **Catégories adaptées à la maison** : les éditeurs peuvent ajouter, renommer ou désactiver des catégories. Les catégories utilisées automatiquement pour les locations et les versements des propriétaires restent protégées.
+
 ## [0.3.54] - 2 septembre 2026
 
 ### Ce qui change pour vous

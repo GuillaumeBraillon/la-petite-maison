@@ -147,6 +147,48 @@ export const TOAST_MESSAGES = {
       message: "Impossible d'enregistrer votre vote.",
     },
   },
+  financial: {
+    transactionCreated: {
+      title: "Mouvement ajouté",
+      message: "Le mouvement financier a été enregistré.",
+    },
+    transactionUpdated: {
+      title: "Mouvement modifié",
+      message: "Le mouvement financier a été mis à jour.",
+    },
+    transactionArchived: {
+      title: "Mouvement supprimé",
+      message: "Le mouvement financier a été retiré des comptes.",
+    },
+    transactionError: {
+      title: "Erreur",
+      message: "Impossible d'enregistrer le mouvement financier.",
+    },
+    categoryCreated: {
+      title: "Catégorie ajoutée",
+      message: "La catégorie est disponible pour les prochains mouvements.",
+    },
+    categoryUpdated: {
+      title: "Catégorie mise à jour",
+      message: "La catégorie a été mise à jour.",
+    },
+    categoryError: {
+      title: "Erreur",
+      message: "Impossible de modifier la catégorie.",
+    },
+    scheduleCreated: {
+      title: "Versements configurés",
+      message: "Les échéances prévues ont été ajoutées au suivi.",
+    },
+    scheduleDeactivated: {
+      title: "Configuration arrêtée",
+      message: "Les anciennes échéances sont conservées.",
+    },
+    scheduleError: {
+      title: "Erreur",
+      message: "Impossible d'enregistrer la configuration des versements.",
+    },
+  },
 } as const;
 
 export const PUSH_MESSAGES = {

@@ -90,6 +90,87 @@ export interface Rental {
   createdAt: string;
   updatedAt: string;
 }
+
+export type FinancialTransactionType = "income" | "expense";
+export type FinancialTransactionSource = "manual" | "rental";
+export type RentalFinancialComponent = "rent" | "electricity";
+export type ContributionFrequency = "monthly" | "quarterly" | "annual";
+
+export interface FinancialCategory {
+  id: string;
+  type: FinancialTransactionType;
+  name: string;
+  isSystem: boolean;
+  isActive: boolean;
+  createdByMemberId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinancialTransaction {
+  id: string;
+  type: FinancialTransactionType;
+  amount: number;
+  transactionDate: string | null;
+  categoryId: string;
+  description: string;
+  source: FinancialTransactionSource;
+  ownerId?: string;
+  rentalId?: string;
+  rentalComponent?: RentalFinancialComponent;
+  contributionScheduleId?: string;
+  contributionDueDate?: string;
+  recordedByMemberId?: string;
+  voidedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinancialTransactionInput {
+  type: FinancialTransactionType;
+  amount: number;
+  transactionDate: string;
+  categoryId: string;
+  description: string;
+  ownerId?: string;
+  contributionScheduleId?: string;
+  contributionDueDate?: string;
+  recordedByMemberId: string;
+}
+
+export interface OwnerContributionSchedule {
+  id: string;
+  ownerId: string;
+  amount: number;
+  frequency: ContributionFrequency;
+  startDate: string;
+  endDate: string;
+  paymentDay: number;
+  isActive: boolean;
+  deactivatedAt?: string;
+  createdByMemberId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OwnerContributionScheduleInput {
+  ownerId: string;
+  amount: number;
+  frequency: ContributionFrequency;
+  startDate: string;
+  endDate: string;
+  paymentDay: number;
+  createdByMemberId: string;
+}
+
+export interface ExpectedContribution {
+  scheduleId: string;
+  ownerId: string;
+  dueDate: string;
+  amount: number;
+  receivedTransaction?: FinancialTransaction;
+}
+
 // ------------------------------------------------------------
 
 export interface PushSubscriptionRecord {
@@ -163,6 +244,8 @@ export interface RentalsPageProps extends RentalsMembersPageSharedProps {
   initialStatusFilter?: RentalStatusFilter;
   initialOwnerFilter?: string | "all";
   initialPaymentFilter?: RentalPaymentFilter;
+  initialRentalIdToOpen?: string | null;
+  onInitialRentalOpenHandled?: (rentalId: string) => void;
 }
 
 // ------------------------------------------------------------

@@ -2,6 +2,7 @@ import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { RentalStatusFilter, RentalPaymentFilter, RentalsPageProps } from "../types";
 import { getPermissions, getRentalActionPermissions } from "../services/permissions";
+import { useError } from "../contexts/ErrorContext";
 import { useCreateSubMember } from "../hooks/useCreateSubMember";
 import { RentalList } from "../components/rentals/RentalList";
 import { RentalDialogs } from "../components/rentals/RentalDialogs";
@@ -23,6 +24,8 @@ export const RentalsPage = ({
   initialStatusFilter,
   initialOwnerFilter,
   initialPaymentFilter,
+  initialRentalIdToOpen,
+  onInitialRentalOpenHandled,
 }: RentalsPageProps) => {
   const handleCreateSubMember = useCreateSubMember({ onRefresh });
   const {
@@ -51,6 +54,24 @@ export const RentalsPage = ({
   const permissions = getPermissions(currentMember ?? null);
   const selectedRentalActions = selected ? getRentalActionPermissions(currentMember ?? null, selected) : null;
   const editingRentalActions = editing && editing.id ? getRentalActionPermissions(currentMember ?? null, editing) : null;
+  const { setError: setGlobalError } = useError();
+
+  useEffect(() => {
+    if (!initialRentalIdToOpen) return;
+    const rentalToOpen = rentals.find((rental) => rental.id === initialRentalIdToOpen);
+
+    if (!rentalToOpen) {
+      setGlobalError({
+        message: "Cette location n’est plus disponible.",
+        context: "Ouverture d’une location depuis les finances",
+      });
+      onInitialRentalOpenHandled?.(initialRentalIdToOpen);
+      return;
+    }
+
+    openDetail(rentalToOpen);
+    onInitialRentalOpenHandled?.(initialRentalIdToOpen);
+  }, [initialRentalIdToOpen, onInitialRentalOpenHandled, openDetail, rentals, setGlobalError]);
 
   // Filters
   type StatusFilter = RentalStatusFilter;
