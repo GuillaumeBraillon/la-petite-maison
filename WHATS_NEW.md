@@ -3,6 +3,13 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.56] - 27 octobre 2026
+
+### Ce qui change pour vous
+
+- **Finances plus faciles à utiliser sur mobile** : les rubriques financières sont présentées sur deux colonnes, avec des boutons plus faciles à toucher et un repère visible lorsque vous naviguez au clavier.
+- **Mouvements filtrables** : choisissez d’afficher tous les mouvements, uniquement les revenus ou uniquement les dépenses. Le filtre s’applique aussi à l’historique des mouvements retirés.
+
 ## [0.3.55] - 26 octobre 2026
 
 ### Ce qui change pour vous

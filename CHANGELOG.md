@@ -5,6 +5,13 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.56] - 2026-10-27
+
+### Amélioré
+
+- **Navigation financière sur mobile** : les onglets s’affichent sur deux colonnes avec des zones tactiles plus grandes et un focus clavier visible.
+- **Mouvements financiers** : filtre d’affichage par revenus, dépenses ou tous les mouvements, appliqué aussi à l’historique des mouvements retirés.
+
 ## [0.3.55] - 2026-10-26
 
 ### Ajouté

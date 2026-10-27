@@ -88,6 +88,7 @@ const FINANCIAL_TABS = [
 ] as const;
 
 type FinancialTabId = (typeof FINANCIAL_TABS)[number]["id"];
+type TransactionFilter = "all" | FinancialTransactionType;
 
 export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }: FinancialsPageProps) => {
   const { categories, transactions, schedules, loading, error, refresh } = useFinancials(currentMember);
@@ -98,6 +99,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
   const today = getLocalDateString();
   const [mode, setMode] = useState<FinancialPeriodMode>("year");
   const [activeTab, setActiveTab] = useState<FinancialTabId>("summary");
+  const [transactionFilter, setTransactionFilter] = useState<TransactionFilter>("all");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [year, setYear] = useState(Number(today.slice(0, 4)));
   const [month, setMonth] = useState(Number(today.slice(5, 7)));
@@ -139,12 +141,20 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
     () => activeTransactions.filter((transaction) => getTransactionInPeriod(transaction, year, month, mode)),
     [activeTransactions, mode, month, year]
   );
+  const filteredPeriodTransactions = useMemo(
+    () => (transactionFilter === "all" ? periodTransactions : periodTransactions.filter((transaction) => transaction.type === transactionFilter)),
+    [periodTransactions, transactionFilter]
+  );
   const historicalTransactions = useMemo(
     () =>
       transactions.filter(
         (transaction) => transaction.voidedAt && (transaction.transactionDate === null || getTransactionInPeriod(transaction, year, month, mode))
       ),
     [mode, month, transactions, year]
+  );
+  const filteredHistoricalTransactions = useMemo(
+    () => (transactionFilter === "all" ? historicalTransactions : historicalTransactions.filter((transaction) => transaction.type === transactionFilter)),
+    [historicalTransactions, transactionFilter]
   );
   const owners = useMemo(() => members.filter((member) => member.role === "owner" && member.isAllowed), [members]);
   const contributionCategoryId = useMemo(
@@ -396,7 +406,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
         onNext={() => changeMonth(1)}
       />
 
-      <div role="tablist" aria-label="Rubriques financières" className="grid grid-cols-4 gap-1 rounded-xl bg-gray-100 p-1">
+      <div role="tablist" aria-label="Rubriques financières" className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-2 sm:grid-cols-4">
         {FINANCIAL_TABS.map((tab, index) => (
           <button
             key={tab.id}
@@ -412,7 +422,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
             onClick={() => setActiveTab(tab.id)}
             onKeyDown={(event) => handleTabKeyDown(event, index)}
             className={[
-              "min-h-11 rounded-lg px-2 py-2 text-sm font-medium transition-colors",
+              "min-h-12 rounded-lg px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
               activeTab === tab.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900",
             ].join(" ")}
           >
@@ -462,9 +472,31 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
                     </Button>
                   )}
                 </div>
-                {periodTransactions.length > 0 ? (
+                <div role="group" aria-label="Filtrer les mouvements par type" className="grid grid-cols-3 gap-2 rounded-xl bg-gray-100 p-1">
+                  {(
+                    [
+                      { id: "all", label: "Tous" },
+                      { id: "income", label: "Revenus" },
+                      { id: "expense", label: "Dépenses" },
+                    ] as const
+                  ).map((filter) => (
+                    <button
+                      key={filter.id}
+                      type="button"
+                      aria-pressed={transactionFilter === filter.id}
+                      onClick={() => setTransactionFilter(filter.id)}
+                      className={[
+                        "min-h-11 rounded-lg px-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
+                        transactionFilter === filter.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900",
+                      ].join(" ")}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+                {filteredPeriodTransactions.length > 0 ? (
                   <FinancialTransactionList
-                    transactions={periodTransactions}
+                    transactions={filteredPeriodTransactions}
                     categories={categories}
                     rentals={rentals}
                     members={members}
@@ -479,20 +511,24 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
                   />
                 ) : (
                   <Card className="bg-gray-50">
-                    <p className="text-sm text-gray-600">Aucun mouvement financier pour cette période.</p>
+                    <p className="text-sm text-gray-600">
+                      {periodTransactions.length === 0
+                        ? "Aucun mouvement financier pour cette période."
+                        : `Aucun ${transactionFilter === "income" ? "revenu" : "mouvement de dépense"} pour cette période.`}
+                    </p>
                   </Card>
                 )}
               </section>
 
-              {historicalTransactions.length > 0 && (
+              {filteredHistoricalTransactions.length > 0 && (
                 <details className="rounded-xl border border-gray-200 bg-white">
                   <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-800">
-                    Historique des mouvements retirés ({historicalTransactions.length})
+                    Historique des mouvements retirés ({filteredHistoricalTransactions.length})
                   </summary>
                   <div className="space-y-3 border-t border-gray-100 p-4">
                     <p className="text-sm text-gray-600">Ces mouvements sont conservés pour l’historique et ne sont pas inclus dans les soldes.</p>
                     <FinancialTransactionList
-                      transactions={historicalTransactions}
+                      transactions={filteredHistoricalTransactions}
                       categories={categories}
                       rentals={rentals}
                       members={members}
