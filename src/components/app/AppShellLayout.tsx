@@ -91,8 +91,8 @@ export const AppShellLayout = ({
   children,
 }: AppShellLayoutProps) => {
   return (
-    <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
-      <aside className="hidden md:flex md:w-56 bg-white border-r border-gray-200 flex-col shrink-0 overflow-visible relative z-30">
+    <div className="min-h-[100dvh] bg-gray-50 flex flex-col md:min-h-screen md:flex-row">
+      <aside className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-56 md:self-start bg-white border-r border-gray-200 flex-col shrink-0 overflow-visible relative z-30">
         <div className="flex items-center gap-2 px-5 py-5 border-b border-gray-100">
           <img src="/icon-192.png" alt="La Petite Maison" className="w-8 h-8 rounded-lg object-cover" />
           <span className="font-bold text-gray-900 text-sm leading-tight">La Petite Maison</span>
@@ -148,7 +148,7 @@ export const AppShellLayout = ({
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="min-w-0 flex-1">
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 pb-24">
           <div className="md:hidden flex items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-2">

@@ -180,6 +180,14 @@ export const TOAST_MESSAGES = {
       title: "Versements configurés",
       message: "Les échéances prévues ont été ajoutées au suivi.",
     },
+    scheduleUpdated: {
+      title: "Versements modifiés",
+      message: "La configuration des versements a été mise à jour.",
+    },
+    scheduleDeleted: {
+      title: "Configuration supprimée",
+      message: "La configuration des versements a été supprimée.",
+    },
     scheduleDeactivated: {
       title: "Configuration arrêtée",
       message: "Les anciennes échéances sont conservées.",

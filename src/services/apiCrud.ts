@@ -258,6 +258,23 @@ export const createOwnerContributionSchedule = async (input: OwnerContributionSc
   return mapOwnerContributionScheduleFromDb(data as DbOwnerContributionSchedule);
 };
 
+export const updateOwnerContributionSchedule = async (
+  id: string,
+  input: Omit<OwnerContributionScheduleInput, "createdByMemberId">
+): Promise<OwnerContributionSchedule> => {
+  const dbPayload = mapOwnerContributionScheduleToDb(input);
+  const { data, error } = await supabase.from("owner_contribution_schedules").update(dbPayload).eq("id", id).select().single();
+
+  if (error) throw error;
+  return mapOwnerContributionScheduleFromDb(data as DbOwnerContributionSchedule);
+};
+
+export const deleteOwnerContributionSchedule = async (id: string): Promise<void> => {
+  const { error } = await supabase.from("owner_contribution_schedules").delete().eq("id", id);
+
+  if (error) throw error;
+};
+
 export const setOwnerContributionScheduleActive = async (id: string, isActive: boolean): Promise<OwnerContributionSchedule> => {
   const { data, error } = await supabase.from("owner_contribution_schedules").update({ is_active: isActive }).eq("id", id).select().single();
 

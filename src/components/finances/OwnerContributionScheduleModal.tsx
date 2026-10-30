@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import type { ContributionFrequency, Member, OwnerContributionScheduleInput } from "../../types";
+import type { ContributionFrequency, Member, OwnerContributionSchedule, OwnerContributionScheduleInput } from "../../types";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Modal } from "../ui/Modal";
@@ -13,6 +13,7 @@ interface OwnerContributionScheduleModalProps {
   owners: Member[];
   saving: boolean;
   currentYear: number;
+  schedule?: OwnerContributionSchedule;
   onClose: () => void;
   onSubmit: (values: ScheduleValues) => Promise<void>;
 }
@@ -26,7 +27,7 @@ const getInitialValues = (year: number): ScheduleValues => ({
   paymentDay: 1,
 });
 
-export const OwnerContributionScheduleModal = ({ isOpen, owners, saving, currentYear, onClose, onSubmit }: OwnerContributionScheduleModalProps) => {
+export const OwnerContributionScheduleModal = ({ isOpen, owners, saving, currentYear, schedule, onClose, onSubmit }: OwnerContributionScheduleModalProps) => {
   const [ownerId, setOwnerId] = useState("");
   const [amount, setAmount] = useState("100");
   const [frequency, setFrequency] = useState<ContributionFrequency>("monthly");
@@ -38,14 +39,14 @@ export const OwnerContributionScheduleModal = ({ isOpen, owners, saving, current
   useEffect(() => {
     if (!isOpen) return;
     const defaults = getInitialValues(currentYear);
-    setOwnerId(owners[0]?.id ?? "");
-    setAmount(String(defaults.amount));
-    setFrequency(defaults.frequency);
-    setStartDate(defaults.startDate);
-    setEndDate(defaults.endDate);
-    setPaymentDay(String(defaults.paymentDay));
+    setOwnerId(schedule?.ownerId ?? owners[0]?.id ?? "");
+    setAmount(String(schedule?.amount ?? defaults.amount));
+    setFrequency(schedule?.frequency ?? defaults.frequency);
+    setStartDate(schedule?.startDate ?? defaults.startDate);
+    setEndDate(schedule?.endDate ?? defaults.endDate);
+    setPaymentDay(String(schedule?.paymentDay ?? defaults.paymentDay));
     setError(null);
-  }, [currentYear, isOpen, owners]);
+  }, [currentYear, isOpen, owners, schedule]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -84,7 +85,7 @@ export const OwnerContributionScheduleModal = ({ isOpen, owners, saving, current
     <Modal
       isOpen={isOpen}
       onClose={saving ? () => undefined : onClose}
-      title="Ajouter des versements récurrents"
+      title={schedule ? "Modifier les versements récurrents" : "Ajouter des versements récurrents"}
       size="md"
       footer={
         <>
@@ -92,7 +93,7 @@ export const OwnerContributionScheduleModal = ({ isOpen, owners, saving, current
             Annuler
           </Button>
           <Button type="submit" form="contribution-schedule-form" loading={saving}>
-            Enregistrer les versements récurrents
+            {schedule ? "Enregistrer les modifications" : "Enregistrer les versements récurrents"}
           </Button>
         </>
       }

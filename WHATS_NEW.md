@@ -3,6 +3,15 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.57] - 30 octobre 2026
+
+### Ce qui change pour vous
+
+- **Finances plus faciles à utiliser sur mobile** : les rubriques financières sont présentées sur deux colonnes, avec des boutons plus faciles à toucher et un repère visible lorsque vous naviguez au clavier.
+- **Mouvements filtrables** : choisissez un type, une catégorie et un propriétaire.
+- **Versements récurrents plus faciles à gérer** : Vous pouvez supprimer un versement tant qu’aucun n’a été enregistré.
+- **Ajout des versements mieux placé** : le bouton se trouve désormais dans « Configurations enregistrées ».
+
 ## [0.3.56] - 27 octobre 2026
 
 ### Ce qui change pour vous

@@ -5,6 +5,19 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.57] - 2026-10-30
+
+### Amélioré
+
+- **Navigation financière sur mobile** : les onglets s’affichent sur deux colonnes avec des zones tactiles plus grandes et un focus clavier visible.
+- **Mouvements financiers** : filtres par type, catégorie et propriétaire, appliqués aussi à l’historique des mouvements retirés.
+- **Versements récurrents** : affichage des échéances sous forme de cartes sur mobile et ordinateur; les configurations peuvent être modifiées, arrêtées ou supprimées lorsqu’aucun versement n’a été enregistré.
+- **Configuration des versements** : déplacement du bouton d’ajout dans la section « Configurations enregistrées ».
+
+### Technique
+
+- **Supabase** : ajout d’une politique RLS permettant aux éditeurs et administrateurs de supprimer uniquement les configurations de versements sans mouvement associé.
+
 ## [0.3.56] - 2026-10-27
 
 ### Amélioré

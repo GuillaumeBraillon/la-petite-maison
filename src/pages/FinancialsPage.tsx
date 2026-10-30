@@ -18,9 +18,11 @@ import {
   createFinancialCategory,
   createFinancialTransaction,
   createOwnerContributionSchedule,
+  deleteOwnerContributionSchedule,
   setFinancialCategoryActive,
   setOwnerContributionScheduleActive,
   updateFinancialCategory,
+  updateOwnerContributionSchedule,
   updateFinancialTransaction,
 } from "../services/apiCrud";
 import { calculateFinancialSummary, calculateYearlyBreakdown, getExpectedContributions, getProjectedRentals } from "../services/financialCalculations";
@@ -74,6 +76,16 @@ const getTransactionInPeriod = (transaction: FinancialTransaction, year: number,
   return date.startsWith(`${year}-`) && (mode === "year" || date.startsWith(`${year}-${String(month).padStart(2, "0")}-`));
 };
 
+const matchesTransactionFilters = (
+  transaction: FinancialTransaction,
+  type: TransactionFilter,
+  categoryId: TransactionFacetFilter,
+  ownerId: TransactionFacetFilter
+): boolean =>
+  (type === "all" || transaction.type === type) &&
+  (categoryId === "all" || transaction.categoryId === categoryId) &&
+  (ownerId === "all" || transaction.ownerId === ownerId);
+
 const getPeriodLabel = (year: number, month: number, mode: FinancialPeriodMode): string => {
   if (mode === "year") return `Année ${year}`;
   const monthName = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(year, month - 1, 1)));
@@ -89,6 +101,7 @@ const FINANCIAL_TABS = [
 
 type FinancialTabId = (typeof FINANCIAL_TABS)[number]["id"];
 type TransactionFilter = "all" | FinancialTransactionType;
+type TransactionFacetFilter = "all" | string;
 
 export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }: FinancialsPageProps) => {
   const { categories, transactions, schedules, loading, error, refresh } = useFinancials(currentMember);
@@ -100,6 +113,8 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
   const [mode, setMode] = useState<FinancialPeriodMode>("year");
   const [activeTab, setActiveTab] = useState<FinancialTabId>("summary");
   const [transactionFilter, setTransactionFilter] = useState<TransactionFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<TransactionFacetFilter>("all");
+  const [ownerFilter, setOwnerFilter] = useState<TransactionFacetFilter>("all");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [year, setYear] = useState(Number(today.slice(0, 4)));
   const [month, setMonth] = useState(Number(today.slice(5, 7)));
@@ -108,6 +123,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
   const [contributionToRecord, setContributionToRecord] = useState<{ scheduleId: string; dueDate: string; amount: number; ownerId: string } | undefined>();
   const [defaultTransactionType, setDefaultTransactionType] = useState<FinancialTransactionType>("expense");
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [scheduleToEdit, setScheduleToEdit] = useState<OwnerContributionSchedule | undefined>();
   const [transactionToArchive, setTransactionToArchive] = useState<FinancialTransaction | null>(null);
   const [savingTransaction, setSavingTransaction] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
@@ -142,21 +158,20 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
     [activeTransactions, mode, month, year]
   );
   const filteredPeriodTransactions = useMemo(
-    () => (transactionFilter === "all" ? periodTransactions : periodTransactions.filter((transaction) => transaction.type === transactionFilter)),
-    [periodTransactions, transactionFilter]
+    () => periodTransactions.filter((transaction) => matchesTransactionFilters(transaction, transactionFilter, categoryFilter, ownerFilter)),
+    [periodTransactions, transactionFilter, categoryFilter, ownerFilter]
   );
-  const historicalTransactions = useMemo(
-    () =>
-      transactions.filter(
-        (transaction) => transaction.voidedAt && (transaction.transactionDate === null || getTransactionInPeriod(transaction, year, month, mode))
-      ),
-    [mode, month, transactions, year]
-  );
+  const historicalTransactions = useMemo(() => transactions.filter((transaction) => transaction.voidedAt), [transactions]);
   const filteredHistoricalTransactions = useMemo(
-    () => (transactionFilter === "all" ? historicalTransactions : historicalTransactions.filter((transaction) => transaction.type === transactionFilter)),
-    [historicalTransactions, transactionFilter]
+    () => historicalTransactions.filter((transaction) => matchesTransactionFilters(transaction, transactionFilter, categoryFilter, ownerFilter)),
+    [historicalTransactions, transactionFilter, categoryFilter, ownerFilter]
+  );
+  const recordedScheduleIds = useMemo(
+    () => new Set(transactions.flatMap((transaction) => (transaction.contributionScheduleId ? [transaction.contributionScheduleId] : []))),
+    [transactions]
   );
   const owners = useMemo(() => members.filter((member) => member.role === "owner" && member.isAllowed), [members]);
+  const transactionOwners = useMemo(() => members.filter((member) => member.role === "owner"), [members]);
   const contributionCategoryId = useMemo(
     () =>
       categories.find(
@@ -301,12 +316,34 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
     try {
       await createOwnerContributionSchedule({ ...values, createdByMemberId: currentMember.id });
       setScheduleModalOpen(false);
+      setScheduleToEdit(undefined);
       showToast({ variant: "success", ...TOAST_MESSAGES.financial.scheduleCreated });
       await refresh();
     } catch (scheduleError) {
       reportError(
         scheduleError,
         "Création d’une configuration de versements",
+        TOAST_MESSAGES.financial.scheduleError.title,
+        TOAST_MESSAGES.financial.scheduleError.message
+      );
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  const handleUpdateSchedule = async (values: Omit<Parameters<typeof createOwnerContributionSchedule>[0], "createdByMemberId">): Promise<void> => {
+    if (!scheduleToEdit || !canManage) return;
+    setSavingSchedule(true);
+    try {
+      await updateOwnerContributionSchedule(scheduleToEdit.id, values);
+      setScheduleModalOpen(false);
+      setScheduleToEdit(undefined);
+      showToast({ variant: "success", ...TOAST_MESSAGES.financial.scheduleUpdated });
+      await refresh();
+    } catch (scheduleError) {
+      reportError(
+        scheduleError,
+        "Modification d’une configuration de versements",
         TOAST_MESSAGES.financial.scheduleError.title,
         TOAST_MESSAGES.financial.scheduleError.message
       );
@@ -325,6 +362,40 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
       reportError(
         scheduleError,
         "Arrêt d’une configuration de versements",
+        TOAST_MESSAGES.financial.scheduleError.title,
+        TOAST_MESSAGES.financial.scheduleError.message
+      );
+      throw new Error(TOAST_MESSAGES.financial.scheduleError.message);
+    }
+  };
+
+  const handleReactivateSchedule = async (schedule: OwnerContributionSchedule): Promise<void> => {
+    if (!canManage) return;
+    try {
+      await setOwnerContributionScheduleActive(schedule.id, true);
+      showToast({ variant: "success", title: "Configuration réactivée", message: "Les échéances prévues sont de nouveau actives." });
+      await refresh();
+    } catch (scheduleError) {
+      reportError(
+        scheduleError,
+        "Réactivation d’une configuration de versements",
+        TOAST_MESSAGES.financial.scheduleError.title,
+        TOAST_MESSAGES.financial.scheduleError.message
+      );
+      throw new Error(TOAST_MESSAGES.financial.scheduleError.message);
+    }
+  };
+
+  const handleDeleteSchedule = async (schedule: OwnerContributionSchedule): Promise<void> => {
+    if (!canManage || recordedScheduleIds.has(schedule.id)) return;
+    try {
+      await deleteOwnerContributionSchedule(schedule.id);
+      showToast({ variant: "success", ...TOAST_MESSAGES.financial.scheduleDeleted });
+      await refresh();
+    } catch (scheduleError) {
+      reportError(
+        scheduleError,
+        "Suppression d’une configuration de versements",
         TOAST_MESSAGES.financial.scheduleError.title,
         TOAST_MESSAGES.financial.scheduleError.message
       );
@@ -377,7 +448,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 max-w-full space-y-6">
       <header>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Finances de la maison</h1>
@@ -406,7 +477,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
         onNext={() => changeMonth(1)}
       />
 
-      <div role="tablist" aria-label="Rubriques financières" className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-2 sm:grid-cols-4">
+      <div role="tablist" aria-label="Rubriques financières" className="grid min-w-0 grid-cols-2 gap-2 rounded-xl bg-gray-100 p-2 sm:grid-cols-4">
         {FINANCIAL_TABS.map((tab, index) => (
           <button
             key={tab.id}
@@ -439,7 +510,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
           aria-labelledby={`financial-tab-${tab.id}`}
           tabIndex={0}
           hidden={activeTab !== tab.id}
-          className="space-y-6 focus:outline-none"
+          className="min-w-0 space-y-6 focus:outline-none"
         >
           {activeTab === tab.id && tab.id === "summary" && (
             <>
@@ -459,7 +530,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
 
           {activeTab === tab.id && tab.id === "movements" && (
             <>
-              <section className="space-y-3">
+              <section className="min-w-0 space-y-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900">Mouvements financiers · {periodLabel}</h2>
@@ -472,7 +543,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
                     </Button>
                   )}
                 </div>
-                <div role="group" aria-label="Filtrer les mouvements par type" className="grid grid-cols-3 gap-2 rounded-xl bg-gray-100 p-1">
+                <div role="group" aria-label="Filtrer les mouvements par type" className="grid min-w-0 grid-cols-3 gap-2 rounded-xl bg-gray-100 p-1">
                   {(
                     [
                       { id: "all", label: "Tous" },
@@ -494,6 +565,40 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
                     </button>
                   ))}
                 </div>
+                <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    Catégorie
+                    <select
+                      aria-label="Filtrer les mouvements par catégorie"
+                      value={categoryFilter}
+                      onChange={(event) => setCategoryFilter(event.target.value)}
+                      className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm font-normal text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                    >
+                      <option value="all">Toutes les catégories</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    Propriétaire
+                    <select
+                      aria-label="Filtrer les mouvements par propriétaire"
+                      value={ownerFilter}
+                      onChange={(event) => setOwnerFilter(event.target.value)}
+                      className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm font-normal text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                    >
+                      <option value="all">Tous les propriétaires</option>
+                      {transactionOwners.map((owner) => (
+                        <option key={owner.id} value={owner.id}>
+                          {owner.firstName} {owner.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
                 {filteredPeriodTransactions.length > 0 ? (
                   <FinancialTransactionList
                     transactions={filteredPeriodTransactions}
@@ -514,19 +619,23 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
                     <p className="text-sm text-gray-600">
                       {periodTransactions.length === 0
                         ? "Aucun mouvement financier pour cette période."
-                        : `Aucun ${transactionFilter === "income" ? "revenu" : "mouvement de dépense"} pour cette période.`}
+                        : "Aucun mouvement ne correspond à ces filtres pour cette période."}
                     </p>
                   </Card>
                 )}
               </section>
 
-              {filteredHistoricalTransactions.length > 0 && (
-                <details className="rounded-xl border border-gray-200 bg-white">
-                  <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-800">
-                    Historique des mouvements retirés ({filteredHistoricalTransactions.length})
-                  </summary>
-                  <div className="space-y-3 border-t border-gray-100 p-4">
-                    <p className="text-sm text-gray-600">Ces mouvements sont conservés pour l’historique et ne sont pas inclus dans les soldes.</p>
+              <details className="rounded-xl border border-gray-200 bg-white">
+                <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-800">
+                  Historique des mouvements retirés ({historicalTransactions.length})
+                </summary>
+                <div className="space-y-3 border-t border-gray-100 p-4">
+                  <p className="text-sm text-gray-600">
+                    Toutes les périodes sont incluses. Ces mouvements sont conservés pour l’historique et ne sont pas inclus dans les soldes.
+                  </p>
+                  {historicalTransactions.length === 0 ? (
+                    <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Aucun mouvement retiré pour le moment.</p>
+                  ) : filteredHistoricalTransactions.length > 0 ? (
                     <FinancialTransactionList
                       transactions={filteredHistoricalTransactions}
                       categories={categories}
@@ -537,9 +646,11 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
                       onArchive={() => undefined}
                       onOpenRental={onOpenRental}
                     />
-                  </div>
-                </details>
-              )}
+                  ) : (
+                    <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Aucun mouvement retiré ne correspond aux filtres sélectionnés.</p>
+                  )}
+                </div>
+              </details>
             </>
           )}
 
@@ -547,9 +658,20 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
             <OwnerContributionSection
               schedules={schedules}
               occurrences={expectedContributions}
+              currentMonth={today.slice(0, 7)}
+              recordedScheduleIds={recordedScheduleIds}
               members={members}
               canManage={canManage}
-              onCreateSchedule={() => setScheduleModalOpen(true)}
+              onCreateSchedule={() => {
+                setScheduleToEdit(undefined);
+                setScheduleModalOpen(true);
+              }}
+              onEditSchedule={(schedule) => {
+                setScheduleToEdit(schedule);
+                setScheduleModalOpen(true);
+              }}
+              onDeleteSchedule={handleDeleteSchedule}
+              onReactivateSchedule={handleReactivateSchedule}
               onDeactivateSchedule={handleDeactivateSchedule}
               onRecordReceipt={(contribution) => openReceiptForm(contribution.scheduleId, contribution.dueDate, contribution.amount, contribution.ownerId)}
             />
@@ -587,8 +709,12 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
         owners={owners}
         saving={savingSchedule}
         currentYear={year}
-        onClose={() => setScheduleModalOpen(false)}
-        onSubmit={handleCreateSchedule}
+        schedule={scheduleToEdit}
+        onClose={() => {
+          setScheduleModalOpen(false);
+          setScheduleToEdit(undefined);
+        }}
+        onSubmit={scheduleToEdit ? handleUpdateSchedule : handleCreateSchedule}
       />
 
       <ConfirmDialog
