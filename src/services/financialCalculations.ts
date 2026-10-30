@@ -14,6 +14,8 @@ const FREQUENCY_INTERVAL_MONTHS: Record<OwnerContributionSchedule["frequency"], 
 export interface FinancialMonthSummary {
   month: number;
   incomeCents: number;
+  rentalIncomeCents: number; // Locations
+  otherIncomeCents: number; // Autres revenus
   expenseCents: number;
   balanceCents: number;
   expectedContributionCents: number;
@@ -147,6 +149,13 @@ const calculatePeriodSummary = (
     (transaction) => !transaction.voidedAt && transaction.transactionDate && isInPeriod(transaction.transactionDate, year, month)
   );
   const incomeCents = datedTransactions.reduce((sum, transaction) => sum + (transaction.type === "income" ? toCents(transaction.amount) : 0), 0);
+  const rentalIncomeCents = datedTransactions.reduce((sum, t) => sum + (t.type === "income" && t.source === "rental" ? toCents(t.amount) : 0), 0);
+
+  // Revenus saisis à la main qui ne sont pas des versements de propriétaires
+  const otherIncomeCents = datedTransactions.reduce(
+    (sum, t) => sum + (t.type === "income" && t.source !== "rental" && !t.contributionScheduleId ? toCents(t.amount) : 0),
+    0
+  );
   const expenseCents = datedTransactions.reduce((sum, transaction) => sum + (transaction.type === "expense" ? toCents(transaction.amount) : 0), 0);
   const expectedContributionCents = contributions.reduce((sum, contribution) => sum + toCents(contribution.amount), 0);
   const receivedContributionCents = contributions.reduce(
@@ -157,6 +166,8 @@ const calculatePeriodSummary = (
   return {
     month: month ?? 0,
     incomeCents,
+    rentalIncomeCents,
+    otherIncomeCents,
     expenseCents,
     balanceCents: incomeCents - expenseCents,
     expectedContributionCents,
@@ -182,6 +193,8 @@ export const calculateFinancialSummary = (
 
   return {
     incomeCents: summary.incomeCents,
+    rentalIncomeCents: summary.rentalIncomeCents,
+    otherIncomeCents: summary.otherIncomeCents,
     expenseCents: summary.expenseCents,
     balanceCents: summary.balanceCents,
     expectedContributionCents: summary.expectedContributionCents,

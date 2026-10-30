@@ -515,15 +515,15 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
           {activeTab === tab.id && tab.id === "summary" && (
             <>
               <FinancialSummaryCards summary={summary} periodLabel={periodLabel} />
-              {mode === "year" && (
-                <FinancialYearBreakdown
-                  months={yearBreakdown}
-                  onSelectMonth={(selectedMonth) => {
-                    setMonth(selectedMonth);
-                    setMode("month");
-                  }}
-                />
-              )}
+
+              <FinancialYearBreakdown
+                months={yearBreakdown}
+                selectedMonth={mode === "month" ? month : undefined}
+                onSelectMonth={(selectedMonth) => {
+                  setMonth(selectedMonth);
+                  setMode("month");
+                }}
+              />
               <ProjectedRentalList projectedRentals={projectedRentals} members={members} />
             </>
           )}

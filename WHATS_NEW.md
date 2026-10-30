@@ -3,6 +3,16 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.58] - 30 octobre 2026
+
+### Ce qui change pour vous
+
+- **Récapitulatif mensuel amélioré** : le tableau récapitulatif les lignes alternent en gris clair pour une meilleure lecture. Les sections « Réel » et « Prévisionnel » sont clairement séparées.
+
+### Ce qui change pour vous (suite)
+
+- **Vue mobile repensée** : le récapitulatif mensuel s'affiche en deux sections distinctes (d'abord les montants réels, puis les prévisions dans un encadré) pour une meilleure organisation sur petit écran.
+
 ## [0.3.57] - 30 octobre 2026
 
 ### Ce qui change pour vous
