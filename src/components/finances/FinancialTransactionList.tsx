@@ -1,8 +1,12 @@
-import type { FinancialCategory, FinancialTransaction, Member, Rental } from "../../types";
+import { useEffect, useMemo, useState } from "react";
+import type { FinancialCategory, FinancialTransaction, FinancialTransactionType, Member, Rental } from "../../types";
 import { formatCents, formatFinancialAmount, toCents } from "../../services/financialCalculations";
 import { formatDateShort } from "../../utils/rentalUtils";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
+import type { FinancialTransactionFormValues } from "./FinancialTransactionModal";
 
 interface FinancialTransactionListProps {
   transactions: FinancialTransaction[];
@@ -13,6 +17,15 @@ interface FinancialTransactionListProps {
   onEdit: (transaction: FinancialTransaction) => void;
   onArchive: (transaction: FinancialTransaction) => void;
   onOpenRental?: (rentalId: string) => void;
+  createRow?: {
+    categories: FinancialCategory[];
+    owners: Member[];
+    defaultDate: string;
+    defaultType?: FinancialTransactionType;
+    saving: boolean;
+    onTypeChange: (type: FinancialTransactionType) => void;
+    onSubmit: (values: FinancialTransactionFormValues) => Promise<boolean>;
+  };
 }
 
 type TransactionListItem =
@@ -98,14 +111,84 @@ export const FinancialTransactionList = ({
   onEdit,
   onArchive,
   onOpenRental,
+  createRow,
 }: FinancialTransactionListProps) => {
   const categoryById = new Map(categories.map((category) => [category.id, category]));
   const rentalById = new Map(rentals.map((rental) => [rental.id, rental]));
   const listItems = groupTransactions(transactions);
+  const [createType, setCreateType] = useState<FinancialTransactionType>("expense");
+  const [createAmount, setCreateAmount] = useState("");
+  const [createDate, setCreateDate] = useState(createRow?.defaultDate ?? "");
+  const [createCategoryId, setCreateCategoryId] = useState("");
+  const [createDescription, setCreateDescription] = useState("");
+  const [createOwnerId, setCreateOwnerId] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
+  const createCategories = useMemo(() => createRow?.categories.filter((category) => category.type === createType) ?? [], [createRow?.categories, createType]);
+
+  useEffect(() => {
+    if (createRow?.defaultType && createRow.defaultType !== createType) setCreateType(createRow.defaultType);
+  }, [createRow?.defaultType, createType]);
+
+  useEffect(() => {
+    if (!createRow || createCategories.some((category) => category.id === createCategoryId)) return;
+    setCreateCategoryId(createCategories[0]?.id ?? "");
+  }, [createCategories, createCategoryId, createRow]);
+
+  const resetCreateRow = (): void => {
+    setCreateType("expense");
+    setCreateAmount("");
+    setCreateDate(createRow?.defaultDate ?? "");
+    setCreateCategoryId("");
+    setCreateDescription("");
+    setCreateOwnerId("");
+    setCreateError(null);
+  };
+
+  const handleCreateRowSubmit = async (): Promise<void> => {
+    if (!createRow) return;
+    const parsedAmount = Number(createAmount);
+
+    if (!/^\d+(?:\.\d{1,2})?$/.test(createAmount.trim()) || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setCreateError("Saisissez un montant supérieur à 0 avec au maximum deux décimales.");
+      return;
+    }
+    if (!createDate || !/^\d{4}-\d{2}-\d{2}$/.test(createDate)) {
+      setCreateError("Choisissez une date valide.");
+      return;
+    }
+    if (!createCategoryId) {
+      setCreateError("Choisissez une catégorie.");
+      return;
+    }
+
+    setCreateError(null);
+    const created = await createRow.onSubmit({
+      type: createType,
+      amount: parsedAmount,
+      transactionDate: createDate,
+      categoryId: createCategoryId,
+      description: createDescription.trim(),
+      ownerId: createOwnerId || undefined,
+    });
+    if (created) {
+      setCreateAmount("");
+      setCreateDescription("");
+      setCreateOwnerId("");
+    }
+  };
 
   return (
     <div className="space-y-3">
       <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white sm:block">
+        {createRow && (
+          <form
+            id="financial-transaction-create-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleCreateRowSubmit();
+            }}
+          />
+        )}
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
             <tr>
@@ -129,6 +212,127 @@ export const FinancialTransactionList = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
+            {createRow && canManage && (
+              <>
+                <tr className="align-top border-b-2 border-primary-300 bg-primary-50">
+                  <td className="px-3 py-3">
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-primary-700">Nouvelle saisie</p>
+                    <Input
+                      form="financial-transaction-create-form"
+                      aria-label="Date du nouveau mouvement"
+                      type="date"
+                      value={createDate}
+                      disabled={createRow.saving}
+                      onChange={(event) => {
+                        setCreateDate(event.target.value);
+                        setCreateError(null);
+                      }}
+                      required
+                      className="min-w-[9rem] text-xs"
+                    />
+                  </td>
+                  <td className="space-y-2 px-3 py-3">
+                    <Select
+                      form="financial-transaction-create-form"
+                      aria-label="Type du nouveau mouvement"
+                      value={createType}
+                      disabled={createRow.saving}
+                      onChange={(event) => {
+                        const nextType = event.target.value as FinancialTransactionType;
+                        setCreateType(nextType);
+                        createRow.onTypeChange(nextType);
+                        setCreateError(null);
+                      }}
+                      className="min-w-[8rem] text-xs"
+                    >
+                      <option value="expense">Dépense</option>
+                      <option value="income">Revenu</option>
+                    </Select>
+                    <Select
+                      form="financial-transaction-create-form"
+                      aria-label="Catégorie du nouveau mouvement"
+                      value={createCategoryId}
+                      disabled={createRow.saving}
+                      onChange={(event) => {
+                        setCreateCategoryId(event.target.value);
+                        setCreateError(null);
+                      }}
+                      placeholder={createCategories.length > 0 ? "Catégorie" : "Aucune catégorie active"}
+                      required
+                      className="min-w-[8rem] text-xs"
+                    >
+                      {createCategories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </td>
+                  <td className="space-y-2 px-3 py-3">
+                    <Input
+                      form="financial-transaction-create-form"
+                      aria-label="Description du nouveau mouvement (facultative)"
+                      value={createDescription}
+                      disabled={createRow.saving}
+                      onChange={(event) => setCreateDescription(event.target.value)}
+                      placeholder="Description (facultative)"
+                      className="min-w-[12rem] text-xs"
+                    />
+                    <Select
+                      form="financial-transaction-create-form"
+                      aria-label="Propriétaire concerné (facultatif)"
+                      value={createOwnerId}
+                      disabled={createRow.saving}
+                      onChange={(event) => setCreateOwnerId(event.target.value)}
+                      className="min-w-[12rem] text-xs"
+                    >
+                      <option value="">Aucun propriétaire associé</option>
+                      {createRow.owners.map((owner) => (
+                        <option key={owner.id} value={owner.id}>
+                          {owner.label || `${owner.firstName} ${owner.lastName}`}
+                        </option>
+                      ))}
+                    </Select>
+                  </td>
+                  <td className="px-3 py-3">
+                    <Input
+                      form="financial-transaction-create-form"
+                      aria-label="Montant du nouveau mouvement"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      inputMode="decimal"
+                      value={createAmount}
+                      disabled={createRow.saving}
+                      onChange={(event) => {
+                        setCreateAmount(event.target.value);
+                        setCreateError(null);
+                      }}
+                      placeholder="0,00"
+                      required
+                      className="min-w-[7rem] text-right text-xs"
+                    />
+                  </td>
+                  <td className="px-3 py-3 text-right">
+                    <div className="flex flex-col items-end gap-2">
+                      <Button type="submit" form="financial-transaction-create-form" size="xs" loading={createRow.saving}>
+                        Enregistrer
+                      </Button>
+                      <Button type="button" variant="ghost" size="xs" onClick={resetCreateRow} disabled={createRow.saving}>
+                        Annuler
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+                {createError && (
+                  <tr>
+                    <td colSpan={5} className="px-3 py-2 text-sm text-red-700">
+                      <p role="alert">{createError}</p>
+                    </td>
+                  </tr>
+                )}
+              </>
+            )}
             {listItems.map((item) => {
               if (item.kind === "rental") {
                 const [firstTransaction] = item.transactions;

@@ -18,7 +18,7 @@ type Column = {
   /** Première colonne d'un groupe : reçoit une bordure de séparation */
   startsGroup?: boolean;
   value: (s: FinancialMonthSummary) => number;
-  color: (s: FinancialMonthSummary) => string;
+  color: (value: number) => string;
 };
 
 const COLUMNS: Column[] = [
@@ -30,7 +30,7 @@ const COLUMNS: Column[] = [
     label: "Solde",
     kind: "balance",
     value: (s) => s.balanceCents,
-    color: (s) => (s.balanceCents >= 0 ? "text-gray-900" : "text-amber-800"),
+    color: (value) => (value >= 0 ? "text-gray-900" : "text-amber-800"),
   },
   { label: "Locations", kind: "forecast", startsGroup: true, value: (s) => s.projectedRentalCents, color: () => "text-amber-700" },
   { label: "Versements", kind: "forecast", value: (s) => s.expectedContributionCents, color: () => "text-amber-700" },
@@ -40,10 +40,14 @@ const ACTUAL_COLUMNS = COLUMNS.filter((c) => c.kind !== "forecast");
 const FORECAST_COLUMNS = COLUMNS.filter((c) => c.kind === "forecast");
 
 /** Un montant à 0 s'efface ; sinon couleur + graisse selon la colonne */
-const amountClass = (col: Column, summary: FinancialMonthSummary): string => {
-  if (col.value(summary) === 0) return "font-normal text-gray-300";
-  return `${col.kind === "balance" ? "font-semibold" : "font-medium"} ${col.color(summary)}`;
+const amountClass = (col: Column, value: number): string => {
+  if (value === 0) return "font-normal text-gray-300";
+  return `${col.kind === "balance" ? "font-semibold" : "font-medium"} ${col.color(value)}`;
 };
+
+const totalAmountClass = (col: Column, value: number): string => (value === 0 ? "font-semibold text-gray-300" : `font-semibold ${col.color(value)}`);
+
+const getColumnTotal = (col: Column, months: FinancialMonthSummary[]): number => months.reduce((total, month) => total + col.value(month), 0);
 
 const headerCellClass = (col: Column): string => {
   const base = "px-4 py-3 text-right";
@@ -80,20 +84,20 @@ export const FinancialYearBreakdown = ({ months, selectedMonth, onSelectMonth }:
               Mois
             </th>
             <th scope="colgroup" colSpan={ACTUAL_COLUMNS.length} className="px-4 pt-3 text-center text-gray-600">
-              Réel
+              Reçus
             </th>
             <th
               scope="colgroup"
               colSpan={FORECAST_COLUMNS.length}
               className="border-l border-dashed border-amber-300 bg-amber-50 px-4 pt-3 text-center italic text-amber-700"
             >
-              Prévisionnel
+              Attendus
             </th>
           </tr>
           {/* Ligne des colonnes */}
           <tr>
             {COLUMNS.map((col) => (
-              <th key={col.label} scope="col" className={headerCellClass(col)}>
+              <th key={`${col.kind}-${col.label}`} scope="col" className={headerCellClass(col)}>
                 {col.label}
               </th>
             ))}
@@ -112,13 +116,28 @@ export const FinancialYearBreakdown = ({ months, selectedMonth, onSelectMonth }:
                 </button>
               </th>
               {COLUMNS.map((col) => (
-                <td key={col.label} className={`${bodyCellClass(col)} ${amountClass(col, summary)}`}>
+                <td key={col.label} className={`${bodyCellClass(col)} ${amountClass(col, col.value(summary))}`}>
                   {formatCents(col.value(summary))}
                 </td>
               ))}
             </tr>
           ))}
         </tbody>
+        <tfoot className="bg-gray-50">
+          <tr>
+            <th scope="row" className="border-t-2 border-gray-200 px-4 py-3 font-semibold text-gray-900">
+              Total
+            </th>
+            {COLUMNS.map((col) => {
+              const total = getColumnTotal(col, months);
+              return (
+                <td key={`${col.kind}-${col.label}`} className={`${bodyCellClass(col)} border-t-2 border-gray-200 py-3 ${totalAmountClass(col, total)}`}>
+                  {formatCents(total)}
+                </td>
+              );
+            })}
+          </tr>
+        </tfoot>
       </table>
     </div>
 
@@ -137,21 +156,45 @@ export const FinancialYearBreakdown = ({ months, selectedMonth, onSelectMonth }:
           <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
             {ACTUAL_COLUMNS.map((col) => (
               <p key={col.label} className={`text-gray-500 ${col.kind === "balance" ? "col-span-2 rounded bg-sky-50 px-2 py-1 text-sm" : ""}`}>
-                {col.label} <span className={amountClass(col, summary)}>{formatCents(col.value(summary))}</span>
+                {col.label} <span className={amountClass(col, col.value(summary))}>{formatCents(col.value(summary))}</span>
               </p>
             ))}
           </div>
 
           <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 rounded border-t border-dashed border-amber-300 bg-amber-50/60 px-2 py-1 text-xs italic">
-            <p className="col-span-2 text-[10px] uppercase tracking-wide text-amber-700">Prévisionnel</p>
+            <p className="col-span-2 text-[10px] uppercase tracking-wide text-amber-700">Attendus</p>
             {FORECAST_COLUMNS.map((col) => (
               <p key={col.label} className="text-gray-500">
-                {col.label} <span className={amountClass(col, summary)}>{formatCents(col.value(summary))}</span>
+                {col.label} <span className={amountClass(col, col.value(summary))}>{formatCents(col.value(summary))}</span>
               </p>
             ))}
           </div>
         </li>
       ))}
+      <li className="bg-gray-50 px-4 py-3">
+        <h3 className="font-semibold text-gray-900">Total annuel</h3>
+        <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+          {ACTUAL_COLUMNS.map((col) => {
+            const total = getColumnTotal(col, months);
+            return (
+              <p key={col.label} className={`text-gray-500 ${col.kind === "balance" ? "col-span-2 rounded bg-sky-50 px-2 py-1 text-sm" : ""}`}>
+                {col.label} <span className={totalAmountClass(col, total)}>{formatCents(total)}</span>
+              </p>
+            );
+          })}
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 rounded border-t border-dashed border-amber-300 bg-amber-50/60 px-2 py-1 text-xs italic">
+          <p className="col-span-2 text-[10px] uppercase tracking-wide text-amber-700">Attendus</p>
+          {FORECAST_COLUMNS.map((col) => {
+            const total = getColumnTotal(col, months);
+            return (
+              <p key={col.label} className="text-gray-500">
+                {col.label} <span className={totalAmountClass(col, total)}>{formatCents(total)}</span>
+              </p>
+            );
+          })}
+        </div>
+      </li>
     </ul>
   </section>
 );

@@ -5,6 +5,21 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.59] - 2026-11-02
+
+### Ajouté
+
+- **Création de mouvements depuis le tableau** : ajout d’une ligne de saisie directe pour les éditeurs, avec date, type, catégorie, description, propriétaire facultatif et montant. Le bouton d’ajout reste disponible sur mobile.
+- **Totaux annuels** : ajout d’une ligne de totaux en bas de chaque colonne du récapitulatif financier, également accessible dans la vue mobile.
+
+### Amélioré
+
+- **Période financière** : sélecteur compact et responsive, bouton « Aujourd’hui », navigation précédente/suivante par mois ou par année et désactivation du bouton lorsque la période courante est sélectionnée.
+- **Synthèse financière** : période affichée directement dans les titres des cartes et cumul expliqué comme un total depuis le début du suivi.
+- **Vocabulaire financier** : remplacement de « Prévisions » et « Prévisionnel » par « À venir » dans l’interface.
+- **Navigation financière** : onglets visuellement distincts, avec un panneau relié à l’onglet actif.
+- **Type du nouveau mouvement** : synchronisation avec le filtre « Revenus » ou « Dépenses ».
+
 ## [0.3.58] - 2026-10-30
 
 ### Amélioré
@@ -12,7 +27,7 @@ et ce projet respecte le [Versionnage Sémantique](https://semver.org/spec/v2.0.
 - **Récapitulatif mensuel (FinancialYearBreakdown)** : refactorisation complète du tableau avec architecture par colonnes (`ColumnKind`: actual | balance | forecast).
 - **Montants à zéro** : affichage grisé (`font-normal text-gray-300`) pour réduire le bruit visuel, montants non-zéro en police plus marquée avec couleur sémantique.
 - **Lignes alternées** : fond `bg-gray-50` sur une ligne sur deux pour meilleure lisibilité.
-- **En-têtes groupés** : sections « Réel » (4 colonnes) et « Prévisionnel » (2 colonnes) avec `colSpan` et styles distincts.
+- **En-têtes groupés** : sections « Reçus » (4 colonnes) et « Prévisionnel » (2 colonnes) avec `colSpan` et styles distincts.
 - **Mois sélectionné** : mise en surbrillance (`bg-primary-50` + `border-l-4 border-primary-600`) et attribut `aria-current="date"`.
 - **Vue mobile** : réorganisation en deux sections groupées (colonnes réelles puis prévisionnelles dans un encadré amber).
 

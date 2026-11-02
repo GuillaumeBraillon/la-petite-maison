@@ -14,10 +14,10 @@ export const ProjectedRentalList = ({ projectedRentals, members }: ProjectedRent
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold text-gray-900">Revenus locatifs prévisionnels</h2>
+      <h2 className="text-lg font-semibold text-gray-900">Locations à venir</h2>
       <p className="mt-1 text-sm text-gray-600">Ces montants prévus ne sont pas comptés comme de l’argent encaissé.</p>
       {projectedRentals.length === 0 ? (
-        <p className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Aucun revenu locatif prévisionnel pour cette période.</p>
+        <p className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Aucune location à venir pour cette période.</p>
       ) : (
         <ul className="mt-3 divide-y divide-gray-100">
           {projectedRentals.map(({ rental, amountCents }) => {

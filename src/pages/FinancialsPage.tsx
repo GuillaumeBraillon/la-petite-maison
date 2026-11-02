@@ -204,13 +204,15 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
     setDefaultTransactionType(type);
   };
 
-  const handleTransactionSubmit = async (values: FinancialTransactionFormValues): Promise<void> => {
-    if (!currentMember || !canManage) return;
+  const handleTransactionSubmit = async (values: FinancialTransactionFormValues, closeModal = true): Promise<boolean> => {
+    if (!currentMember || !canManage) return false;
     setSavingTransaction(true);
+    let saved = false;
 
     try {
       if (transactionToEdit) {
         await updateFinancialTransaction(transactionToEdit.id, values);
+        saved = true;
         showToast({ variant: "success", ...TOAST_MESSAGES.financial.transactionUpdated });
       } else {
         const input: FinancialTransactionInput = {
@@ -223,10 +225,12 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
           }),
         };
         await createFinancialTransaction(input);
+        saved = true;
         showToast({ variant: "success", ...TOAST_MESSAGES.financial.transactionCreated });
       }
-      closeTransactionModal();
+      if (closeModal) closeTransactionModal();
       await refresh();
+      return true;
     } catch (saveError) {
       reportError(
         saveError,
@@ -234,6 +238,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
         TOAST_MESSAGES.financial.transactionError.title,
         TOAST_MESSAGES.financial.transactionError.message
       );
+      return saved;
     } finally {
       setSavingTransaction(false);
     }
@@ -416,6 +421,19 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
     setMonth(date.getUTCMonth() + 1);
   };
 
+  const changePeriod = (increment: -1 | 1): void => {
+    if (mode === "month") {
+      changeMonth(increment);
+      return;
+    }
+    setYear((currentYear) => currentYear + increment);
+  };
+
+  const changeToToday = (): void => {
+    setYear(Number(today.slice(0, 4)));
+    setMonth(Number(today.slice(5, 7)));
+  };
+
   if (!permissions.viewFinances) {
     return (
       <Card>
@@ -428,6 +446,7 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
   if (loading) return <LoadingScreen />;
 
   const periodLabel = getPeriodLabel(year, month, mode);
+  const isCurrentPeriod = year === Number(today.slice(0, 4)) && (mode === "year" || month === Number(today.slice(5, 7)));
   const activeCategories = categories.filter((category) => category.isActive);
   const manualCategories = activeCategories.filter(
     (category) => !(category.type === "income" && category.name.trim().toLocaleLowerCase("fr-FR") === "locations")
@@ -452,7 +471,9 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
       <header>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Finances de la maison</h1>
-          <p className="mt-1 text-sm text-gray-600">Consultez les entrées et sorties d’argent, sans confondre prévisions et paiements reçus.</p>
+          <p className="mt-1 text-sm text-gray-600">
+            Consultez les entrées et sorties d’argent, sans confondre les locations à venir avec les paiements reçus.
+          </p>
         </div>
       </header>
 
@@ -473,221 +494,253 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
         onModeChange={setMode}
         onYearChange={setYear}
         onMonthChange={setMonth}
-        onPrevious={() => changeMonth(-1)}
-        onNext={() => changeMonth(1)}
+        onPrevious={() => changePeriod(-1)}
+        onNext={() => changePeriod(1)}
+        onToday={changeToToday}
+        isCurrentPeriod={isCurrentPeriod}
       />
 
-      <div role="tablist" aria-label="Rubriques financières" className="grid min-w-0 grid-cols-2 gap-2 rounded-xl bg-gray-100 p-2 sm:grid-cols-4">
-        {FINANCIAL_TABS.map((tab, index) => (
-          <button
+      <div className="min-w-0">
+        <div role="tablist" aria-label="Rubriques financières" className="flex min-w-0 items-end gap-0.5 border-b border-gray-300 bg-gray-100">
+          {FINANCIAL_TABS.map((tab, index) => (
+            <button
+              key={tab.id}
+              ref={(element) => {
+                tabRefs.current[index] = element;
+              }}
+              id={`financial-tab-${tab.id}`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`financial-panel-${tab.id}`}
+              tabIndex={activeTab === tab.id ? 0 : -1}
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+              className={[
+                "relative flex min-h-11 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-t-lg border px-1 py-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-600 sm:px-3 sm:text-sm",
+                activeTab === tab.id
+                  ? "-mb-px z-10 border-gray-300 border-b-white bg-white text-gray-900"
+                  : "border-gray-300 bg-gray-200 text-gray-700 hover:bg-gray-300",
+              ].join(" ")}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {FINANCIAL_TABS.map((tab) => (
+          <section
             key={tab.id}
-            ref={(element) => {
-              tabRefs.current[index] = element;
-            }}
-            id={`financial-tab-${tab.id}`}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            aria-controls={`financial-panel-${tab.id}`}
-            tabIndex={activeTab === tab.id ? 0 : -1}
-            onClick={() => setActiveTab(tab.id)}
-            onKeyDown={(event) => handleTabKeyDown(event, index)}
-            className={[
-              "min-h-12 rounded-lg px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
-              activeTab === tab.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900",
-            ].join(" ")}
+            id={`financial-panel-${tab.id}`}
+            role="tabpanel"
+            aria-labelledby={`financial-tab-${tab.id}`}
+            tabIndex={0}
+            hidden={activeTab !== tab.id}
+            className="min-w-0 border-x border-b border-gray-300 bg-white p-4 focus:outline-none sm:p-6"
           >
-            {tab.label}
-          </button>
+            <div className="flex flex-col gap-6">
+              {activeTab === tab.id && tab.id === "summary" && (
+                <>
+                  <FinancialSummaryCards summary={summary} periodLabel={periodLabel} />
+
+                  <FinancialYearBreakdown
+                    months={yearBreakdown}
+                    selectedMonth={mode === "month" ? month : undefined}
+                    onSelectMonth={(selectedMonth) => {
+                      setMonth(selectedMonth);
+                      setMode("month");
+                    }}
+                  />
+                  <ProjectedRentalList projectedRentals={projectedRentals} members={members} />
+                </>
+              )}
+
+              {activeTab === tab.id && tab.id === "movements" && (
+                <>
+                  <section className="min-w-0 space-y-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-900">Mouvements financiers · {periodLabel}</h2>
+                        <p className="text-sm text-gray-600">Les paiements liés aux locations sont gérés depuis la fiche de location.</p>
+                      </div>
+                      {canManage && (
+                        <Button type="button" size="lg" onClick={() => openCreateTransaction()} className="sm:hidden">
+                          <Plus size={18} aria-hidden="true" />
+                          Ajouter un mouvement
+                        </Button>
+                      )}
+                    </div>
+                    <div role="group" aria-label="Filtrer les mouvements par type" className="grid min-w-0 grid-cols-3 gap-2 rounded-xl bg-gray-100 p-1">
+                      {(
+                        [
+                          { id: "all", label: "Tous" },
+                          { id: "income", label: "Revenus" },
+                          { id: "expense", label: "Dépenses" },
+                        ] as const
+                      ).map((filter) => (
+                        <button
+                          key={filter.id}
+                          type="button"
+                          aria-pressed={transactionFilter === filter.id}
+                          onClick={() => setTransactionFilter(filter.id)}
+                          className={[
+                            "min-h-11 rounded-lg px-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
+                            transactionFilter === filter.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900",
+                          ].join(" ")}
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        Catégorie
+                        <select
+                          aria-label="Filtrer les mouvements par catégorie"
+                          value={categoryFilter}
+                          onChange={(event) => setCategoryFilter(event.target.value)}
+                          className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm font-normal text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                        >
+                          <option value="all">Toutes les catégories</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        Propriétaire
+                        <select
+                          aria-label="Filtrer les mouvements par propriétaire"
+                          value={ownerFilter}
+                          onChange={(event) => setOwnerFilter(event.target.value)}
+                          className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm font-normal text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                        >
+                          <option value="all">Tous les propriétaires</option>
+                          {transactionOwners.map((owner) => (
+                            <option key={owner.id} value={owner.id}>
+                              {owner.firstName} {owner.lastName}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    {filteredPeriodTransactions.length > 0 || canManage ? (
+                      <>
+                        <FinancialTransactionList
+                          transactions={filteredPeriodTransactions}
+                          categories={categories}
+                          rentals={rentals}
+                          members={members}
+                          canManage={canManage}
+                          onEdit={(transaction) => {
+                            setTransactionToEdit(transaction);
+                            setContributionToRecord(undefined);
+                            setTransactionModalOpen(true);
+                          }}
+                          onArchive={setTransactionToArchive}
+                          onOpenRental={onOpenRental}
+                          createRow={
+                            canManage
+                              ? {
+                                  categories: manualCategories,
+                                  owners,
+                                  defaultDate: today,
+                                  defaultType: transactionFilter === "all" ? undefined : transactionFilter,
+                                  saving: savingTransaction,
+                                  onTypeChange: setTransactionFilter,
+                                  onSubmit: (values) => handleTransactionSubmit(values, false),
+                                }
+                              : undefined
+                          }
+                        />
+                        {filteredPeriodTransactions.length === 0 && (
+                          <Card className="bg-gray-50 sm:hidden">
+                            <p className="text-sm text-gray-600">
+                              {periodTransactions.length === 0
+                                ? "Aucun mouvement financier pour cette période."
+                                : "Aucun mouvement ne correspond à ces filtres pour cette période."}
+                            </p>
+                          </Card>
+                        )}
+                      </>
+                    ) : (
+                      <Card className="bg-gray-50">
+                        <p className="text-sm text-gray-600">
+                          {periodTransactions.length === 0
+                            ? "Aucun mouvement financier pour cette période."
+                            : "Aucun mouvement ne correspond à ces filtres pour cette période."}
+                        </p>
+                      </Card>
+                    )}
+                  </section>
+
+                  <details className="rounded-xl border border-gray-200 bg-white">
+                    <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-800">
+                      Historique des mouvements retirés ({historicalTransactions.length})
+                    </summary>
+                    <div className="space-y-3 border-t border-gray-100 p-4">
+                      <p className="text-sm text-gray-600">
+                        Toutes les périodes sont incluses. Ces mouvements sont conservés pour l’historique et ne sont pas inclus dans les soldes.
+                      </p>
+                      {historicalTransactions.length === 0 ? (
+                        <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Aucun mouvement retiré pour le moment.</p>
+                      ) : filteredHistoricalTransactions.length > 0 ? (
+                        <FinancialTransactionList
+                          transactions={filteredHistoricalTransactions}
+                          categories={categories}
+                          rentals={rentals}
+                          members={members}
+                          canManage={false}
+                          onEdit={() => undefined}
+                          onArchive={() => undefined}
+                          onOpenRental={onOpenRental}
+                        />
+                      ) : (
+                        <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Aucun mouvement retiré ne correspond aux filtres sélectionnés.</p>
+                      )}
+                    </div>
+                  </details>
+                </>
+              )}
+
+              {activeTab === tab.id && tab.id === "contributions" && (
+                <OwnerContributionSection
+                  schedules={schedules}
+                  occurrences={expectedContributions}
+                  currentMonth={today.slice(0, 7)}
+                  recordedScheduleIds={recordedScheduleIds}
+                  members={members}
+                  canManage={canManage}
+                  onCreateSchedule={() => {
+                    setScheduleToEdit(undefined);
+                    setScheduleModalOpen(true);
+                  }}
+                  onEditSchedule={(schedule) => {
+                    setScheduleToEdit(schedule);
+                    setScheduleModalOpen(true);
+                  }}
+                  onDeleteSchedule={handleDeleteSchedule}
+                  onReactivateSchedule={handleReactivateSchedule}
+                  onDeactivateSchedule={handleDeactivateSchedule}
+                  onRecordReceipt={(contribution) => openReceiptForm(contribution.scheduleId, contribution.dueDate, contribution.amount, contribution.ownerId)}
+                />
+              )}
+
+              {activeTab === tab.id && tab.id === "categories" && (
+                <FinancialCategoryManagement
+                  categories={categories}
+                  canManage={canManage}
+                  onCreate={handleCreateCategory}
+                  onUpdate={handleUpdateCategory}
+                  onSetActive={(category, isActive) => handleSetCategoryActive(category.id, isActive)}
+                />
+              )}
+            </div>
+          </section>
         ))}
       </div>
-
-      {FINANCIAL_TABS.map((tab) => (
-        <section
-          key={tab.id}
-          id={`financial-panel-${tab.id}`}
-          role="tabpanel"
-          aria-labelledby={`financial-tab-${tab.id}`}
-          tabIndex={0}
-          hidden={activeTab !== tab.id}
-          className="min-w-0 space-y-6 focus:outline-none"
-        >
-          {activeTab === tab.id && tab.id === "summary" && (
-            <>
-              <FinancialSummaryCards summary={summary} periodLabel={periodLabel} />
-
-              <FinancialYearBreakdown
-                months={yearBreakdown}
-                selectedMonth={mode === "month" ? month : undefined}
-                onSelectMonth={(selectedMonth) => {
-                  setMonth(selectedMonth);
-                  setMode("month");
-                }}
-              />
-              <ProjectedRentalList projectedRentals={projectedRentals} members={members} />
-            </>
-          )}
-
-          {activeTab === tab.id && tab.id === "movements" && (
-            <>
-              <section className="min-w-0 space-y-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">Mouvements financiers · {periodLabel}</h2>
-                    <p className="text-sm text-gray-600">Les paiements liés aux locations sont gérés depuis la fiche de location.</p>
-                  </div>
-                  {canManage && (
-                    <Button type="button" size="lg" onClick={() => openCreateTransaction()}>
-                      <Plus size={18} aria-hidden="true" />
-                      Ajouter un mouvement
-                    </Button>
-                  )}
-                </div>
-                <div role="group" aria-label="Filtrer les mouvements par type" className="grid min-w-0 grid-cols-3 gap-2 rounded-xl bg-gray-100 p-1">
-                  {(
-                    [
-                      { id: "all", label: "Tous" },
-                      { id: "income", label: "Revenus" },
-                      { id: "expense", label: "Dépenses" },
-                    ] as const
-                  ).map((filter) => (
-                    <button
-                      key={filter.id}
-                      type="button"
-                      aria-pressed={transactionFilter === filter.id}
-                      onClick={() => setTransactionFilter(filter.id)}
-                      className={[
-                        "min-h-11 rounded-lg px-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
-                        transactionFilter === filter.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900",
-                      ].join(" ")}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Catégorie
-                    <select
-                      aria-label="Filtrer les mouvements par catégorie"
-                      value={categoryFilter}
-                      onChange={(event) => setCategoryFilter(event.target.value)}
-                      className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm font-normal text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
-                    >
-                      <option value="all">Toutes les catégories</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Propriétaire
-                    <select
-                      aria-label="Filtrer les mouvements par propriétaire"
-                      value={ownerFilter}
-                      onChange={(event) => setOwnerFilter(event.target.value)}
-                      className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm font-normal text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
-                    >
-                      <option value="all">Tous les propriétaires</option>
-                      {transactionOwners.map((owner) => (
-                        <option key={owner.id} value={owner.id}>
-                          {owner.firstName} {owner.lastName}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                {filteredPeriodTransactions.length > 0 ? (
-                  <FinancialTransactionList
-                    transactions={filteredPeriodTransactions}
-                    categories={categories}
-                    rentals={rentals}
-                    members={members}
-                    canManage={canManage}
-                    onEdit={(transaction) => {
-                      setTransactionToEdit(transaction);
-                      setContributionToRecord(undefined);
-                      setTransactionModalOpen(true);
-                    }}
-                    onArchive={setTransactionToArchive}
-                    onOpenRental={onOpenRental}
-                  />
-                ) : (
-                  <Card className="bg-gray-50">
-                    <p className="text-sm text-gray-600">
-                      {periodTransactions.length === 0
-                        ? "Aucun mouvement financier pour cette période."
-                        : "Aucun mouvement ne correspond à ces filtres pour cette période."}
-                    </p>
-                  </Card>
-                )}
-              </section>
-
-              <details className="rounded-xl border border-gray-200 bg-white">
-                <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-800">
-                  Historique des mouvements retirés ({historicalTransactions.length})
-                </summary>
-                <div className="space-y-3 border-t border-gray-100 p-4">
-                  <p className="text-sm text-gray-600">
-                    Toutes les périodes sont incluses. Ces mouvements sont conservés pour l’historique et ne sont pas inclus dans les soldes.
-                  </p>
-                  {historicalTransactions.length === 0 ? (
-                    <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Aucun mouvement retiré pour le moment.</p>
-                  ) : filteredHistoricalTransactions.length > 0 ? (
-                    <FinancialTransactionList
-                      transactions={filteredHistoricalTransactions}
-                      categories={categories}
-                      rentals={rentals}
-                      members={members}
-                      canManage={false}
-                      onEdit={() => undefined}
-                      onArchive={() => undefined}
-                      onOpenRental={onOpenRental}
-                    />
-                  ) : (
-                    <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Aucun mouvement retiré ne correspond aux filtres sélectionnés.</p>
-                  )}
-                </div>
-              </details>
-            </>
-          )}
-
-          {activeTab === tab.id && tab.id === "contributions" && (
-            <OwnerContributionSection
-              schedules={schedules}
-              occurrences={expectedContributions}
-              currentMonth={today.slice(0, 7)}
-              recordedScheduleIds={recordedScheduleIds}
-              members={members}
-              canManage={canManage}
-              onCreateSchedule={() => {
-                setScheduleToEdit(undefined);
-                setScheduleModalOpen(true);
-              }}
-              onEditSchedule={(schedule) => {
-                setScheduleToEdit(schedule);
-                setScheduleModalOpen(true);
-              }}
-              onDeleteSchedule={handleDeleteSchedule}
-              onReactivateSchedule={handleReactivateSchedule}
-              onDeactivateSchedule={handleDeactivateSchedule}
-              onRecordReceipt={(contribution) => openReceiptForm(contribution.scheduleId, contribution.dueDate, contribution.amount, contribution.ownerId)}
-            />
-          )}
-
-          {activeTab === tab.id && tab.id === "categories" && (
-            <FinancialCategoryManagement
-              categories={categories}
-              canManage={canManage}
-              onCreate={handleCreateCategory}
-              onUpdate={handleUpdateCategory}
-              onSetActive={(category, isActive) => handleSetCategoryActive(category.id, isActive)}
-            />
-          )}
-        </section>
-      ))}
 
       <FinancialTransactionModal
         isOpen={transactionModalOpen}
@@ -701,7 +754,9 @@ export const FinancialsPage = ({ members, rentals, currentMember, onOpenRental }
         categories={manualCategories}
         saving={savingTransaction}
         onClose={closeTransactionModal}
-        onSubmit={handleTransactionSubmit}
+        onSubmit={async (values) => {
+          await handleTransactionSubmit(values);
+        }}
       />
 
       <OwnerContributionScheduleModal

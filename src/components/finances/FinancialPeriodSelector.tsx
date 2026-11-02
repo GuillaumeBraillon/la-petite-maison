@@ -14,10 +14,12 @@ interface FinancialPeriodSelectorProps {
   onMonthChange: (month: number) => void;
   onPrevious: () => void;
   onNext: () => void;
+  onToday: () => void;
+  isCurrentPeriod: boolean;
 }
 
 const MONTHS = Array.from({ length: 12 }, (_, index) =>
-  new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2020, index, 1)))
+  new Intl.DateTimeFormat("fr-FR", { month: "short", timeZone: "UTC" }).format(new Date(Date.UTC(2020, index, 1)))
 );
 
 export const FinancialPeriodSelector = ({
@@ -30,41 +32,88 @@ export const FinancialPeriodSelector = ({
   onMonthChange,
   onPrevious,
   onNext,
+  onToday,
+  isCurrentPeriod,
 }: FinancialPeriodSelectorProps) => (
-  <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-end sm:justify-between">
-    <div className="grid grid-cols-2 gap-3 sm:flex">
-      <Select label="Afficher par" value={mode} onChange={(event) => onModeChange(event.target.value as FinancialPeriodMode)}>
-        <option value="month">Mois</option>
-        <option value="year">Année</option>
-      </Select>
-      <Select label="Année" value={year} onChange={(event) => onYearChange(Number(event.target.value))}>
-        {years.map((yearOption) => (
-          <option key={yearOption} value={yearOption}>
-            {yearOption}
-          </option>
-        ))}
-      </Select>
-      {mode === "month" && (
-        <Select label="Mois" value={month} onChange={(event) => onMonthChange(Number(event.target.value))} className="col-span-2 sm:col-span-1">
-          {MONTHS.map((monthName, index) => (
-            <option key={monthName} value={index + 1}>
-              {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
-            </option>
-          ))}
-        </Select>
-      )}
+  <section
+    aria-label="Sélection de la période"
+    className="flex flex-wrap items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm"
+  >
+    <div role="group" aria-label="Type de période" className="inline-flex shrink-0 rounded-lg bg-gray-100 p-0.5">
+      {(["month", "year"] as const).map((periodMode) => (
+        <button
+          key={periodMode}
+          type="button"
+          aria-pressed={mode === periodMode}
+          onClick={() => onModeChange(periodMode)}
+          className={`rounded-md px-1.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 ${
+            mode === periodMode ? "bg-white text-primary-700 shadow-sm" : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          {periodMode === "month" ? "Mois" : "Année"}
+        </button>
+      ))}
     </div>
-    {mode === "month" && (
-      <div className="flex gap-2">
-        <Button type="button" variant="secondary" size="sm" onClick={onPrevious} className="flex-1 sm:flex-none">
-          <ChevronLeft size={16} aria-hidden="true" />
-          Mois précédent
-        </Button>
-        <Button type="button" variant="secondary" size="sm" onClick={onNext} className="flex-1 sm:flex-none">
-          Mois suivant
-          <ChevronRight size={16} aria-hidden="true" />
-        </Button>
-      </div>
-    )}
-  </div>
+
+    <Button
+      type="button"
+      variant="secondary"
+      size="xs"
+      onClick={onPrevious}
+      aria-label={mode === "month" ? "Mois précédent" : "Année précédente"}
+      title={mode === "month" ? "Mois précédent" : "Année précédente"}
+      className="h-8 w-8 shrink-0 !p-0"
+    >
+      <ChevronLeft size={16} aria-hidden="true" />
+    </Button>
+
+    <div className="min-w-0 flex-1 sm:w-56 sm:flex-none">
+      <Select
+        aria-label={mode === "month" ? "Mois et année" : "Année"}
+        value={mode === "month" ? `${year}-${month}` : year}
+        onChange={(event) => {
+          if (mode === "month") {
+            const [selectedYear, selectedMonth] = event.target.value.split("-").map(Number);
+            onYearChange(selectedYear);
+            onMonthChange(selectedMonth);
+          } else {
+            onYearChange(Number(event.target.value));
+          }
+        }}
+        className="h-9 min-w-0 border-gray-200 py-1 text-sm shadow-none"
+      >
+        {mode === "month"
+          ? years.flatMap((yearOption) =>
+              MONTHS.map((monthName, index) => (
+                <option key={`${yearOption}-${index + 1}`} value={`${yearOption}-${index + 1}`}>
+                  {monthName.charAt(0).toUpperCase() + monthName.slice(1)} {yearOption}
+                </option>
+              ))
+            )
+          : years.map((yearOption) => (
+              <option key={yearOption} value={yearOption}>
+                {yearOption}
+              </option>
+            ))}
+      </Select>
+    </div>
+
+    <Button
+      type="button"
+      variant="secondary"
+      size="xs"
+      onClick={onNext}
+      aria-label={mode === "month" ? "Mois suivant" : "Année suivante"}
+      title={mode === "month" ? "Mois suivant" : "Année suivante"}
+      className="h-8 w-8 shrink-0 !p-0"
+    >
+      <ChevronRight size={16} aria-hidden="true" />
+    </Button>
+
+    <div className="flex basis-full justify-center sm:basis-auto sm:justify-start">
+      <Button type="button" variant="secondary" size="xs" onClick={onToday} disabled={isCurrentPeriod} className="shrink-0">
+        Aujourd’hui
+      </Button>
+    </div>
+  </section>
 );

@@ -3,11 +3,22 @@
 Ce fichier contient les notes de mise à jour **destinées aux utilisateurs**.
 Rédigé en langage simple, sans jargon technique.
 
+## [0.3.59] - 2 novembre 2026
+
+### Ce qui change pour vous
+
+- **Totaux plus faciles à consulter** : les totaux de l’année apparaissent en bas de chaque colonne, sur ordinateur comme sur mobile.
+- **Période plus simple à choisir** : utilisez « Aujourd’hui » pour revenir au mois ou à l’année en cours, ou les flèches pour passer au mois ou à l’année précédente/suivante.
+- **Synthèse plus claire** : chaque carte indique le mois ou l’année concernés. Le total depuis le début du suivi est distingué des montants de la période.
+- **Locations « À venir »** : les montants attendus et reçus sont présentés séparément, sans vocabulaire comptable.
+- **Ajout d’un mouvement depuis le tableau** : les éditeurs peuvent saisir un mouvement directement sur la première ligne. Sur mobile, le bouton d’ajout reste disponible.
+- **Rubriques plus faciles à repérer** : les onglets financiers sont mieux différenciés et le type de mouvement suit le filtre Revenus/Dépenses.
+
 ## [0.3.58] - 30 octobre 2026
 
 ### Ce qui change pour vous
 
-- **Récapitulatif mensuel amélioré** : le tableau récapitulatif les lignes alternent en gris clair pour une meilleure lecture. Les sections « Réel » et « Prévisionnel » sont clairement séparées.
+- **Récapitulatif mensuel amélioré** : le tableau récapitulatif les lignes alternent en gris clair pour une meilleure lecture. Les sections « Reçus » et « Prévisionnel » sont clairement séparées.
 
 ### Ce qui change pour vous (suite)
 
